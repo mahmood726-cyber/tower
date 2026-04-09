@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/incident.schema.json",
+  "title": "Tower Incident",
+  "description": "Incident record for tracking issues",
+  "type": "object",
+  "required": ["incident_id", "type", "description", "created_at", "status", "spec_version"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "incident_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["drift", "corruption", "gate_failure", "validation_error", "merge_conflict", "quota_exceeded", "machine_offline", "other"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "default": "medium"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "investigating", "resolved", "closed"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "related_cards": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^CARD-[0-9]+$"}
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "resolution": {
+      "type": ["string", "null"]
+    },
+    "root_cause": {
+      "type": ["string", "null"]
+    },
+    "preventive_action": {
+      "type": ["string", "null"]
+    }
+  }
+}

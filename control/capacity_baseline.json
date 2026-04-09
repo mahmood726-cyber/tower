@@ -1,0 +1,24 @@
+{
+  "spec_version": "v1.5.5",
+  "last_updated": "2026-01-16T22:33:33.521689",
+  "analysis_period_days": 14,
+  "cards_per_day": {
+    "mean": 3.0,
+    "median": 3,
+    "min": 3,
+    "max": 3
+  },
+  "avg_time_per_state_minutes": {
+    "READY": null,
+    "ACTIVE": null,
+    "REVIEW": null,
+    "BLOCKED": null,
+    "GATES_PASS": null,
+    "VALIDATORS_PASS": null,
+    "GOLD": null
+  },
+  "quota_utilization": {},
+  "gate_pass_rate": null,
+  "escalation_rate": null,
+  "drift_incidents_per_day": null
+}

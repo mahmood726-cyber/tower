@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/outcome_definition.schema.json",
+  "title": "TruthCert OutcomeDefinition Node",
+  "description": "Canonical outcome definition per Spec v0.8 Section 5.3",
+  "type": "object",
+  "required": ["outcome_id", "domain", "canonical_name", "measure_type"],
+  "properties": {
+    "outcome_id": {
+      "type": "string",
+      "pattern": "^outcome:[a-z0-9_-]+:[a-z0-9_-]+$"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Clinical domain (e.g., cardio, oncology, diabetes)"
+    },
+    "canonical_name": {
+      "type": "string",
+      "description": "Canonical name for this outcome"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "definition": {
+      "type": "string",
+      "description": "Precise clinical definition"
+    },
+    "measure_type": {
+      "type": "string",
+      "enum": ["binary", "continuous", "time_to_event", "count", "rate", "ordinal", "other"]
+    },
+    "is_composite": {
+      "type": "boolean",
+      "default": false
+    },
+    "composite_components": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "For composites like MACE: list of component outcomes"
+    },
+    "canonical_unit": {
+      "type": "string",
+      "description": "Canonical unit for this outcome (per Section 5.2)"
+    },
+    "allowable_variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "variant_id": { "type": "string" },
+          "variant_name": { "type": "string" },
+          "mapping_rule": { "type": "string" }
+        }
+      },
+      "description": "Per Section 5.3: allowed variants (e.g., MACE-3, MACE-4)"
+    },
+    "prespec_hierarchy": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["sap_pre_unblinding", "registry_lock_snapshot", "protocol_publication", "registry_later", "paper_only"]
+      },
+      "description": "Per Section 8.1: prespec hierarchy for this outcome"
+    },
+    "ontology_terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ontology": { "type": "string" },
+          "term_id": { "type": "string" },
+          "term_label": { "type": "string" }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "version": {
+      "type": "string"
+    }
+  }
+}

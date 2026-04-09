@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "towerjs://schemas/control_quota.schema.json",
+  "title": "Tower Quota",
+  "type": "object",
+  "required": ["spec_version"],
+  "properties": {
+    "spec_version": { "type": "string", "minLength": 1 },
+    "last_updated": { "type": "string" },
+    "models": { "type": "object", "additionalProperties": true },
+    "usage": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

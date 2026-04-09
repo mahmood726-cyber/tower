@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/transport_config.schema.json",
+  "title": "TruthCert Transport Lane Configuration",
+  "description": "Transport lane config per Spec v0.8 Section 13",
+  "type": "object",
+  "required": ["transport_id", "target_population_schema", "target_estimand", "baseline_risk_policy"],
+  "properties": {
+    "transport_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "target_population_schema": {
+      "type": "object",
+      "description": "Per Section 13.1",
+      "required": ["covariates"],
+      "properties": {
+        "schema_id": { "type": "string" },
+        "covariates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": "string", "enum": ["continuous", "categorical", "binary"] },
+              "unit": { "type": "string" },
+              "categories": { "type": "array", "items": { "type": "string" } },
+              "allowed_missingness": { "type": "number", "minimum": 0, "maximum": 1 },
+              "measurement_notes": { "type": "string" },
+              "provenance": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "overlap_metric": {
+      "type": "object",
+      "description": "Per Section 13.2: default propensity overlap diagnostics",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["propensity_overlap", "covariate_balance", "custom"],
+          "default": "propensity_overlap"
+        },
+        "threshold": { "type": "number" },
+        "action_if_below": {
+          "type": "string",
+          "enum": ["badge_cap", "widen_uncertainty", "abstain", "warn"]
+        }
+      }
+    },
+    "target_estimand": {
+      "type": "object",
+      "description": "Per Section 13.3",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["relative_effect", "absolute_risk", "both"]
+        },
+        "invariants_assumed": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "effect_modifiers": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "baseline_risk_policy": {
+      "type": "object",
+      "description": "Per Section 13.4",
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["trial_control", "external_cohort", "registry", "model_based"]
+        },
+        "provenance": { "type": "string" },
+        "context_datum_id": { "type": "string" },
+        "shift_check_enabled": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

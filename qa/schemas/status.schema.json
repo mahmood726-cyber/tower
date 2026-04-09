@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/status.schema.json",
+  "title": "Tower Status",
+  "description": "Current state of all cards in the Tower system",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "cards"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cards": {
+      "type": "array",
+      "description": "Array of card objects (not a dictionary)",
+      "items": {
+        "type": "object",
+        "required": ["card_id", "state", "stream", "updated_at"],
+        "properties": {
+          "card_id": {
+            "type": "string",
+            "pattern": "^CARD-[0-9]+$"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["DRAFT", "BACKLOG", "READY", "ACTIVE", "REVIEW", "BLOCKED", "GATES_PASS", "VALIDATORS_PASS", "GOLD", "MERGED", "ESCALATED", "ABANDONED"]
+          },
+          "stream": {
+            "type": "string",
+            "enum": ["apps", "methods", "hta", "live"]
+          },
+          "window": {
+            "type": ["string", "null"]
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable title for the card"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the card work"
+          },
+          "gates": {
+            "type": "object",
+            "description": "Gate results with TruthCert severity levels",
+            "properties": {
+              "tests": {
+                "oneOf": [
+                  {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED", "BLOCKED"]},
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED", "BLOCKED"]},
+                      "severity": {"type": "string", "enum": ["P0", "P1", "P2"]}
+                    },
+                    "required": ["status", "severity"]
+                  }
+                ]
+              },
+              "validators": {
+                "oneOf": [
+                  {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED", "BLOCKED"]},
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED", "BLOCKED"]},
+                      "severity": {"type": "string", "enum": ["P0", "P1", "P2"]}
+                    },
+                    "required": ["status", "severity"]
+                  }
+                ]
+              },
+              "proofpack": {
+                "oneOf": [
+                  {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED", "BLOCKED"]},
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED", "BLOCKED"]},
+                      "severity": {"type": "string", "enum": ["P0", "P1", "P2"]}
+                    },
+                    "required": ["status", "severity"]
+                  }
+                ]
+              }
+            }
+          },
+          "color": {
+            "type": "string",
+            "enum": ["GREEN", "YELLOW", "RED"]
+          },
+          "assurance": {
+            "type": "string",
+            "enum": ["none", "bronze", "silver", "gold"],
+            "description": "TruthCert assurance level"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "escalation_reason": {
+            "type": ["string", "null"]
+          },
+          "run_ids": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

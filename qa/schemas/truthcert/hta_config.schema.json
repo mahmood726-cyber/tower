@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/hta_config.schema.json",
+  "title": "TruthCert HTA Lane Configuration",
+  "description": "HTA lane config per Spec v0.8 Section 14",
+  "type": "object",
+  "required": ["hta_id", "model_structure", "utility_mapping", "structural_uncertainty"],
+  "properties": {
+    "hta_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "model_structure": {
+      "type": "object",
+      "description": "Per Section 14.1",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["markov", "microsim", "partitioned_survival", "other"]
+        },
+        "states": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cycle_length": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "unit": { "type": "string", "enum": ["days", "weeks", "months", "years"] }
+          }
+        },
+        "time_horizon": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "unit": { "type": "string" }
+          }
+        },
+        "discount_rate": {
+          "type": "object",
+          "properties": {
+            "costs": { "type": "number" },
+            "outcomes": { "type": "number" }
+          }
+        },
+        "half_cycle_correction": { "type": "boolean" }
+      }
+    },
+    "utility_mapping": {
+      "type": "object",
+      "description": "Per Section 14.2",
+      "required": ["instrument", "tariff"],
+      "properties": {
+        "instrument": { "type": "string" },
+        "tariff": {
+          "type": "object",
+          "properties": {
+            "country": { "type": "string" },
+            "year": { "type": "integer" }
+          }
+        },
+        "mapping_function": { "type": "string" },
+        "witnesses": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "bounds": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        }
+      }
+    },
+    "structural_uncertainty": {
+      "type": "object",
+      "description": "Per Section 14.3",
+      "required": ["included"],
+      "properties": {
+        "included": { "type": "boolean" },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "scenario_id": { "type": "string" },
+              "description": { "type": "string" },
+              "structure_type": { "type": "string" }
+            }
+          },
+          "minItems": 2
+        },
+        "justification_if_not": {
+          "type": "string",
+          "description": "Required if included=false: why not feasible (goes to EXPLAIN)"
+        }
+      }
+    },
+    "double_counting_check": {
+      "type": "object",
+      "description": "Per Section 14.4",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "severity": { "type": "string", "enum": ["P0", "P1"], "default": "P1" },
+        "sources_checked": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

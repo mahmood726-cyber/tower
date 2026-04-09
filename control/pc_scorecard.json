@@ -1,0 +1,48 @@
+{
+  "spec_version": "v1.5.5",
+  "last_updated": "2026-01-16T22:33:48.555325",
+  "pcs": {
+    "pc1": {
+      "pc_id": "pc1",
+      "online": false,
+      "total_jobs": 0,
+      "successful_jobs": 0,
+      "failed_jobs": 0,
+      "success_rate": null,
+      "avg_cpu_utilization": null,
+      "avg_ram_utilization": null,
+      "uptime_hours": null,
+      "last_job": null,
+      "last_health_check": "2026-01-16T22:33:48.555207",
+      "placeholder": true
+    },
+    "pc2": {
+      "pc_id": "pc2",
+      "online": false,
+      "total_jobs": 0,
+      "successful_jobs": 0,
+      "failed_jobs": 0,
+      "success_rate": null,
+      "avg_cpu_utilization": null,
+      "avg_ram_utilization": null,
+      "uptime_hours": null,
+      "last_job": null,
+      "last_health_check": "2026-01-16T22:33:48.555282",
+      "placeholder": true
+    },
+    "pc3": {
+      "pc_id": "pc3",
+      "online": false,
+      "total_jobs": 0,
+      "successful_jobs": 0,
+      "failed_jobs": 0,
+      "success_rate": null,
+      "avg_cpu_utilization": null,
+      "avg_ram_utilization": null,
+      "uptime_hours": null,
+      "last_job": null,
+      "last_health_check": "2026-01-16T22:33:48.555308",
+      "placeholder": true
+    }
+  }
+}

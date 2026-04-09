@@ -1,0 +1,10 @@
+timestamp,metric,value,recommendation
+2026-01-16T22:30:13.706177,quota_utilization,0.000,Underutilized: assign more work to claude_opus
+2026-01-16T22:30:13.706177,quota_utilization,0.000,Underutilized: assign more work to claude_sonnet
+2026-01-16T22:30:13.706177,quota_utilization,0.000,Underutilized: assign more work to gemini
+2026-01-16T22:30:13.706177,quota_utilization,0.000,Underutilized: assign more work to glm_4_7
+2026-01-16T22:30:13.706177,quota_utilization,0.000,Underutilized: assign more work to codex
+2026-01-16T22:30:13.706177,backlog_ready,0,Low backlog in apps: add more READY cards
+2026-01-16T22:30:13.706177,backlog_ready,0,Low backlog in methods: add more READY cards
+2026-01-16T22:30:13.706177,backlog_ready,0,Low backlog in hta: add more READY cards
+2026-01-16T22:30:13.706177,backlog_ready,0,Low backlog in live: add more READY cards

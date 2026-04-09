@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/meta_method_registry.schema.json",
+  "title": "TruthCert Meta Method Registry",
+  "description": "Method registry per Spec v0.8 Section 12.1 (required for Meta lane)",
+  "type": "object",
+  "required": ["method_id", "estimand", "effect_measure_policy", "model_family", "timepoint_selection_policy", "multi_arm_policy", "study_design_policy"],
+  "properties": {
+    "method_id": {
+      "type": "string"
+    },
+    "method_name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "estimand": {
+      "type": "string",
+      "description": "What is being estimated (e.g., average treatment effect)"
+    },
+    "effect_measure_policy": {
+      "type": "object",
+      "properties": {
+        "primary_measure": {
+          "type": "string",
+          "enum": ["RR", "OR", "HR", "RD", "MD", "SMD", "Fisher_z"]
+        },
+        "allowed_transforms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "transform_rules": {
+          "type": "string"
+        }
+      }
+    },
+    "model_family": {
+      "type": "string",
+      "enum": ["fixed_effect", "random_effects_dl", "random_effects_reml", "random_effects_ml", "bayesian", "other"]
+    },
+    "model_details": {
+      "type": "object",
+      "properties": {
+        "heterogeneity_estimator": { "type": "string" },
+        "confidence_interval_method": { "type": "string" },
+        "prediction_interval": { "type": "boolean" }
+      }
+    },
+    "timepoint_selection_policy": {
+      "type": "string",
+      "enum": ["primary_prespecified", "longest_followup", "hierarchical_rule"],
+      "description": "Per Section 6.2: must declare one"
+    },
+    "timepoint_hierarchy": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "If hierarchical_rule, the ordered list"
+    },
+    "multi_arm_policy": {
+      "type": "string",
+      "enum": ["all_pairwise", "vs_control_only", "network_meta", "other"],
+      "description": "How multi-arm trials are handled"
+    },
+    "study_design_policy": {
+      "type": "object",
+      "description": "Per Section 12.2: P0 design enforcement",
+      "properties": {
+        "cluster_rct": {
+          "type": "object",
+          "properties": {
+            "require_icc": { "type": "boolean" },
+            "adjustment_method": { "type": "string" },
+            "block_if_missing": { "type": "boolean", "default": true }
+          }
+        },
+        "crossover": {
+          "type": "object",
+          "properties": {
+            "require_washout": { "type": "boolean" },
+            "block_hard_outcomes": { "type": "boolean", "default": true }
+          }
+        },
+        "factorial": {
+          "type": "object",
+          "properties": {
+            "arm_combination_rule": { "type": "string" }
+          }
+        }
+      }
+    },
+    "generator_version": {
+      "type": "string"
+    },
+    "validator_version": {
+      "type": "string"
+    }
+  }
+}

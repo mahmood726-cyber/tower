@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/machines.schema.json",
+  "title": "Tower Machines",
+  "description": "Machine status and capabilities",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "machines"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "machines": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["machine_id", "type", "online"],
+        "properties": {
+          "machine_id": {"type": "string"},
+          "type": {"type": "string", "enum": ["laptop", "pc"]},
+          "online": {"type": "boolean"},
+          "last_seen": {"type": ["string", "null"], "format": "date-time"},
+          "hostname": {"type": ["string", "null"]},
+          "ip_address": {"type": ["string", "null"]},
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "cpu_cores": {"type": ["integer", "null"]},
+              "ram_gb": {"type": ["number", "null"]},
+              "gpu": {"type": ["boolean", "null"]},
+              "wsl": {"type": ["boolean", "null"]}
+            }
+          },
+          "current_load": {
+            "type": "object",
+            "properties": {
+              "cpu_percent": {"type": ["number", "null"]},
+              "ram_percent": {"type": ["number", "null"]},
+              "active_jobs": {"type": ["integer", "null"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/capsule_run.schema.json",
+  "title": "TruthCert CapsuleRun Node",
+  "description": "Capsule run provenance per Spec v0.8 Section 4.1 and 25",
+  "type": "object",
+  "required": ["run_id", "capsule_id", "started_at", "completed_at", "status"],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^run:[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.*$"
+    },
+    "capsule_id": {
+      "type": "string",
+      "pattern": "^capsule:[a-f0-9]{64}$"
+    },
+    "machine_id": {
+      "type": "string"
+    },
+    "machine_role": {
+      "type": "string",
+      "enum": ["box_a", "box_b", "box_c", "dev", "other"],
+      "description": "Machine role in 3-box architecture"
+    },
+    "git_sha": {
+      "type": "string"
+    },
+    "git_branch": {
+      "type": "string"
+    },
+    "spec_version": {
+      "type": "string"
+    },
+    "lanes_run": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["map", "meta", "transport", "hta"]
+      }
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "duration_seconds": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["success", "partial", "failed", "blocked"]
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "validators_run": {
+      "type": "integer"
+    },
+    "p0_count": {
+      "type": "integer"
+    },
+    "p1_count": {
+      "type": "integer"
+    },
+    "p2_count": {
+      "type": "integer"
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "map_json": { "type": "string" },
+        "meta_json": { "type": "string" },
+        "transport_json": { "type": "string" },
+        "hta_json": { "type": "string" },
+        "explain_json": { "type": "string" },
+        "number_cards": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "is_reproducible": {
+      "type": "boolean",
+      "default": true
+    },
+    "seed": {
+      "type": "integer",
+      "description": "Random seed if applicable"
+    }
+  }
+}

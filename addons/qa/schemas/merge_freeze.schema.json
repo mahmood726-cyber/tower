@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "merge_freeze.schema.json",
+  "title": "Tower Merge Freeze Status",
+  "description": "Schema for merge freeze control file",
+  "type": "object",
+  "properties": {
+    "active": {
+      "type": "boolean",
+      "description": "Whether merge freeze is currently active"
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Reason for the freeze"
+    },
+    "activated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp when freeze was activated"
+    },
+    "activated_by": {
+      "type": "string",
+      "description": "Who or what activated the freeze"
+    },
+    "expires_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Optional expiration timestamp"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["all", "production", "staging"],
+      "default": "all",
+      "description": "Scope of the freeze"
+    },
+    "exempt_cards": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,50}$"
+      },
+      "description": "Cards exempt from the freeze"
+    }
+  },
+  "required": ["active"],
+  "additionalProperties": false
+}

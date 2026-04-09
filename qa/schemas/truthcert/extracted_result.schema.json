@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/extracted_result.schema.json",
+  "title": "TruthCert ExtractedResult Node",
+  "description": "Extracted result from registry or publication per Spec v0.8 Section 4.1",
+  "type": "object",
+  "required": ["result_id", "source_id", "outcome_id", "effect_measure"],
+  "properties": {
+    "result_id": {
+      "type": "string"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "RegistrySnapshot or Publication ID"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["registry_snapshot", "publication", "curated_extract"]
+    },
+    "trial_id": {
+      "type": "string"
+    },
+    "outcome_id": {
+      "type": "string",
+      "pattern": "^outcome:[a-z0-9_-]+:[a-z0-9_-]+$"
+    },
+    "outcome_mapping": {
+      "type": "object",
+      "properties": {
+        "mapped_to_canonical": { "type": "boolean" },
+        "variant_used": { "type": "string" },
+        "mapping_rule": { "type": "string" }
+      }
+    },
+    "timepoint": {
+      "type": "object",
+      "required": ["target_value", "unit"],
+      "properties": {
+        "target_value": { "type": "number" },
+        "unit": { "type": "string", "enum": ["days", "weeks", "months", "years"] },
+        "lower_window": { "type": "number" },
+        "upper_window": { "type": "number" },
+        "match_type": { "type": "string", "enum": ["exact", "windowed", "inferred"] }
+      }
+    },
+    "arms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "arm_id": { "type": "string" },
+          "arm_label": { "type": "string" },
+          "n": { "type": "integer" },
+          "events": { "type": "integer" },
+          "mean": { "type": "number" },
+          "sd": { "type": "number" },
+          "median": { "type": "number" },
+          "iqr_lower": { "type": "number" },
+          "iqr_upper": { "type": "number" }
+        }
+      }
+    },
+    "effect_measure": {
+      "type": "string",
+      "enum": ["RR", "OR", "HR", "RD", "MD", "SMD", "Fisher_z", "other"]
+    },
+    "effect_estimate": {
+      "type": "number"
+    },
+    "effect_se": {
+      "type": "number"
+    },
+    "effect_ci_lower": {
+      "type": "number"
+    },
+    "effect_ci_upper": {
+      "type": "number"
+    },
+    "effect_ci_level": {
+      "type": "number",
+      "default": 0.95
+    },
+    "p_value": {
+      "type": "number"
+    },
+    "unit": {
+      "type": "string"
+    },
+    "is_primary_timepoint": {
+      "type": "boolean"
+    },
+    "witnesses": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Witness IDs supporting this result"
+    },
+    "quorum": {
+      "$ref": "quorum.schema.json"
+    },
+    "extraction_method": {
+      "type": "string",
+      "enum": ["manual", "automated", "semi_automated"]
+    },
+    "extracted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "extracted_by": {
+      "type": "string"
+    }
+  }
+}

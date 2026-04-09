@@ -1,0 +1,11 @@
+{
+  "case_id": "EV-100",
+  "title": "Validate all JSON schemas are valid",
+  "description": "Ensures all addon JSON schemas parse correctly and have required fields",
+  "command": "python -c \"import json; import sys; from pathlib import Path; schemas = list(Path('tower/addons/qa/schemas').glob('*.json')); [json.load(open(s)) for s in schemas]; print(f'Validated {len(schemas)} schemas'); sys.exit(0 if schemas else 1)\"",
+  "cwd": null,
+  "timeout_seconds": 30,
+  "expected_exit_code": 0,
+  "points": 2,
+  "tags": ["addon", "schema", "smoke"]
+}

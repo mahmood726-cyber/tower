@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/abstention.schema.json",
+  "title": "TruthCert Abstention Node",
+  "description": "Abstention decision per Spec v0.8 Rule 7: 'insufficient certainty—do not publish' is first-class",
+  "type": "object",
+  "required": ["abstention_id", "scope", "reason", "abstained_at"],
+  "properties": {
+    "abstention_id": {
+      "type": "string",
+      "pattern": "^abstention:[a-f0-9]{16,64}$"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["claim", "result", "trial", "outcome", "meta_analysis", "transport", "hta"],
+      "description": "What level is being abstained from"
+    },
+    "scope_id": {
+      "type": "string",
+      "description": "ID of the object being abstained from"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "quorum_not_met",
+        "witness_grade_insufficient",
+        "conflict_unresolved",
+        "timepoint_inferred",
+        "outcome_mapping_uncertain",
+        "design_enforcement_block",
+        "icc_missing",
+        "overlap_insufficient",
+        "structural_uncertainty_missing",
+        "other"
+      ]
+    },
+    "reason_detail": {
+      "type": "string"
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of blocking conditions"
+    },
+    "minimum_to_resolve": {
+      "type": "string",
+      "description": "What would be needed to lift the abstention"
+    },
+    "abstained_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "abstained_by": {
+      "type": "string",
+      "enum": ["automated", "manual"]
+    },
+    "reviewed": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

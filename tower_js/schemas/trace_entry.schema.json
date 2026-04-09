@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "towerjs://schemas/trace_entry.schema.json",
+  "title": "TowerJS Trace Entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["timestamp", "event", "source"],
+  "properties": {
+    "timestamp": { "type": "string", "format": "date-time" },
+    "event": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "minLength": 1 },
+    "card_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "message": { "type": "string" },
+    "level": { "type": "string", "enum": ["debug", "info", "warn", "error"] },
+    "tags": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "data": { "type": "object", "additionalProperties": true }
+  }
+}

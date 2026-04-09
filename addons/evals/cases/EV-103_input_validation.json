@@ -1,0 +1,11 @@
+{
+  "case_id": "EV-103",
+  "title": "Test input validation rejects malicious input",
+  "description": "Verifies bridge and GUI reject path traversal and injection attempts",
+  "command": "python -c \"import sys; sys.path.insert(0, 'tower/addons/bridge'); from tower_run_with_addons import _validate_card_id; assert not _validate_card_id('../../../etc/passwd'), 'Should reject path traversal'; assert not _validate_card_id('card; rm -rf /'), 'Should reject command injection'; print('Input validation working correctly')\"",
+  "cwd": null,
+  "timeout_seconds": 10,
+  "expected_exit_code": 0,
+  "points": 3,
+  "tags": ["addon", "security", "validation"]
+}

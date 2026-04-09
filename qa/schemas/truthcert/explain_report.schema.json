@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/explain_report.schema.json",
+  "title": "TruthCert EXPLAIN.json",
+  "description": "EXPLAIN.json per Spec v0.8 Section 20.1 (required for every capsule)",
+  "type": "object",
+  "required": ["spec_version", "capsule_id", "generated_at", "badge", "validators_summary"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "const": "0.8.0"
+    },
+    "capsule_id": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "badge": {
+      "type": "object",
+      "required": ["level", "algorithm_version"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["none", "bronze", "silver", "gold"],
+          "description": "Assurance level per Section 2"
+        },
+        "algorithm_version": { "type": "string" },
+        "computation_summary": { "type": "string" }
+      }
+    },
+    "validators_summary": {
+      "type": "object",
+      "properties": {
+        "total_run": { "type": "integer" },
+        "p0_blockers": { "type": "integer" },
+        "p1_warnings": { "type": "integer" },
+        "p2_info": { "type": "integer" }
+      }
+    },
+    "top_blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "validator": { "type": "string" },
+          "severity": { "type": "string", "enum": ["P0", "P1"] },
+          "message": { "type": "string" },
+          "scope": { "type": "string" },
+          "scope_id": { "type": "string" }
+        }
+      },
+      "description": "Top P0 blockers and P1 warnings"
+    },
+    "top_drift_changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "drift_id": { "type": "string" },
+          "drift_type": { "type": "string" },
+          "field": { "type": "string" },
+          "old_value": {},
+          "new_value": {},
+          "severity": { "type": "string" }
+        }
+      }
+    },
+    "conflicts_open": {
+      "type": "integer"
+    },
+    "conflicts_resolved": {
+      "type": "integer"
+    },
+    "abstentions_count": {
+      "type": "integer"
+    },
+    "certainty_summary": {
+      "type": "object",
+      "description": "Per Section 15: minimal RoB/certainty stub",
+      "properties": {
+        "certainty_level": {
+          "type": "string",
+          "enum": ["low", "moderate", "high"]
+        },
+        "top_drivers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "top_concerns": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action_type": {
+            "type": "string",
+            "enum": ["mapping_needed", "adjudication_needed", "rerun_needed", "witness_needed", "review_needed"]
+          },
+          "description": { "type": "string" },
+          "priority": { "type": "string", "enum": ["P0", "P1", "P2"] },
+          "scope_id": { "type": "string" }
+        }
+      }
+    },
+    "incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "incident_id": { "type": "string" },
+          "description": { "type": "string" },
+          "slo_breach": { "type": "boolean" },
+          "lane_degraded": { "type": "string" }
+        }
+      },
+      "description": "Per Section 16.2: SLO breaches and incidents"
+    },
+    "release_notes": {
+      "type": "string"
+    }
+  }
+}

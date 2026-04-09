@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/experiment.schema.json",
+  "title": "Tower Experiments",
+  "description": "Active experiments in the Tower system",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "experiments"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "experiments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["experiment_id", "name", "status"],
+        "properties": {
+          "experiment_id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": ["string", "null"]},
+          "status": {
+            "type": "string",
+            "enum": ["draft", "active", "paused", "completed", "cancelled"]
+          },
+          "hypothesis": {"type": ["string", "null"]},
+          "metrics": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "start_date": {"type": ["string", "null"], "format": "date-time"},
+          "end_date": {"type": ["string", "null"], "format": "date-time"},
+          "related_cards": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^CARD-[0-9]+$"}
+          },
+          "results": {
+            "type": ["object", "null"]
+          }
+        }
+      }
+    }
+  }
+}

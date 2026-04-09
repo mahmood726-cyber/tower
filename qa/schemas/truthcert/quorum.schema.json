@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/quorum.schema.json",
+  "title": "TruthCert Quorum Rules",
+  "description": "Quorum rules for publishable-grade claims per Spec v0.8 Section 7.2",
+  "type": "object",
+  "required": ["quorum_rule", "satisfied", "witnesses"],
+  "properties": {
+    "quorum_rule": {
+      "type": "string",
+      "enum": ["Q1", "Q2", "Q3", "NONE"],
+      "description": "Q1=1 Grade-A witness, Q2=≥2 independent witnesses agreeing, Q3=adjudication logged"
+    },
+    "satisfied": {
+      "type": "boolean",
+      "description": "Whether quorum is satisfied for this claim"
+    },
+    "witnesses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["witness_id", "grade"],
+        "properties": {
+          "witness_id": { "type": "string" },
+          "grade": { "type": "string", "enum": ["A", "B", "C"] },
+          "value": { "type": "number" },
+          "source_independent": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "tolerance_config": {
+      "type": "object",
+      "description": "Versioned tolerance configuration reference",
+      "properties": {
+        "config_version": { "type": "string" },
+        "relative_tolerance": { "type": "number", "default": 0.01 },
+        "absolute_tolerance": { "type": "number" }
+      }
+    },
+    "agreement_check": {
+      "type": "object",
+      "description": "For Q2: details of witness agreement",
+      "properties": {
+        "values_compared": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "max_difference": { "type": "number" },
+        "within_tolerance": { "type": "boolean" }
+      }
+    },
+    "adjudication_ref": {
+      "type": "string",
+      "description": "For Q3: reference to adjudication object"
+    }
+  }
+}

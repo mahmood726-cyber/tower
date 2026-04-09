@@ -1,0 +1,36 @@
+{
+    "version":  "1.0",
+    "algorithm":  "sha256",
+    "generated_at":  "2026-01-18T22:52:47.5358357+00:00",
+    "root":  "64b84055dbcad7a3071fd15bbc8429a63d2ebd7359322658225740db1c318977",
+    "files":  [
+                  {
+                      "path":  "NSE",
+                      "sha256":  "30d7de41e98d51586d76239fe21d18a6b90a4720f372f1c8c01ef7dc989e052d"
+                  },
+                  {
+                      "path":  "ME.md",
+                      "sha256":  "1ba82664063d683c2b65b61ac51f128c7b468f202348eac168e81f5358cc981f"
+                  },
+                  {
+                      "path":  "mas\\control_backlog.schema.json",
+                      "sha256":  "e9438c22f99f0a206690cde635be20d0ec29df150465f001a2f5b2f42a7d7672"
+                  },
+                  {
+                      "path":  "mas\\control_status.schema.json",
+                      "sha256":  "f743c3c133be8a39d415c60e94443b6115c1a950482670a83c2a2b20ad99435f"
+                  },
+                  {
+                      "path":  "mas\\trace_entry.schema.json",
+                      "sha256":  "31335b1799280a1b46b9b621cd6f4d825f616c533bf48c0383a37ba9c166956d"
+                  },
+                  {
+                      "path":  "rjs.js",
+                      "sha256":  "cea5d5b847e8dcc32c9735061d9b41390ff1548cc41d89d6dcd88d61199e5c53"
+                  },
+                  {
+                      "path":  "rjs_v0_1.html",
+                      "sha256":  "c37c0cf79984fc984de39529afe21e97264f676cce4da587ca35efba3afb9e60"
+                  }
+              ]
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/capacity_baseline.schema.json",
+  "title": "Capacity Baseline",
+  "description": "Historical capacity metrics for planning",
+  "type": "object",
+  "required": ["spec_version", "last_updated"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "analysis_period_days": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 14
+    },
+    "cards_per_day": {
+      "type": "object",
+      "properties": {
+        "mean": {"type": ["number", "null"]},
+        "median": {"type": ["number", "null"]},
+        "min": {"type": ["number", "null"]},
+        "max": {"type": ["number", "null"]}
+      }
+    },
+    "avg_time_per_state_minutes": {
+      "type": "object",
+      "additionalProperties": {"type": ["number", "null"]}
+    },
+    "quota_utilization": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "mean_daily": {"type": ["number", "null"]},
+          "mean_weekly": {"type": ["number", "null"]}
+        }
+      }
+    },
+    "gate_pass_rate": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "escalation_rate": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "drift_incidents_per_day": {
+      "type": ["number", "null"]
+    }
+  }
+}

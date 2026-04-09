@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge_run.schema.json",
+  "title": "Tower Bridge Run Parameters",
+  "description": "Schema for bridge wrapper run parameters and trace events",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp"
+    },
+    "bridge_id": {
+      "type": "string",
+      "pattern": "^bridge_[0-9]{14}_[a-f0-9]{6}$",
+      "description": "Unique bridge run identifier"
+    },
+    "run_id": {
+      "type": ["string", "null"],
+      "description": "Tower run ID (discovered after run completes)"
+    },
+    "card_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,50}$",
+      "description": "Card identifier"
+    },
+    "session": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]{1,100}$",
+      "description": "Session name"
+    },
+    "model": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:/-]{1,100}$",
+      "description": "Model identifier"
+    },
+    "command": {
+      "type": "string",
+      "maxLength": 10000,
+      "description": "Command being executed"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["START", "END", "ERROR"],
+      "description": "Bridge event status"
+    },
+    "exit_code": {
+      "type": ["integer", "null"],
+      "description": "Process exit code (null for START events)"
+    },
+    "duration_sec": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Duration in seconds (null for START events)"
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Relevant artifact paths"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]+$"
+      },
+      "description": "User-supplied tags"
+    },
+    "note": {
+      "type": ["string", "null"],
+      "maxLength": 1000,
+      "description": "Optional user note"
+    },
+    "addon": {
+      "type": "object",
+      "properties": {
+        "langsmith": {
+          "type": "object",
+          "properties": {
+            "local": { "type": "boolean" },
+            "remote_attempted": { "type": "boolean" },
+            "remote_ok": { "type": "boolean" }
+          }
+        },
+        "mlflow": {
+          "type": "object",
+          "properties": {
+            "attempted": { "type": "boolean" },
+            "ok": { "type": "boolean" }
+          }
+        }
+      },
+      "description": "Addon integration status"
+    }
+  },
+  "required": ["timestamp", "bridge_id", "card_id", "session", "model", "status"],
+  "additionalProperties": false
+}

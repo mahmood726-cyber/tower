@@ -1,0 +1,64 @@
+# TowerJS v0.1
+
+TowerJS is a browser-first JavaScript library for reading Tower directories from local files. It runs entirely in the browser with no server or build step.
+
+## Contents
+
+- `towerjs.js` - TowerJS library (global `TowerJS` object)
+- `towerjs_v0_1.html` - Single-file UI scaffold demo (TowerJS is inlined)
+- `LICENSE` - MIT license
+- `hash_tree.json` - SHA256 hash manifest for addon files
+- `signature.txt` - Signature over the hash tree root
+- `public_key.txt` - Public key for verifying `signature.txt`
+
+## Quick Start
+
+1. Open `tower_js/towerjs_v0_1.html` in a modern browser.
+2. Click **Pick Tower Folder** (File System Access API) or use **Folder Upload**.
+3. The UI scans `control/` files, shows status counts, and lists cards.
+
+For the File System Access API, Chrome or Edge is recommended. The picker requires a secure context; if it is unavailable, use the folder upload fallback.
+
+## Library Usage
+
+```html
+<script src="towerjs.js"></script>
+<script>
+  async function openTower() {
+    const handle = await TowerJS.openDirectory();
+    const project = await TowerJS.connect({ directoryHandle: handle });
+    const scan = await project.scan({ cardLimit: 100 });
+    console.log(scan.statusCounts, scan.cards);
+  }
+</script>
+```
+
+## Trace DB
+
+TowerJS supports a file-based trace database at `control/trace_db.jsonl` (JSON Lines). Reading works in all browsers; appending requires the File System Access API.
+
+```html
+<script src="towerjs.js"></script>
+<script>
+  async function appendTrace() {
+    const handle = await TowerJS.openDirectory();
+    const project = await TowerJS.connect({ directoryHandle: handle });
+    await project.appendTrace({
+      event: "note",
+      card_id: "CARD-001",
+      message: "Reviewed results.",
+      source: "towerjs"
+    });
+  }
+</script>
+```
+
+## Notes
+
+- TowerJS reads `control/` JSON files and scans `control/cards/*.yaml` for top-level metadata.
+- YAML parsing is intentionally shallow (top-level keys only) to avoid heavy dependencies.
+- No network access is required.
+
+## License
+
+MIT. See `tower_js/LICENSE`.

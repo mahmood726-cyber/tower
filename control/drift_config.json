@@ -1,0 +1,26 @@
+{
+  "spec_version": "v1.5.7",
+  "timezone": "Europe/London",
+  "thresholds": {
+    "interactive": 20,
+    "pipeline": 30,
+    "batch": 60
+  },
+  "heartbeat": {
+    "interval_seconds": 60,
+    "stale_threshold_seconds": 120
+  },
+  "alert_rate_limit": {
+    "per_card_per_hour": 1
+  },
+  "merge_windows": [
+    {
+      "start": "06:30",
+      "end": "06:50"
+    },
+    {
+      "start": "19:00",
+      "end": "19:20"
+    }
+  ]
+}

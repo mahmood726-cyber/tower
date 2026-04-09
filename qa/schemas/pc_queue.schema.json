@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/pc_queue.schema.json",
+  "title": "PC Queue",
+  "description": "Job queue for a specific PC",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "pc_id", "jobs"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pc_id": {
+      "type": "string"
+    },
+    "online": {
+      "type": "boolean",
+      "default": false
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["job_id", "command", "status"],
+        "properties": {
+          "job_id": {"type": "string"},
+          "card_id": {"type": ["string", "null"], "pattern": "^CARD-[0-9]+$"},
+          "command": {"type": "string"},
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "completed", "failed", "skipped"]
+          },
+          "priority": {"type": "integer", "minimum": 1, "default": 100},
+          "added_at": {"type": "string", "format": "date-time"},
+          "started_at": {"type": ["string", "null"], "format": "date-time"},
+          "completed_at": {"type": ["string", "null"], "format": "date-time"},
+          "exit_code": {"type": ["integer", "null"]},
+          "run_id": {"type": ["string", "null"]},
+          "compute_requirements": {
+            "type": "object",
+            "properties": {
+              "category": {"type": "string", "enum": ["light", "medium", "heavy"]},
+              "gpu_required": {"type": "boolean", "default": false}
+            }
+          }
+        }
+      }
+    }
+  }
+}

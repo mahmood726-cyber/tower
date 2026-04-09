@@ -1,0 +1,384 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "manifest_version": "1.0.0",
+  "tower_version": "v1.5.7",
+  "generated_at": "2026-01-18T00:00:00Z",
+  "description": "Tower Addons Manifest - Dependency tracking and configuration",
+  "addons": {
+    "langsmith": {
+      "name": "LangSmith Tracing",
+      "version": "1.0.0",
+      "description": "LLM observability and tracing via LangSmith",
+      "path": "tower/addons/langsmith",
+      "enabled_by_default": false,
+      "dependencies": {
+        "python": ["langsmith>=0.1.0"],
+        "env_vars": ["LANGSMITH_API_KEY"],
+        "files": []
+      },
+      "entry_points": {
+        "python": ["langsmith_adapter.py", "trace_local.py"],
+        "bash": []
+      },
+      "schemas": [],
+      "outputs": {
+        "traces": "addons/langsmith/traces/*.jsonl"
+      }
+    },
+    "mlflow": {
+      "name": "MLflow Experiment Tracking",
+      "version": "1.0.0",
+      "description": "ML experiment tracking and artifact logging",
+      "path": "tower/addons/mlflow",
+      "enabled_by_default": false,
+      "dependencies": {
+        "python": ["mlflow>=2.0.0"],
+        "env_vars": ["MLFLOW_TRACKING_URI"],
+        "files": []
+      },
+      "entry_points": {
+        "python": ["mlflow_run_wrapper.py"],
+        "bash": []
+      },
+      "schemas": [],
+      "outputs": {
+        "mlruns": "addons/mlflow/mlruns/"
+      }
+    },
+    "prefect": {
+      "name": "Prefect Orchestration",
+      "version": "1.0.0",
+      "description": "Workflow orchestration with Prefect",
+      "path": "tower/addons/prefect",
+      "enabled_by_default": false,
+      "dependencies": {
+        "python": ["prefect>=2.0.0"],
+        "env_vars": [],
+        "files": []
+      },
+      "entry_points": {
+        "python": ["prefect_flows.py", "flows/tower_flow.py"],
+        "bash": []
+      },
+      "schemas": [],
+      "outputs": {
+        "receipts": "addons/prefect/state/receipts/*.json"
+      }
+    },
+    "bridge": {
+      "name": "Tower Bridge",
+      "version": "1.0.0",
+      "description": "Unified wrapper combining LangSmith + MLflow tracing",
+      "path": "tower/addons/bridge",
+      "enabled_by_default": true,
+      "dependencies": {
+        "python": [],
+        "env_vars": ["TOWER_BRIDGE_LANGSMITH_ENABLE", "TOWER_BRIDGE_MLFLOW_ENABLE"],
+        "files": ["tower/scripts/tower_run.sh"],
+        "addons": ["langsmith", "mlflow"]
+      },
+      "entry_points": {
+        "python": ["tower_run_with_addons.py"],
+        "bash": []
+      },
+      "schemas": ["qa/schemas/bridge_run.schema.json"],
+      "outputs": {
+        "traces": "addons/langsmith/traces/*.jsonl"
+      }
+    },
+    "evals": {
+      "name": "Tower Evals",
+      "version": "1.0.0",
+      "description": "Evaluation test runner with scoring",
+      "path": "tower/addons/evals",
+      "enabled_by_default": true,
+      "dependencies": {
+        "python": ["jsonschema>=4.0.0"],
+        "env_vars": [],
+        "files": []
+      },
+      "entry_points": {
+        "python": ["run_evals.py"],
+        "bash": ["run_evals.sh"]
+      },
+      "schemas": ["qa/schemas/eval_case.schema.json"],
+      "outputs": {
+        "reports": "addons/evals/artifacts/**/evals_report.json",
+        "scores": "addons/evals/artifacts/evals_score.csv"
+      }
+    },
+    "slo": {
+      "name": "SLO Monitoring",
+      "version": "1.0.0",
+      "description": "Service Level Objective monitoring and error budgets",
+      "path": "tower/addons/slo",
+      "enabled_by_default": true,
+      "dependencies": {
+        "python": [],
+        "env_vars": [],
+        "files": ["control/event_ledger.jsonl"]
+      },
+      "entry_points": {
+        "python": ["compute_slo.py", "render_slo_fragment.py"],
+        "bash": ["slo_enforce.sh"]
+      },
+      "schemas": ["qa/schemas/slo_config.schema.json"],
+      "outputs": {
+        "status": "control/slo_status.json"
+      }
+    },
+    "signing": {
+      "name": "Proofpack Signing",
+      "version": "1.0.0",
+      "description": "Cryptographic signing and transparency logging",
+      "path": "tower/addons/signing",
+      "enabled_by_default": false,
+      "dependencies": {
+        "python": [],
+        "env_vars": ["TOWER_SIGNING_KEY"],
+        "files": [],
+        "system": ["openssl", "sha256sum"]
+      },
+      "entry_points": {
+        "python": [],
+        "bash": ["proofpack_hash.sh", "proofpack_sign.sh", "proofpack_verify.sh", "transparency_append.sh", "transparency_verify.sh", "tower_proofpack_signed.sh"]
+      },
+      "schemas": [],
+      "outputs": {
+        "signatures": "artifacts/**/*.sig",
+        "transparency": "control/transparency_log.jsonl"
+      }
+    },
+    "resilience": {
+      "name": "Resilience & Assurance",
+      "version": "1.0.0",
+      "description": "SPC monitoring, error budgets, hazard analysis, and dashboard overlay",
+      "path": "tower/addons/resilience",
+      "enabled_by_default": true,
+      "dependencies": {
+        "python": ["scipy>=1.0.0"],
+        "env_vars": [],
+        "files": ["control/status.json", "control/event_ledger.jsonl"],
+        "addons": ["slo"]
+      },
+      "entry_points": {
+        "python": ["scripts/tower_spc_analyze.py", "scripts/tower_error_budget_update.py"],
+        "bash": ["scripts/tower_dashboard_plus.sh", "scripts/tower_merge_gate_slo.sh", "scripts/tower_capture_provenance.sh"]
+      },
+      "schemas": ["qa/schemas/dashboard_plus_status.schema.json", "qa/schemas/merge_freeze.schema.json"],
+      "outputs": {
+        "dashboard": "control/dashboard_plus.html",
+        "status": "control/dashboard_plus_status.json",
+        "spc_alerts": "control/spc_alerts.json",
+        "drift_alerts": "control/drift_alerts.json"
+      }
+    },
+    "ledger": {
+      "name": "Event Ledger",
+      "version": "1.0.0",
+      "description": "Hash-chained event logging with tamper detection",
+      "path": "tower/addons/ledger",
+      "enabled_by_default": true,
+      "dependencies": {
+        "python": [],
+        "env_vars": [],
+        "files": []
+      },
+      "entry_points": {
+        "python": ["event_logger.py"],
+        "bash": ["log_event.sh", "tower_with_ledger.sh"]
+      },
+      "schemas": ["qa/schemas/ledger_event.schema.json"],
+      "outputs": {
+        "ledger": "control/event_ledger.jsonl"
+      }
+    },
+    "gui": {
+      "name": "Tower GUI",
+      "version": "1.0.0",
+      "description": "Local-only web interface for Tower control",
+      "path": "tower/addons/gui",
+      "enabled_by_default": false,
+      "dependencies": {
+        "python": ["flask>=2.0.0"],
+        "env_vars": ["TOWER_GUI_PORT", "TOWER_GUI_HOST", "TOWER_GUI_READONLY"],
+        "files": ["control/status.json"]
+      },
+      "entry_points": {
+        "python": ["tower_gui.py"],
+        "bash": []
+      },
+      "schemas": ["qa/schemas/gui_status.schema.json"],
+      "outputs": {}
+    },
+    "dagster": {
+      "name": "Dagster Orchestration",
+      "version": "1.0.0",
+      "description": "Alternative workflow orchestration with Dagster",
+      "path": "tower/addons/dagster",
+      "enabled_by_default": false,
+      "dependencies": {
+        "python": ["dagster>=1.0.0"],
+        "env_vars": [],
+        "files": []
+      },
+      "entry_points": {
+        "python": ["definitions.py"],
+        "bash": []
+      },
+      "schemas": [],
+      "outputs": {}
+    },
+    "autoclaude": {
+      "name": "Autoclaude Production Patterns",
+      "version": "2.0.0",
+      "description": "Production LLM agent patterns: token tracking, circuit breaker, retry, prompts, checkpoints, confidence, error taxonomy, fallback chain, rate limiting, session management, output validation, state recovery, guardrails, metrics, tool registry, memory management, agent orchestration, evaluation, OpenTelemetry, decision explainability",
+      "path": "tower/addons/autoclaude",
+      "enabled_by_default": true,
+      "dependencies": {
+        "python": [],
+        "env_vars": [],
+        "files": [],
+        "addons": ["ledger"]
+      },
+      "entry_points": {
+        "python": [
+          "__init__.py",
+          "llm_tracker.py",
+          "circuit_breaker.py",
+          "retry_policy.py",
+          "prompt_registry.py",
+          "human_checkpoint.py",
+          "confidence_scorer.py",
+          "error_taxonomy.py",
+          "fallback_chain.py",
+          "rate_limiter.py",
+          "session_manager.py",
+          "output_validator.py",
+          "state_manager.py",
+          "guardrails.py",
+          "metrics_exporter.py",
+          "tool_registry.py",
+          "memory_manager.py",
+          "agent_orchestrator.py",
+          "agent_evaluator.py",
+          "otel_exporter.py",
+          "decision_explainer.py"
+        ],
+        "bash": []
+      },
+      "schemas": [],
+      "outputs": {
+        "llm_tracker": "control/llm_tracker.jsonl",
+        "circuit_states": "control/circuit_states.json",
+        "prompt_registry": "control/prompt_registry.json",
+        "checkpoints": "control/checkpoints.json",
+        "sessions": "control/sessions/*.json",
+        "state": "control/state/",
+        "metrics": "control/metrics.json",
+        "tool_registry": "control/tool_registry.json",
+        "memories": "control/memories/*.json",
+        "agents": "control/agents/*.json",
+        "evaluations": "control/evaluations/*.json",
+        "traces": "control/traces/*.json",
+        "decisions": "control/decisions/*.json"
+      },
+      "features": {
+        "llm_tracker": {
+          "description": "Token and cost tracking with budget enforcement",
+          "class": "LLMTracker"
+        },
+        "circuit_breaker": {
+          "description": "Prevents runaway correction loops",
+          "class": "CircuitBreaker"
+        },
+        "retry_policy": {
+          "description": "Exponential backoff with jitter",
+          "class": "RetryPolicy"
+        },
+        "prompt_registry": {
+          "description": "Version-controlled prompt management",
+          "class": "PromptRegistry"
+        },
+        "human_checkpoint": {
+          "description": "Human-in-the-loop review gates",
+          "class": "HumanCheckpoint"
+        },
+        "confidence_scorer": {
+          "description": "LLM output confidence assessment",
+          "class": "ConfidenceScorer"
+        },
+        "error_taxonomy": {
+          "description": "Structured error classification with auto-fix detection",
+          "class": "ErrorTaxonomy"
+        },
+        "fallback_chain": {
+          "description": "Model degradation with quality-based fallback",
+          "class": "FallbackChain"
+        },
+        "rate_limiter": {
+          "description": "Token bucket rate limiting with per-scope buckets",
+          "class": "RateLimiter"
+        },
+        "session_manager": {
+          "description": "Conversation context with automatic truncation strategies",
+          "class": "SessionManager"
+        },
+        "output_validator": {
+          "description": "Structured output parsing and JSON schema validation",
+          "class": "OutputValidator"
+        },
+        "state_manager": {
+          "description": "Crash recovery with WAL and checkpoint snapshots",
+          "class": "StateManager"
+        },
+        "guardrails": {
+          "description": "Safety filtering, PII detection, injection prevention",
+          "class": "Guardrails"
+        },
+        "metrics_exporter": {
+          "description": "Prometheus/StatsD-compatible metrics export",
+          "class": "MetricsExporter"
+        },
+        "tool_registry": {
+          "description": "Semantic tool discovery and validation with Hikmah (Wisdom)",
+          "class": "ToolRegistry"
+        },
+        "memory_manager": {
+          "description": "Long-term memory with context compaction and Amanah (Trust)",
+          "class": "MemoryManager"
+        },
+        "agent_orchestrator": {
+          "description": "Multi-agent coordination patterns (Supervisor, Coordinator-Worker, Blackboard)",
+          "class": "AgentOrchestrator"
+        },
+        "agent_evaluator": {
+          "description": "Offline/online evaluation with LLM-as-judge and Adl (Justice)",
+          "class": "AgentEvaluator"
+        },
+        "otel_exporter": {
+          "description": "OpenTelemetry GenAI semantic conventions exporter",
+          "class": "OTelExporter"
+        },
+        "decision_explainer": {
+          "description": "Decision audit trail with Hisab (Accountability) and counterfactuals",
+          "class": "DecisionExplainer"
+        }
+      }
+    }
+  },
+  "dependency_graph": {
+    "bridge": ["langsmith", "mlflow"],
+    "resilience": ["slo", "ledger"],
+    "slo": ["ledger"],
+    "autoclaude": ["ledger"]
+  },
+  "addon_groups": {
+    "core": ["ledger", "evals", "slo"],
+    "tracing": ["langsmith", "mlflow", "bridge"],
+    "orchestration": ["prefect", "dagster"],
+    "monitoring": ["resilience", "gui"],
+    "security": ["signing"],
+    "autoclaude": ["autoclaude"]
+  }
+}

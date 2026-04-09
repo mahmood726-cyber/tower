@@ -1,0 +1,69 @@
+{
+  "spec_version": "v1.5.5",
+  "last_updated": "2026-01-16T00:00:00Z",
+  "reset_time_daily": "00:00",
+  "reset_day_weekly": "monday",
+  "timezone": "Europe/London",
+  "models": {
+    "claude_opus": {
+      "daily_limit": 100,
+      "weekly_limit": 500,
+      "used_today": 0,
+      "used_this_week": 0,
+      "unit": "requests",
+      "targets": {
+        "daily_utilization": 0.90,
+        "weekly_utilization": 0.95
+      },
+      "last_updated": "2026-01-16T00:00:00Z"
+    },
+    "claude_sonnet": {
+      "daily_limit": 200,
+      "weekly_limit": 1000,
+      "used_today": 0,
+      "used_this_week": 0,
+      "unit": "requests",
+      "targets": {
+        "daily_utilization": 0.90,
+        "weekly_utilization": 0.95
+      },
+      "last_updated": "2026-01-16T00:00:00Z"
+    },
+    "gemini": {
+      "daily_limit": 150,
+      "weekly_limit": 750,
+      "used_today": 0,
+      "used_this_week": 0,
+      "unit": "requests",
+      "targets": {
+        "daily_utilization": 0.90,
+        "weekly_utilization": 0.95
+      },
+      "last_updated": "2026-01-16T00:00:00Z"
+    },
+    "glm_4_7": {
+      "daily_limit": 100,
+      "weekly_limit": 500,
+      "used_today": 0,
+      "used_this_week": 0,
+      "unit": "requests",
+      "targets": {
+        "daily_utilization": 0.90,
+        "weekly_utilization": 0.95
+      },
+      "last_updated": "2026-01-16T00:00:00Z"
+    },
+    "codex": {
+      "daily_limit": 50,
+      "weekly_limit": 250,
+      "used_today": 0,
+      "used_this_week": 0,
+      "unit": "requests",
+      "targets": {
+        "daily_utilization": 0.90,
+        "weekly_utilization": 0.95
+      },
+      "last_updated": "2026-01-16T00:00:00Z"
+    }
+  }
+}

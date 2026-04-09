@@ -1,0 +1,24 @@
+{
+    "version":  "1.0",
+    "algorithm":  "sha256",
+    "generated_at":  "2026-01-18T22:38:20.1471649+00:00",
+    "root":  "2f897fbacf23290df988b1a9aa9de8a86e50a7481a90f8befb33de8752eb92dc",
+    "files":  [
+                  {
+                      "path":  "LICENSE",
+                      "sha256":  "30d7de41e98d51586d76239fe21d18a6b90a4720f372f1c8c01ef7dc989e052d"
+                  },
+                  {
+                      "path":  "README.md",
+                      "sha256":  "e4c8c360a7ac346eaab4529677f6e7808dbca99c81f67f1bffb051d8a132110a"
+                  },
+                  {
+                      "path":  "towerjs.js",
+                      "sha256":  "b39cb67ac51cd3f3202f669e75e0eb5f4077457378f6bef01dd60a39e23ddff6"
+                  },
+                  {
+                      "path":  "towerjs_v0_1.html",
+                      "sha256":  "71db65dcfc380fbd52781f96cb4795ec198fe69e36293430e85ec090af8211f4"
+                  }
+              ]
+}

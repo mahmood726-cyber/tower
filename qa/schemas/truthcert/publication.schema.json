@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/publication.schema.json",
+  "title": "TruthCert Publication Node",
+  "description": "Publication node per Spec v0.8 Section 4.1",
+  "type": "object",
+  "required": ["publication_id", "title"],
+  "properties": {
+    "publication_id": {
+      "type": "string",
+      "pattern": "^pub:(pmid|doi|pmcid):.+$"
+    },
+    "pmid": {
+      "type": "string"
+    },
+    "doi": {
+      "type": "string"
+    },
+    "pmcid": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "authors": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "journal": {
+      "type": "string"
+    },
+    "publication_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "publication_year": {
+      "type": "integer"
+    },
+    "abstract": {
+      "type": "string"
+    },
+    "is_primary_report": {
+      "type": "boolean",
+      "description": "True if this is the primary results publication",
+      "default": false
+    },
+    "is_open_access": {
+      "type": "boolean"
+    },
+    "full_text_available": {
+      "type": "boolean"
+    },
+    "full_text_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "linked_trials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trial_id": { "type": "string" },
+          "linkage_decision_id": { "type": "string" }
+        }
+      }
+    },
+    "retrieved_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

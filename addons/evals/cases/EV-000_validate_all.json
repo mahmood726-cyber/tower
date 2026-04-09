@@ -1,0 +1,10 @@
+{
+  "case_id": "EV-000",
+  "title": "Validate base Tower control files",
+  "command": "bash tower/scripts/validate_all.sh",
+  "cwd": null,
+  "timeout_seconds": 900,
+  "expected_exit_code": 0,
+  "checks": [],
+  "points": 3
+}

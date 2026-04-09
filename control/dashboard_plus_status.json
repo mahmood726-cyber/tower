@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-01-17T08:48:12+00:00",
+  "status": "GREEN",
+  "is_frozen": false,
+  "freeze_reason": "",
+  "error_budget_remaining": "N/A",
+  "error_budget_depleted": false,
+  "slo_status": "N/A",
+  "slo_breached": false,
+  "spc_alert_count": 0,
+  "drift_alert_count": 0,
+  "active_cards": 1,
+  "output_file": "/c/Users/user/tower/control/dashboard_plus.html"
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ledger_event.schema.json",
+  "title": "Tower Ledger Event",
+  "description": "Schema for hash-chained events in addons/ledger event log",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp when event occurred"
+    },
+    "event_type": {
+      "type": "string",
+      "pattern": "^[A-Z_]+$",
+      "description": "Event type (e.g., RUN_START, RUN_END, VALIDATION_PASS)"
+    },
+    "card_id": {
+      "type": ["string", "null"],
+      "pattern": "^[A-Za-z0-9_-]{1,50}$",
+      "description": "Associated card ID"
+    },
+    "run_id": {
+      "type": ["string", "null"],
+      "description": "Associated run ID"
+    },
+    "session": {
+      "type": ["string", "null"],
+      "pattern": "^[A-Za-z0-9_.-]{1,100}$",
+      "description": "Session name"
+    },
+    "actor": {
+      "type": "string",
+      "description": "Who or what triggered this event"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["tower_run", "bridge", "gui", "api", "manual", "prefect", "ci"],
+      "description": "Source system that generated this event"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OK", "FAIL", "SKIP", "WARN", "ERROR"],
+      "description": "Outcome status"
+    },
+    "details": {
+      "type": "object",
+      "description": "Additional event-specific data",
+      "additionalProperties": true
+    },
+    "prev_hash": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hash of previous event (null for first event)"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hash of this event (excluding hash field)"
+    }
+  },
+  "required": ["timestamp", "event_type", "hash"],
+  "additionalProperties": false
+}

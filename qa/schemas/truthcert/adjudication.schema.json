@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/adjudication.schema.json",
+  "title": "TruthCert Adjudication Node",
+  "description": "Adjudication decision per Spec v0.8 Section 4.1, Rule 5",
+  "type": "object",
+  "required": ["adjudication_id", "conflict_id", "decision", "rationale", "adjudicator", "adjudicated_at"],
+  "properties": {
+    "adjudication_id": {
+      "type": "string",
+      "pattern": "^adjudication:[a-f0-9]{16,64}$"
+    },
+    "conflict_id": {
+      "type": "string"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["accept_party_a", "accept_party_b", "weighted_merge", "abstain", "defer", "escalate"]
+    },
+    "selected_party": {
+      "type": "string",
+      "description": "ID of the accepted party if applicable"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Explicit reasoning per Rule 5 (logged and replayable)"
+    },
+    "evidence_considered": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of evidence reviewed"
+    },
+    "adjudicator": {
+      "type": "string",
+      "description": "Person or system that made the decision"
+    },
+    "adjudicator_role": {
+      "type": "string",
+      "enum": ["automated", "reviewer", "senior_reviewer", "domain_expert"]
+    },
+    "adjudicated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "replayable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Per Rule 5: adjudications must be replayable"
+    },
+    "replay_instructions": {
+      "type": "string"
+    }
+  }
+}

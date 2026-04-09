@@ -1,0 +1,11 @@
+{
+  "case_id": "EV-102",
+  "title": "Test event ledger hash chain integrity",
+  "description": "Verifies ledger can log events and maintain hash chain",
+  "command": "python tower/addons/qa/scripts/integration_test.py --quick -v 2>&1 | grep -E '(Ledger|PASS|FAIL)'",
+  "cwd": null,
+  "timeout_seconds": 60,
+  "expected_exit_code": 0,
+  "points": 3,
+  "tags": ["addon", "ledger", "security"]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tower://schemas/dashboard_plus_status.schema.json",
+  "title": "Tower Dashboard Plus Status",
+  "type": "object",
+  "required": ["generated_at", "status"],
+  "properties": {
+    "generated_at": { "type": "string" },
+    "status": { "type": "string", "enum": ["GREEN", "YELLOW", "RED", "FROZEN"] },
+    "is_frozen": { "type": "boolean" },
+    "freeze_reason": { "type": "string" },
+    "error_budget_remaining": { "type": ["string", "number"] },
+    "error_budget_depleted": { "type": "boolean" },
+    "slo_status": { "type": "string" },
+    "slo_breached": { "type": "boolean" },
+    "spc_alert_count": { "type": "integer" },
+    "drift_alert_count": { "type": "integer" },
+    "active_cards": { "type": "integer" },
+    "output_file": { "type": "string" }
+  },
+  "additionalProperties": true
+}

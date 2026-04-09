@@ -1,0 +1,148 @@
+{
+  "spec_version": "0.8.0",
+  "description": "3-Box Architecture Configuration for TruthCert/Burhan",
+  "boxes": {
+    "box_a": {
+      "name": "RCT Graph / Cardiology Trial Universe",
+      "role": "ingest_graph",
+      "hostname": null,
+      "tailscale_ip": null,
+      "ssh_user": "tower",
+      "lanes": ["map"],
+      "responsibilities": [
+        "registry_ingestion",
+        "dedupe_linkage",
+        "evidence_graph_storage",
+        "witness_snapshots",
+        "indexing_search"
+      ],
+      "bottleneck": "storage_ram_io",
+      "recommended_specs": {
+        "cpu_cores": 8,
+        "ram_gb": 64,
+        "storage_ssd_tb": 2,
+        "storage_hdd_tb": 4
+      },
+      "services": {
+        "postgres": true,
+        "duckdb": true,
+        "api_port": 8001
+      },
+      "sync_targets": ["box_b", "box_c"],
+      "cron_jobs": [
+        {
+          "name": "registry_refresh",
+          "schedule": "0 2 * * *",
+          "command": "tower ingest --source ctgov"
+        },
+        {
+          "name": "linkage_update",
+          "schedule": "0 4 * * *",
+          "command": "tower linkage --refresh"
+        }
+      ]
+    },
+    "box_b": {
+      "name": "Context / MASem / WHO-World Bank-IHME",
+      "role": "context_transport",
+      "hostname": null,
+      "tailscale_ip": null,
+      "ssh_user": "tower",
+      "lanes": ["transport"],
+      "responsibilities": [
+        "country_year_covariates",
+        "joins",
+        "transportability_inputs",
+        "context_datums_refresh",
+        "parquet_tables"
+      ],
+      "bottleneck": "ram_io",
+      "recommended_specs": {
+        "cpu_cores": 8,
+        "ram_gb": 64,
+        "storage_ssd_tb": 2
+      },
+      "services": {
+        "duckdb": true,
+        "api_port": 8002
+      },
+      "sync_sources": ["box_a"],
+      "sync_targets": ["box_c"],
+      "cron_jobs": [
+        {
+          "name": "context_refresh",
+          "schedule": "0 3 * * 0",
+          "command": "tower context --refresh-who-wb"
+        }
+      ]
+    },
+    "box_c": {
+      "name": "Methods / Meta Engine",
+      "role": "methods_compute",
+      "hostname": null,
+      "tailscale_ip": null,
+      "ssh_user": "tower",
+      "lanes": ["meta", "hta"],
+      "responsibilities": [
+        "meta_computations",
+        "validators",
+        "drift_checks",
+        "simulation_benchmarks",
+        "capsule_generation",
+        "volume_publishing"
+      ],
+      "bottleneck": "cpu_ram",
+      "recommended_specs": {
+        "cpu_cores": 16,
+        "ram_gb": 64,
+        "storage_ssd_tb": 2
+      },
+      "services": {
+        "duckdb": true,
+        "api_port": 8003
+      },
+      "sync_sources": ["box_a", "box_b"],
+      "cron_jobs": [
+        {
+          "name": "nightly_meta",
+          "schedule": "0 1 * * *",
+          "command": "tower meta --all-topics"
+        },
+        {
+          "name": "drift_check",
+          "schedule": "0 5 * * *",
+          "command": "tower drift --check"
+        },
+        {
+          "name": "capsule_publish",
+          "schedule": "0 6 * * 1",
+          "command": "tower capsule --publish"
+        }
+      ]
+    }
+  },
+  "shared": {
+    "git_repo": "tower",
+    "git_branch": "main",
+    "drift_ledger_path": "control/drift_ledger.json",
+    "capsule_index_path": "capsules/index.json",
+    "tailscale_enabled": true
+  },
+  "sync_protocol": {
+    "method": "rsync_ssh",
+    "frequency_minutes": 15,
+    "paths_to_sync": [
+      "control/status.json",
+      "control/drift_ledger.json",
+      "GRAPH/",
+      "VIEWS/",
+      "capsules/"
+    ],
+    "exclude_patterns": [
+      "*.tmp",
+      "*.log",
+      "__pycache__/",
+      ".git/"
+    ]
+  }
+}

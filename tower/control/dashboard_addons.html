@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Add-ons Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --text: #eaeaea;
+            --text-dim: #888;
+            --green: #4ade80;
+            --yellow: #fbbf24;
+            --red: #f87171;
+            --blue: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .header {
+            background: var(--accent);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--blue);
+        }
+        .header h1 { font-size: 1.5rem; }
+        .header .meta { font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--accent);
+        }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .badge.green { background: var(--green); color: #000; }
+        .badge.yellow { background: var(--yellow); color: #000; }
+        .badge.red { background: var(--red); color: #000; }
+        .badge.blue { background: var(--blue); color: #000; }
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--accent);
+        }
+        .stat:last-child { border-bottom: none; }
+        .stat-label { color: var(--text-dim); }
+        .receipt {
+            background: var(--accent);
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Tower Add-ons Dashboard</h1>
+        <div class="meta">
+            Generated: 2026-01-16T22:26:20.102846 |
+            Tower vtower
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- MLflow Card -->
+        <div class="card">
+            <h2>
+                MLflow
+                <span class="badge yellow">
+                    Not Installed
+                </span>
+            </h2>
+            <div class="stat">
+                <span class="stat-label">Recent Runs Logged</span>
+                <span>0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Tracking URI</span>
+                <code>file:./addons/mlflow/state/mlruns</code>
+            </div>
+            
+            <p style="margin-top:1rem;color:var(--text-dim);">Install: <code>pip install mlflow</code></p>
+        </div>
+
+        <!-- Prefect Card -->
+        <div class="card">
+            <h2>
+                Prefect
+                <span class="badge yellow">
+                    Not Installed
+                </span>
+            </h2>
+            <div class="stat">
+                <span class="stat-label">Recent Flow Runs</span>
+                <span>0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Mode</span>
+                <span>Local (no server)</span>
+            </div>
+            
+            <p style="margin-top:1rem;color:var(--text-dim);">Install: <code>pip install prefect</code></p>
+        </div>
+
+        <!-- Tracing Card -->
+        <div class="card">
+            <h2>
+                LangSmith Tracing
+                <span class="badge yellow">
+                    Not Installed
+                </span>
+            </h2>
+            <div class="stat">
+                <span class="stat-label">Status</span>
+                <span>Disabled (default)</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Recent Traces</span>
+                <span>0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Mode</span>
+                <span>Metadata only</span>
+            </div>
+            <p style="margin-top:1rem;color:var(--text-dim);">
+                Tracing disabled by default for privacy.
+            </p>
+        </div>
+
+        <!-- Quick Commands Card -->
+        <div class="card">
+            <h2>Quick Commands</h2>
+            <div style="font-family: monospace; font-size: 0.85rem;">
+                <p style="margin-bottom: 0.5rem;"><strong>Run with MLflow:</strong></p>
+                <code style="display:block;padding:0.5rem;margin-bottom:1rem;">bash tower/scripts/tower_run_plus.sh --card CARD-XXX --enable-mlflow ...</code>
+
+                <p style="margin-bottom: 0.5rem;"><strong>Prefect validate flow:</strong></p>
+                <code style="display:block;padding:0.5rem;margin-bottom:1rem;">bash tower/scripts/addons/prefect_run_local.sh validate</code>
+
+                <p style="margin-bottom: 0.5rem;"><strong>MLflow UI:</strong></p>
+                <code style="display:block;padding:0.5rem;">cd tower/addons/mlflow/state && mlflow ui</code>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 2rem; text-align: center; color: var(--text-dim);">
+        <p>Tower v1.5.5 Add-ons Pack | <a href="dashboard.html" style="color: var(--blue);">Main Dashboard</a></p>
+    </div>
+</body>
+</html>

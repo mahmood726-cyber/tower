@@ -1,0 +1,82 @@
+{
+  "spec_version": "v1.5.5",
+  "last_updated": "2026-01-16T00:00:00Z",
+  "machines": {
+    "laptop": {
+      "machine_id": "laptop",
+      "type": "laptop",
+      "online": true,
+      "last_seen": "2026-01-16T00:00:00Z",
+      "hostname": null,
+      "ip_address": null,
+      "capabilities": {
+        "cpu_cores": null,
+        "ram_gb": null,
+        "gpu": false,
+        "wsl": true
+      },
+      "current_load": {
+        "cpu_percent": null,
+        "ram_percent": null,
+        "active_jobs": 0
+      }
+    },
+    "pc1": {
+      "machine_id": "pc1",
+      "type": "pc",
+      "online": false,
+      "last_seen": null,
+      "hostname": null,
+      "ip_address": null,
+      "capabilities": {
+        "cpu_cores": null,
+        "ram_gb": null,
+        "gpu": null,
+        "wsl": null
+      },
+      "current_load": {
+        "cpu_percent": null,
+        "ram_percent": null,
+        "active_jobs": 0
+      }
+    },
+    "pc2": {
+      "machine_id": "pc2",
+      "type": "pc",
+      "online": false,
+      "last_seen": null,
+      "hostname": null,
+      "ip_address": null,
+      "capabilities": {
+        "cpu_cores": null,
+        "ram_gb": null,
+        "gpu": null,
+        "wsl": null
+      },
+      "current_load": {
+        "cpu_percent": null,
+        "ram_percent": null,
+        "active_jobs": 0
+      }
+    },
+    "pc3": {
+      "machine_id": "pc3",
+      "type": "pc",
+      "online": false,
+      "last_seen": null,
+      "hostname": null,
+      "ip_address": null,
+      "capabilities": {
+        "cpu_cores": null,
+        "ram_gb": null,
+        "gpu": null,
+        "wsl": null
+      },
+      "current_load": {
+        "cpu_percent": null,
+        "ram_percent": null,
+        "active_jobs": 0
+      }
+    }
+  }
+}

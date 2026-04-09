@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "towerjs://schemas/control_backlog.schema.json",
+  "title": "Tower Backlog",
+  "type": "object",
+  "required": ["spec_version", "streams"],
+  "properties": {
+    "spec_version": { "type": "string", "minLength": 1 },
+    "last_updated": { "type": "string" },
+    "streams": {
+      "type": "object",
+      "required": ["apps", "methods", "hta", "live"],
+      "properties": {
+        "apps": { "$ref": "#/$defs/stream" },
+        "methods": { "$ref": "#/$defs/stream" },
+        "hta": { "$ref": "#/$defs/stream" },
+        "live": { "$ref": "#/$defs/stream" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "stream": {
+      "type": "object",
+      "required": ["ready_cards", "active_cards", "blocked_cards"],
+      "properties": {
+        "ready_cards": { "type": "array", "items": { "type": "string" } },
+        "active_cards": { "type": "array", "items": { "type": "string" } },
+        "blocked_cards": { "type": "array", "items": { "type": "string" } },
+        "minimum_ready": { "type": "integer" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

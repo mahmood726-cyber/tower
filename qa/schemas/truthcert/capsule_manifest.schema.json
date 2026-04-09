@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/capsule_manifest.schema.json",
+  "title": "TruthCert Capsule MANIFEST.json",
+  "description": "Capsule manifest per Spec v0.8 Section 25 (immutable proof bundle)",
+  "type": "object",
+  "required": ["spec_version", "capsule_id", "created_at", "provenance", "contents", "validation"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "const": "0.8.0"
+    },
+    "capsule_id": {
+      "type": "string",
+      "description": "sha256(MANIFEST.json content without capsule_id field)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Clinical domain (e.g., cardiology)"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Specific topic within domain"
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["run_id", "machine_id", "git_sha"],
+      "properties": {
+        "run_id": { "type": "string" },
+        "machine_id": { "type": "string" },
+        "machine_role": { "type": "string", "enum": ["box_a", "box_b", "box_c", "dev"] },
+        "git_sha": { "type": "string" },
+        "git_branch": { "type": "string" },
+        "pipeline_version": { "type": "string" }
+      }
+    },
+    "contents": {
+      "type": "object",
+      "description": "Per Section 25: capsule contents",
+      "properties": {
+        "graph_dir": { "type": "string", "default": "GRAPH/" },
+        "output_dir": { "type": "string", "default": "OUTPUT/" },
+        "views_dir": { "type": "string", "default": "VIEWS/" },
+        "validation_dir": { "type": "string", "default": "VALIDATION/" },
+        "lineage_dir": { "type": "string", "default": "LINEAGE/" },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "map_json": { "type": "string" },
+            "meta_json": { "type": "string" },
+            "transport_json": { "type": "string" },
+            "hta_json": { "type": "string" }
+          }
+        },
+        "explain_json": { "type": "string", "default": "EXPLAIN.json" },
+        "number_cards": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "provenance_md": { "type": "string", "default": "PROVENANCE.md" },
+        "changelog_md": { "type": "string", "default": "CHANGELOG.md" },
+        "citation_cff": { "type": "string", "default": "CITATION.cff" }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": ["badge", "p0_count", "p1_count"],
+      "properties": {
+        "badge": {
+          "type": "string",
+          "enum": ["none", "bronze", "silver", "gold"]
+        },
+        "badge_algorithm_version": { "type": "string" },
+        "p0_count": { "type": "integer" },
+        "p1_count": { "type": "integer" },
+        "p2_count": { "type": "integer" },
+        "validators_run": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "all_p0_passed": { "type": "boolean" }
+      }
+    },
+    "lanes_included": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["map", "meta", "transport", "hta"] }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "capsule_id": { "type": "string" },
+          "relationship": { "type": "string" }
+        }
+      }
+    },
+    "signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key_id": { "type": "string" },
+          "algorithm": { "type": "string" },
+          "signature": { "type": "string" },
+          "signed_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "sensitivity_tag": {
+      "type": "string",
+      "enum": ["public", "restricted", "internal"],
+      "description": "Per Section 23"
+    }
+  }
+}

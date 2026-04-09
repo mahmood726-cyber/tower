@@ -1,0 +1,84 @@
+{
+  "spec_version": "v1.5.5",
+  "generated_at": "2026-01-16T22:26:01.468406",
+  "card_counts_by_state": {},
+  "cards": [],
+  "quota_summary": [
+    {
+      "model": "claude_opus",
+      "daily_limit": 100,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 500,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "claude_sonnet",
+      "daily_limit": 200,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 1000,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "gemini",
+      "daily_limit": 150,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 750,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "glm_4_7",
+      "daily_limit": 100,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 500,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "codex",
+      "daily_limit": 50,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 250,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    }
+  ],
+  "pc_summary": [
+    {
+      "pc_id": "pc1",
+      "online": false,
+      "last_seen": null,
+      "cpu_utilization": null,
+      "ram_utilization": null
+    },
+    {
+      "pc_id": "pc2",
+      "online": false,
+      "last_seen": null,
+      "cpu_utilization": null,
+      "ram_utilization": null
+    },
+    {
+      "pc_id": "pc3",
+      "online": false,
+      "last_seen": null,
+      "cpu_utilization": null,
+      "ram_utilization": null
+    }
+  ],
+  "alerts": {
+    "total_count": 0,
+    "items": []
+  },
+  "papers": {
+    "counts_by_status": {},
+    "total": 0
+  }
+}

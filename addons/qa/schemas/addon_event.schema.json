@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "addon_event.schema.json",
+  "title": "Tower Add-on Event",
+  "description": "Schema for add-on events emitted by Prefect, MLflow, and tracing hooks",
+  "type": "object",
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Tower specification version"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["PREFECT_RUN", "MLFLOW_LOG", "TRACE_LINK", "ADDON_WARNING", "ADDON_ERROR"],
+      "description": "Type of add-on event"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp of the event"
+    },
+    "card_id": {
+      "type": ["string", "null"],
+      "description": "Associated card ID (if any)"
+    },
+    "run_id": {
+      "type": ["string", "null"],
+      "description": "Associated run ID (if any)"
+    },
+    "addon": {
+      "type": "string",
+      "enum": ["prefect", "mlflow", "tracing"],
+      "description": "Which add-on generated this event"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OK", "NOT_INSTALLED", "FAILED", "SKIPPED"],
+      "description": "Outcome status of the operation"
+    },
+    "schema_validation": {
+      "type": "string",
+      "enum": ["PASSED", "FAILED", "SKIPPED"],
+      "description": "Whether this event was validated against schema"
+    },
+    "details": {
+      "type": "object",
+      "description": "Additional details specific to the event type",
+      "additionalProperties": true
+    },
+    "pointers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of paths or URLs relevant to this event"
+    },
+    "error_message": {
+      "type": ["string", "null"],
+      "description": "Error message if status is FAILED"
+    }
+  },
+  "required": ["spec_version", "event_type", "timestamp", "addon", "status"],
+  "additionalProperties": false
+}

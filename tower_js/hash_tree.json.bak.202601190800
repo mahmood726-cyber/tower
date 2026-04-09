@@ -1,0 +1,76 @@
+{
+  "version": "1.0",
+  "algorithm": "sha256",
+  "generated_at": "2026-01-19T07:59:32.098Z",
+  "root": "17c7305a9aed7fdf293b2da304b4ffb5cbd52d71b816d10421b6bc828a05185b",
+  "files": [
+    {
+      "path": "dist/tower-ui.html",
+      "sha256": "1ef3ec89bd2cdd48bca02ab441334f63bb075ec296ecf6301d5274f7741b7dd7"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "30d7de41e98d51586d76239fe21d18a6b90a4720f372f1c8c01ef7dc989e052d"
+    },
+    {
+      "path": "package.json",
+      "sha256": "2b506daefb6e487feadb4db181254e2a24eb817e281f5c20dbe7842b9296143e"
+    },
+    {
+      "path": "packages/core/package.json",
+      "sha256": "6e243435dab823b192bfec39f27873226905254a7d142f5abe0b92fd0300fc7b"
+    },
+    {
+      "path": "packages/core/schemas/control_backlog.schema.json",
+      "sha256": "e9438c22f99f0a206690cde635be20d0ec29df150465f001a2f5b2f42a7d7672"
+    },
+    {
+      "path": "packages/core/schemas/control_quota.schema.json",
+      "sha256": "087e0042a3f47f72e9f8eb3dc27eb04e4b4f2bf9a5cf7eb3f9255cd650d2fcc3"
+    },
+    {
+      "path": "packages/core/schemas/control_status.schema.json",
+      "sha256": "f743c3c133be8a39d415c60e94443b6115c1a950482670a83c2a2b20ad99435f"
+    },
+    {
+      "path": "packages/core/schemas/trace_entry.schema.json",
+      "sha256": "2be52b8cdb7460c4c202b8e5694308ca38b30ef50a9d4d0d1431e273edbdfa5a"
+    },
+    {
+      "path": "packages/core/tower-core.js",
+      "sha256": "a1baaf114375b7280c285d52486ccd3914b7f9b1ca172111a83cb4c032a93a2b"
+    },
+    {
+      "path": "README.md",
+      "sha256": "428db205ad45723e001252e3529f9a7f88f4e3cd9a57414f7aedcfd1fc02e4d8"
+    },
+    {
+      "path": "scripts/build.mjs",
+      "sha256": "e7a17a73930591d24d4030638b8d14fdc63fbff65468de1fb41ebaedb22ab886"
+    },
+    {
+      "path": "scripts/generate-integrity.mjs",
+      "sha256": "b7f315a37061eddd065e7f7ee192d2c7bb0e16b6e302ea7795c447b61a6b15a6"
+    },
+    {
+      "path": "scripts/verify-proofpack.mjs",
+      "sha256": "033f5ccb860419b5659c824ac290f8988c38b0ea53f6fadf6156f01106b2aa7d"
+    },
+    {
+      "path": "src/ui_template.html",
+      "sha256": "a5f8d01fa5085a52e64b177d61b1f9c8540d3ddfa446c560f46dfc155e49501b"
+    },
+    {
+      "path": "src/ui.js",
+      "sha256": "7dad333a70085d4962995d4514896db6d01069c6e638aa2904038c3e359ee8e6"
+    },
+    {
+      "path": "vendor/ajv/ajv.min.js",
+      "sha256": "a523342406661a57ec89c340b55e4b15d4e515f3ccbcca5dc3722f0ff0101d6c"
+    },
+    {
+      "path": "vendor/ajv/LICENSE.txt",
+      "sha256": "f41c69f1126d4579bf5db0c19c3445c7a9e3fdfff68d5a83f062e4b06d384dfa"
+    }
+  ]
+}

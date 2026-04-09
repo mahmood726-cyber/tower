@@ -1,0 +1,138 @@
+{
+  "spec_version": "v1.5.5",
+  "last_updated": "2026-01-17T00:00:00Z",
+  "hazards": [
+    {
+      "id": "H-001",
+      "title": "Undetected control file corruption",
+      "description": "Control files become corrupted without detection, leading to incorrect system state",
+      "severity": "HIGH",
+      "likelihood": "LOW",
+      "risk_level": "MEDIUM",
+      "controls": [
+        "Validation before every operation",
+        "Atomic writes with fsync",
+        "Regular backups",
+        "Schema validation"
+      ]
+    },
+    {
+      "id": "H-002",
+      "title": "Unauthorized merge to gold",
+      "description": "Card merged to gold without proper review or validation",
+      "severity": "HIGH",
+      "likelihood": "LOW",
+      "risk_level": "MEDIUM",
+      "controls": [
+        "Gate checks before merge",
+        "Required PASS status",
+        "Proofpack verification",
+        "SLO freeze enforcement"
+      ]
+    },
+    {
+      "id": "H-003",
+      "title": "Token budget exhaustion",
+      "description": "Token quota exhausted causing work stoppage",
+      "severity": "MEDIUM",
+      "likelihood": "MEDIUM",
+      "risk_level": "MEDIUM",
+      "controls": [
+        "Quota monitoring",
+        "Budget alerts",
+        "Efficiency tracking",
+        "Kaizen proposals for high burn"
+      ]
+    },
+    {
+      "id": "H-004",
+      "title": "State drift between control and reality",
+      "description": "Control files no longer reflect actual system state",
+      "severity": "HIGH",
+      "likelihood": "MEDIUM",
+      "risk_level": "HIGH",
+      "controls": [
+        "Drift detection watchdog",
+        "Regular reconciliation",
+        "Artifact verification",
+        "Git sync checks"
+      ]
+    },
+    {
+      "id": "H-005",
+      "title": "Validator false positive",
+      "description": "Validator passes card that should fail",
+      "severity": "MEDIUM",
+      "likelihood": "MEDIUM",
+      "risk_level": "MEDIUM",
+      "controls": [
+        "Multiple validators",
+        "Human audit sampling",
+        "GLM disagreement tracking",
+        "Escalation on uncertainty"
+      ]
+    },
+    {
+      "id": "H-006",
+      "title": "Proofpack tampering",
+      "description": "Proofpack contents modified after creation",
+      "severity": "HIGH",
+      "likelihood": "LOW",
+      "risk_level": "MEDIUM",
+      "controls": [
+        "SHA256 manifest",
+        "Optional GPG signing",
+        "Transparency log chain",
+        "Verification before use"
+      ]
+    },
+    {
+      "id": "H-007",
+      "title": "Cascade failure from bad merge",
+      "description": "Defective card merged causes downstream failures",
+      "severity": "HIGH",
+      "likelihood": "LOW",
+      "risk_level": "MEDIUM",
+      "controls": [
+        "SLO monitoring",
+        "Rollback rate tracking",
+        "Error budget freeze",
+        "Rapid rollback capability"
+      ]
+    }
+  ],
+  "unsafe_control_actions": [
+    {
+      "id": "UCA-001",
+      "control_action": "Merge to gold",
+      "type": "NOT_PROVIDED",
+      "context": "Card passes all gates",
+      "hazard_ref": "H-002",
+      "scenario": "Merge script not called despite PASS status"
+    },
+    {
+      "id": "UCA-002",
+      "control_action": "Merge to gold",
+      "type": "PROVIDED",
+      "context": "Card has not passed all gates",
+      "hazard_ref": "H-002",
+      "scenario": "Merge executed with --force bypassing gates"
+    },
+    {
+      "id": "UCA-003",
+      "control_action": "Validation",
+      "type": "NOT_PROVIDED",
+      "context": "Control files modified",
+      "hazard_ref": "H-001",
+      "scenario": "Validation skipped after manual edit"
+    },
+    {
+      "id": "UCA-004",
+      "control_action": "Drift detection",
+      "type": "NOT_PROVIDED",
+      "context": "System running",
+      "hazard_ref": "H-004",
+      "scenario": "Watchdog not running or disabled"
+    }
+  ]
+}

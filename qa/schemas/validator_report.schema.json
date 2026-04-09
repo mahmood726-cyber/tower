@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/validator_report.schema.json",
+  "title": "Validator Report",
+  "description": "Report from validator execution",
+  "type": "object",
+  "required": ["spec_version", "card_id", "run_id", "created_at", "overall_status", "validators"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "card_id": {
+      "type": "string",
+      "pattern": "^CARD-[0-9]+$"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "overall_status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "NOT_RUN", "PARTIAL"]
+    },
+    "placeholder": {
+      "type": "boolean",
+      "default": false
+    },
+    "validators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["validator_id", "status"],
+        "properties": {
+          "validator_id": {"type": "string"},
+          "name": {"type": ["string", "null"]},
+          "status": {
+            "type": "string",
+            "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED", "ERROR"]
+          },
+          "message": {"type": ["string", "null"]},
+          "duration_seconds": {"type": ["number", "null"]},
+          "artifacts": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "placeholder": {"type": "boolean", "default": false}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "not_run": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

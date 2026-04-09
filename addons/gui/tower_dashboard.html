@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Control Center</title>
+    <meta name="description" content="Tower v1.5.5 - AI-Assisted Development Control Center">
+
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+
+    <link rel="stylesheet" href="tower_dashboard.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <rect x="8" y="48" width="48" height="8" rx="2" fill="currentColor" opacity="0.3"/>
+                    <rect x="12" y="36" width="40" height="8" rx="2" fill="currentColor" opacity="0.5"/>
+                    <rect x="16" y="24" width="32" height="8" rx="2" fill="currentColor" opacity="0.7"/>
+                    <rect x="20" y="12" width="24" height="8" rx="2" fill="currentColor" opacity="0.9"/>
+                    <rect x="28" y="4" width="8" height="4" rx="1" fill="currentColor"/>
+                </svg>
+            </div>
+            <div class="loading-text">Tower Control Center</div>
+            <div class="loading-bar"><div class="loading-progress"></div></div>
+            <div class="loading-status">Initializing systems...</div>
+        </div>
+    </div>
+
+    <!-- Command Palette (Cmd+K) -->
+    <div id="command-palette" class="command-palette hidden">
+        <div class="command-palette-backdrop"></div>
+        <div class="command-palette-modal">
+            <div class="command-input-wrapper">
+                <svg class="command-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="command-input" class="command-input" placeholder="Type a command or search..." autocomplete="off">
+                <kbd class="command-shortcut">ESC</kbd>
+            </div>
+            <div class="command-results" id="command-results">
+                <div class="command-group">
+                    <div class="command-group-title">Actions</div>
+                    <div class="command-item" data-action="run-validation">
+                        <span class="command-item-icon">✓</span>
+                        <span class="command-item-text">Run Validation</span>
+                        <kbd>V</kbd>
+                    </div>
+                    <div class="command-item" data-action="new-card">
+                        <span class="command-item-icon">+</span>
+                        <span class="command-item-text">Create New Card</span>
+                        <kbd>N</kbd>
+                    </div>
+                    <div class="command-item" data-action="toggle-freeze">
+                        <span class="command-item-icon">❄</span>
+                        <span class="command-item-text">Toggle Merge Freeze</span>
+                        <kbd>F</kbd>
+                    </div>
+                    <div class="command-item" data-action="regenerate-dashboard">
+                        <span class="command-item-icon">↻</span>
+                        <span class="command-item-text">Regenerate Dashboard</span>
+                        <kbd>R</kbd>
+                    </div>
+                </div>
+                <div class="command-group">
+                    <div class="command-group-title">Navigation</div>
+                    <div class="command-item" data-action="goto-kanban">
+                        <span class="command-item-icon">▦</span>
+                        <span class="command-item-text">Go to Kanban Board</span>
+                        <kbd>1</kbd>
+                    </div>
+                    <div class="command-item" data-action="goto-metrics">
+                        <span class="command-item-icon">📊</span>
+                        <span class="command-item-text">Go to Metrics</span>
+                        <kbd>2</kbd>
+                    </div>
+                    <div class="command-item" data-action="goto-events">
+                        <span class="command-item-icon">📋</span>
+                        <span class="command-item-text">Go to Event Log</span>
+                        <kbd>3</kbd>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main Application -->
+    <div id="app" class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+                        <rect x="8" y="48" width="48" height="8" rx="2" fill="currentColor" opacity="0.3"/>
+                        <rect x="12" y="36" width="40" height="8" rx="2" fill="currentColor" opacity="0.5"/>
+                        <rect x="16" y="24" width="32" height="8" rx="2" fill="currentColor" opacity="0.7"/>
+                        <rect x="20" y="12" width="24" height="8" rx="2" fill="currentColor" opacity="0.9"/>
+                        <rect x="28" y="4" width="8" height="4" rx="1" fill="currentColor"/>
+                    </svg>
+                    <span class="logo-text">Tower</span>
+                </div>
+                <span class="version-badge">v1.5.5</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="#dashboard" class="nav-item active" data-view="dashboard">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#kanban" class="nav-item" data-view="kanban">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="10" rx="1"/>
+                            <rect x="16" y="4" width="4" height="14" rx="1"/>
+                        </svg>
+                        <span>Kanban Board</span>
+                    </a>
+                    <a href="#timeline" class="nav-item" data-view="timeline">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="16"/>
+                        </svg>
+                        <span>Timeline</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Monitoring</div>
+                    <a href="#metrics" class="nav-item" data-view="metrics">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+                        </svg>
+                        <span>Metrics & SLO</span>
+                    </a>
+                    <a href="#events" class="nav-item" data-view="events">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span>Event Ledger</span>
+                    </a>
+                    <a href="#alerts" class="nav-item" data-view="alerts">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span>Alerts</span>
+                        <span class="nav-badge" id="alert-count">0</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Tools</div>
+                    <a href="#validator" class="nav-item" data-view="validator">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Validator</span>
+                    </a>
+                    <a href="#proofpack" class="nav-item" data-view="proofpack">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <span>Proofpack</span>
+                    </a>
+                    <a href="#selfcorrect" class="nav-item" data-view="selfcorrect">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                        </svg>
+                        <span>Self-Correct</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="#architecture" class="nav-item" data-view="architecture">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10"/>
+                            <path d="m4.22 4.22 4.24 4.24m7.08 7.08 4.24 4.24"/>
+                            <path d="M1 12h6m6 0h10"/>
+                            <path d="m4.22 19.78 4.24-4.24m7.08-7.08 4.24-4.24"/>
+                        </svg>
+                        <span>Architecture</span>
+                    </a>
+                    <a href="#settings" class="nav-item" data-view="settings">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar (Cmd+B)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                    </svg>
+                </button>
+                <button class="theme-toggle" id="theme-toggle" title="Toggle theme (Cmd+Shift+T)">
+                    <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+                <button class="command-trigger" id="command-trigger" title="Command palette (Cmd+K)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="breadcrumb">
+                        <span class="breadcrumb-item">Tower</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-item active" id="current-view-name">Dashboard</span>
+                    </div>
+                </div>
+
+                <div class="top-bar-center">
+                    <div class="global-search">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" placeholder="Search cards, events, logs... (Cmd+K)" id="global-search">
+                        <kbd>⌘K</kbd>
+                    </div>
+                </div>
+
+                <div class="top-bar-right">
+                    <div class="status-indicators">
+                        <div class="status-indicator" id="system-status" title="System Status">
+                            <span class="status-dot green"></span>
+                            <span class="status-text">Healthy</span>
+                        </div>
+                        <div class="status-indicator" id="freeze-status" title="Merge Freeze Status">
+                            <span class="status-dot" id="freeze-dot"></span>
+                            <span class="status-text" id="freeze-text">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="top-bar-actions">
+                        <button class="action-btn" id="refresh-btn" title="Refresh (Cmd+R)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                                <path d="M21 3v5h-5"/>
+                            </svg>
+                        </button>
+                        <button class="action-btn" id="notifications-btn" title="Notifications">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            <span class="notification-badge" id="notification-badge">3</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- View Container -->
+            <div class="view-container" id="view-container">
+                <!-- Dashboard View -->
+                <section class="view active" id="view-dashboard">
+                    <!-- Status Cards Row -->
+                    <div class="status-cards-row">
+                        <div class="status-card status-green" id="card-healthy">
+                            <div class="status-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <div class="status-card-content">
+                                <div class="status-card-value" id="healthy-count">0</div>
+                                <div class="status-card-label">Healthy Cards</div>
+                            </div>
+                            <div class="status-card-trend up">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                </svg>
+                                <span>+2 today</span>
+                            </div>
+                        </div>
+
+                        <div class="status-card status-yellow" id="card-active">
+                            <div class="status-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                            </div>
+                            <div class="status-card-content">
+                                <div class="status-card-value" id="active-count">0</div>
+                                <div class="status-card-label">Active Cards</div>
+                            </div>
+                            <div class="status-card-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="active-progress" style="width: 65%"></div>
+                                </div>
+                                <span>In progress</span>
+                            </div>
+                        </div>
+
+                        <div class="status-card status-blue" id="card-slo">
+                            <div class="status-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+                                </svg>
+                            </div>
+                            <div class="status-card-content">
+                                <div class="status-card-value" id="slo-value">99.2%</div>
+                                <div class="status-card-label">SLO Compliance</div>
+                            </div>
+                            <div class="status-card-gauge">
+                                <svg viewBox="0 0 36 36" class="circular-gauge">
+                                    <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path class="gauge-fill" stroke-dasharray="99.2, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="status-card status-purple" id="card-budget">
+                            <div class="status-card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                </svg>
+                            </div>
+                            <div class="status-card-content">
+                                <div class="status-card-value" id="budget-value">78%</div>
+                                <div class="status-card-label">Error Budget</div>
+                            </div>
+                            <div class="status-card-mini-chart" id="budget-sparkline"></div>
+                        </div>
+                    </div>
+
+                    <!-- Main Dashboard Grid -->
+                    <div class="dashboard-grid">
+                        <!-- Quick Actions Panel -->
+                        <div class="dashboard-panel quick-actions-panel">
+                            <div class="panel-header">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="panel-content">
+                                <div class="quick-actions-grid">
+                                    <button class="quick-action-btn" id="qa-validate">
+                                        <div class="qa-icon green">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                        </div>
+                                        <span>Run Validation</span>
+                                    </button>
+                                    <button class="quick-action-btn" id="qa-gatecheck">
+                                        <div class="qa-icon blue">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                            </svg>
+                                        </div>
+                                        <span>Gatecheck</span>
+                                    </button>
+                                    <button class="quick-action-btn" id="qa-proofpack">
+                                        <div class="qa-icon purple">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                            </svg>
+                                        </div>
+                                        <span>Proofpack</span>
+                                    </button>
+                                    <button class="quick-action-btn" id="qa-dashboard">
+                                        <div class="qa-icon orange">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                                                <path d="M21 3v5h-5"/>
+                                            </svg>
+                                        </div>
+                                        <span>Regenerate</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Feed -->
+                        <div class="dashboard-panel activity-panel">
+                            <div class="panel-header">
+                                <h3>Recent Activity</h3>
+                                <button class="panel-action" id="view-all-activity">View All</button>
+                            </div>
+                            <div class="panel-content">
+                                <div class="activity-feed" id="activity-feed">
+                                    <!-- Activity items will be populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SLO Chart -->
+                        <div class="dashboard-panel chart-panel">
+                            <div class="panel-header">
+                                <h3>SLO Trend (30 days)</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-control active" data-range="7d">7d</button>
+                                    <button class="chart-control" data-range="30d">30d</button>
+                                    <button class="chart-control" data-range="90d">90d</button>
+                                </div>
+                            </div>
+                            <div class="panel-content">
+                                <div class="chart-container" id="slo-chart"></div>
+                            </div>
+                        </div>
+
+                        <!-- Cards Overview -->
+                        <div class="dashboard-panel cards-overview-panel">
+                            <div class="panel-header">
+                                <h3>Cards by State</h3>
+                            </div>
+                            <div class="panel-content">
+                                <div class="cards-distribution" id="cards-distribution">
+                                    <div class="distribution-bar">
+                                        <div class="dist-segment green" style="width: 30%" title="Green: 3"></div>
+                                        <div class="dist-segment blue" style="width: 20%" title="Active: 2"></div>
+                                        <div class="dist-segment yellow" style="width: 30%" title="Validating: 3"></div>
+                                        <div class="dist-segment gray" style="width: 20%" title="Backlog: 2"></div>
+                                    </div>
+                                    <div class="distribution-legend">
+                                        <div class="legend-item"><span class="legend-dot green"></span>Green</div>
+                                        <div class="legend-item"><span class="legend-dot blue"></span>Active</div>
+                                        <div class="legend-item"><span class="legend-dot yellow"></span>Validating</div>
+                                        <div class="legend-item"><span class="legend-dot gray"></span>Backlog</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hash Chain Status -->
+                        <div class="dashboard-panel chain-panel">
+                            <div class="panel-header">
+                                <h3>Ledger Integrity</h3>
+                                <span class="integrity-badge valid" id="chain-status">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    Verified
+                                </span>
+                            </div>
+                            <div class="panel-content">
+                                <div class="chain-visualization" id="chain-viz">
+                                    <!-- Hash chain blocks will be rendered here -->
+                                </div>
+                                <div class="chain-stats">
+                                    <div class="chain-stat">
+                                        <span class="stat-value" id="chain-events">0</span>
+                                        <span class="stat-label">Events</span>
+                                    </div>
+                                    <div class="chain-stat">
+                                        <span class="stat-value" id="chain-last">-</span>
+                                        <span class="stat-label">Last Event</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Kanban View -->
+                <section class="view" id="view-kanban">
+                    <div class="kanban-header">
+                        <div class="kanban-filters">
+                            <input type="text" class="kanban-search" placeholder="Filter cards..." id="kanban-filter">
+                            <select class="kanban-sort" id="kanban-sort">
+                                <option value="priority">Sort by Priority</option>
+                                <option value="updated">Sort by Updated</option>
+                                <option value="created">Sort by Created</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="new-card-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            New Card
+                        </button>
+                    </div>
+
+                    <div class="kanban-board" id="kanban-board">
+                        <div class="kanban-column" data-state="BACKLOG">
+                            <div class="column-header">
+                                <span class="column-title">Backlog</span>
+                                <span class="column-count" id="count-backlog">0</span>
+                            </div>
+                            <div class="column-cards" id="col-backlog"></div>
+                        </div>
+
+                        <div class="kanban-column" data-state="ACTIVE">
+                            <div class="column-header">
+                                <span class="column-title">Active</span>
+                                <span class="column-count" id="count-active">0</span>
+                            </div>
+                            <div class="column-cards" id="col-active"></div>
+                        </div>
+
+                        <div class="kanban-column" data-state="VALIDATING">
+                            <div class="column-header">
+                                <span class="column-title">Validating</span>
+                                <span class="column-count" id="count-validating">0</span>
+                            </div>
+                            <div class="column-cards" id="col-validating"></div>
+                        </div>
+
+                        <div class="kanban-column" data-state="GREEN">
+                            <div class="column-header">
+                                <span class="column-title">Green</span>
+                                <span class="column-count" id="count-green">0</span>
+                            </div>
+                            <div class="column-cards" id="col-green"></div>
+                        </div>
+
+                        <div class="kanban-column" data-state="MERGED">
+                            <div class="column-header">
+                                <span class="column-title">Merged</span>
+                                <span class="column-count" id="count-merged">0</span>
+                            </div>
+                            <div class="column-cards" id="col-merged"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Metrics View -->
+                <section class="view" id="view-metrics">
+                    <div class="metrics-grid">
+                        <div class="metric-panel large">
+                            <div class="panel-header">
+                                <h3>SLO Performance</h3>
+                            </div>
+                            <div class="panel-content">
+                                <div class="slo-gauges">
+                                    <div class="slo-gauge-item">
+                                        <div class="gauge-wrapper">
+                                            <svg viewBox="0 0 36 36" class="circular-gauge large">
+                                                <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="gauge-fill green" id="gauge-rollback" stroke-dasharray="97, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="gauge-value">97%</div>
+                                        </div>
+                                        <div class="gauge-label">Rollback Rate</div>
+                                        <div class="gauge-target">Target: &lt;3%</div>
+                                    </div>
+                                    <div class="slo-gauge-item">
+                                        <div class="gauge-wrapper">
+                                            <svg viewBox="0 0 36 36" class="circular-gauge large">
+                                                <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="gauge-fill yellow" id="gauge-validator" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="gauge-value">85%</div>
+                                        </div>
+                                        <div class="gauge-label">Validator Pass</div>
+                                        <div class="gauge-target">Target: &gt;85%</div>
+                                    </div>
+                                    <div class="slo-gauge-item">
+                                        <div class="gauge-wrapper">
+                                            <svg viewBox="0 0 36 36" class="circular-gauge large">
+                                                <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="gauge-fill green" id="gauge-audit" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="gauge-value">92%</div>
+                                        </div>
+                                        <div class="gauge-label">Audit Agreement</div>
+                                        <div class="gauge-target">Target: &gt;90%</div>
+                                    </div>
+                                    <div class="slo-gauge-item">
+                                        <div class="gauge-wrapper">
+                                            <svg viewBox="0 0 36 36" class="circular-gauge large">
+                                                <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="gauge-fill green" id="gauge-drift" stroke-dasharray="98, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="gauge-value">98%</div>
+                                        </div>
+                                        <div class="gauge-label">Drift Free</div>
+                                        <div class="gauge-target">Target: &gt;96%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-panel">
+                            <div class="panel-header">
+                                <h3>Error Budget</h3>
+                            </div>
+                            <div class="panel-content">
+                                <div class="error-budget-display">
+                                    <div class="budget-main">
+                                        <span class="budget-value" id="error-budget-pct">78%</span>
+                                        <span class="budget-label">Remaining</span>
+                                    </div>
+                                    <div class="budget-bar">
+                                        <div class="budget-fill" id="error-budget-fill" style="width: 78%"></div>
+                                    </div>
+                                    <div class="budget-details">
+                                        <span>Resets in 23 days</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-panel">
+                            <div class="panel-header">
+                                <h3>SPC Alerts</h3>
+                            </div>
+                            <div class="panel-content">
+                                <div class="spc-status" id="spc-status">
+                                    <div class="spc-indicator green">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="spc-text">
+                                        <span class="spc-title">All metrics in control</span>
+                                        <span class="spc-detail">No statistical anomalies detected</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Events View -->
+                <section class="view" id="view-events">
+                    <div class="events-header">
+                        <div class="events-filters">
+                            <input type="text" class="events-search" placeholder="Search events..." id="events-filter">
+                            <select class="events-type-filter" id="events-type">
+                                <option value="">All Types</option>
+                                <option value="RUN_START">Run Start</option>
+                                <option value="RUN_END">Run End</option>
+                                <option value="VALIDATION">Validation</option>
+                                <option value="STATE_CHANGE">State Change</option>
+                            </select>
+                        </div>
+                        <div class="events-actions">
+                            <button class="btn btn-secondary" id="verify-chain-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                                Verify Chain
+                            </button>
+                            <button class="btn btn-secondary" id="export-events-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="events-table-container">
+                        <table class="events-table" id="events-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Type</th>
+                                    <th>Card</th>
+                                    <th>Actor</th>
+                                    <th>Details</th>
+                                    <th>Hash</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-tbody">
+                                <!-- Events will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Self-Correct View -->
+                <section class="view" id="view-selfcorrect">
+                    <div class="selfcorrect-container">
+                        <div class="selfcorrect-header">
+                            <h2>Self-Correcting Workflow</h2>
+                            <p>Automated validation and correction for Tower operations</p>
+                        </div>
+
+                        <div class="workflow-stages">
+                            <div class="workflow-stage completed" id="stage-validate">
+                                <div class="stage-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <div class="stage-content">
+                                    <h4>Validation</h4>
+                                    <p>Run all validators</p>
+                                </div>
+                                <div class="stage-status">Passed</div>
+                            </div>
+
+                            <div class="workflow-connector"></div>
+
+                            <div class="workflow-stage active" id="stage-analyze">
+                                <div class="stage-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                                    </svg>
+                                </div>
+                                <div class="stage-content">
+                                    <h4>Analysis</h4>
+                                    <p>Identify issues</p>
+                                </div>
+                                <div class="stage-status">In Progress</div>
+                            </div>
+
+                            <div class="workflow-connector"></div>
+
+                            <div class="workflow-stage pending" id="stage-correct">
+                                <div class="stage-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                </div>
+                                <div class="stage-content">
+                                    <h4>Correction</h4>
+                                    <p>Apply fixes</p>
+                                </div>
+                                <div class="stage-status">Pending</div>
+                            </div>
+
+                            <div class="workflow-connector"></div>
+
+                            <div class="workflow-stage pending" id="stage-verify">
+                                <div class="stage-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    </svg>
+                                </div>
+                                <div class="stage-content">
+                                    <h4>Verification</h4>
+                                    <p>Confirm fixes</p>
+                                </div>
+                                <div class="stage-status">Pending</div>
+                            </div>
+                        </div>
+
+                        <div class="selfcorrect-actions">
+                            <button class="btn btn-primary btn-large" id="start-selfcorrect">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                Start Self-Correct Cycle
+                            </button>
+                        </div>
+
+                        <div class="selfcorrect-log" id="selfcorrect-log">
+                            <div class="log-header">
+                                <h4>Execution Log</h4>
+                                <button class="btn btn-ghost" id="clear-log">Clear</button>
+                            </div>
+                            <div class="log-content" id="log-content">
+                                <div class="log-entry info">
+                                    <span class="log-time">20:45:32</span>
+                                    <span class="log-message">Ready to start self-correction cycle</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Validator View -->
+                <section class="view" id="view-validator">
+                    <div class="validator-container">
+                        <div class="validator-header">
+                            <h2>Validation Suite</h2>
+                            <div class="validator-actions">
+                                <button class="btn btn-primary" id="run-all-validators">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                    Run All
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="validators-grid" id="validators-grid">
+                            <!-- Validator cards will be populated by JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings View -->
+                <section class="view" id="view-settings">
+                    <div class="settings-container">
+                        <div class="settings-section">
+                            <h3>Appearance</h3>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Theme</span>
+                                    <span class="setting-description">Choose your preferred color scheme</span>
+                                </div>
+                                <div class="setting-control">
+                                    <select id="theme-select">
+                                        <option value="dark">Dark</option>
+                                        <option value="light">Light</option>
+                                        <option value="system">System</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Compact Mode</span>
+                                    <span class="setting-description">Reduce spacing for more content</span>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="compact-mode">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Notifications</h3>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Desktop Notifications</span>
+                                    <span class="setting-description">Show browser notifications for important events</span>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="desktop-notifications" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Sound Alerts</span>
+                                    <span class="setting-description">Play sounds for validation failures</span>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="sound-alerts">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Data</h3>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label">Auto Refresh</span>
+                                    <span class="setting-description">Automatically refresh data</span>
+                                </div>
+                                <div class="setting-control">
+                                    <select id="auto-refresh">
+                                        <option value="0">Disabled</option>
+                                        <option value="5">Every 5 seconds</option>
+                                        <option value="15" selected>Every 15 seconds</option>
+                                        <option value="30">Every 30 seconds</option>
+                                        <option value="60">Every minute</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Keyboard Shortcuts</h3>
+                            <div class="shortcuts-list">
+                                <div class="shortcut-item">
+                                    <span class="shortcut-action">Command Palette</span>
+                                    <kbd>Cmd+K</kbd>
+                                </div>
+                                <div class="shortcut-item">
+                                    <span class="shortcut-action">Toggle Sidebar</span>
+                                    <kbd>Cmd+B</kbd>
+                                </div>
+                                <div class="shortcut-item">
+                                    <span class="shortcut-action">Toggle Theme</span>
+                                    <kbd>Cmd+Shift+T</kbd>
+                                </div>
+                                <div class="shortcut-item">
+                                    <span class="shortcut-action">Refresh</span>
+                                    <kbd>Cmd+R</kbd>
+                                </div>
+                                <div class="shortcut-item">
+                                    <span class="shortcut-action">Go to Dashboard</span>
+                                    <kbd>G then D</kbd>
+                                </div>
+                                <div class="shortcut-item">
+                                    <span class="shortcut-action">Go to Kanban</span>
+                                    <kbd>G then K</kbd>
+                                </div>
+                                <div class="shortcut-item">
+                                    <span class="shortcut-action">Run Validation</span>
+                                    <kbd>Cmd+Shift+V</kbd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Other views placeholders -->
+                <section class="view" id="view-timeline">
+                    <div class="placeholder-view">
+                        <h2>Timeline View</h2>
+                        <p>Coming soon...</p>
+                    </div>
+                </section>
+
+                <section class="view" id="view-alerts">
+                    <div class="placeholder-view">
+                        <h2>Alerts View</h2>
+                        <p>Coming soon...</p>
+                    </div>
+                </section>
+
+                <section class="view" id="view-proofpack">
+                    <div class="placeholder-view">
+                        <h2>Proofpack View</h2>
+                        <p>Coming soon...</p>
+                    </div>
+                </section>
+
+                <section class="view" id="view-architecture">
+                    <div class="placeholder-view">
+                        <h2>Architecture View</h2>
+                        <p>Coming soon...</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Card Detail Modal -->
+        <div id="card-modal" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content card-detail-modal">
+                <div class="modal-header">
+                    <h2 id="modal-card-id">CARD-001</h2>
+                    <button class="modal-close" id="close-card-modal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-card-body">
+                    <!-- Card details will be populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="tower_dashboard.js"></script>
+</body>
+</html>

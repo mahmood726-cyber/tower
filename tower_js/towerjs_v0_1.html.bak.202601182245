@@ -1,0 +1,1523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TowerJS v0.1</title>
+    <style>
+      :root {
+        --bg: #f4efe4;
+        --bg-accent: #e6f1e6;
+        --ink: #1f1a17;
+        --muted: #5a564f;
+        --accent: #d45b3f;
+        --accent-2: #2f6f64;
+        --panel: #fff8ee;
+        --panel-alt: #f5ede1;
+        --line: rgba(31, 26, 23, 0.15);
+        --shadow: 0 26px 55px rgba(31, 26, 23, 0.18);
+        --radius: 20px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 10%, rgba(212, 91, 63, 0.18), transparent 45%),
+          radial-gradient(circle at 88% 12%, rgba(47, 111, 100, 0.18), transparent 48%),
+          linear-gradient(140deg, var(--bg), var(--bg-accent));
+      }
+
+      .page {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 38px 24px 54px;
+        position: relative;
+      }
+
+      .page::before,
+      .page::after {
+        content: "";
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(31, 26, 23, 0.05);
+        filter: blur(2px);
+        z-index: 0;
+      }
+
+      .page::before {
+        top: 24px;
+        right: 10%;
+      }
+
+      .page::after {
+        bottom: 10%;
+        left: 4%;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 28px;
+        align-items: center;
+        margin-bottom: 32px;
+        position: relative;
+        z-index: 1;
+        animation: rise 0.8s ease both;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--panel-alt);
+        border: 1px solid var(--line);
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+
+      h1 {
+        font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+        font-size: clamp(28px, 4vw, 46px);
+        margin: 14px 0 12px;
+        line-height: 1.1;
+      }
+
+      .hero p {
+        margin: 0 0 20px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .btn {
+        border: 1px solid var(--line);
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--panel);
+        color: var(--ink);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(31, 26, 23, 0.12);
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #fff8f2;
+        border-color: transparent;
+      }
+
+      .btn.ghost {
+        background: transparent;
+      }
+
+      .btn input {
+        display: none;
+      }
+
+      .note {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .hero-panel {
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 20px;
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-panel::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border: 1px dashed rgba(47, 111, 100, 0.2);
+        border-radius: 16px;
+      }
+
+      .hero-panel-inner {
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-label {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 8px 0 6px;
+      }
+
+      .stat-meta {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .panel {
+        background: var(--panel);
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 35px rgba(31, 26, 23, 0.1);
+        animation: rise 0.6s ease both;
+      }
+
+      .panel-title {
+        font-weight: 700;
+        margin-bottom: 12px;
+        font-size: 15px;
+      }
+
+      .panel-body {
+        display: grid;
+        gap: 10px;
+        font-size: 13px;
+      }
+
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed rgba(31, 26, 23, 0.1);
+      }
+
+      .kv span:last-child {
+        font-weight: 600;
+      }
+
+      .warning {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(212, 91, 63, 0.12);
+        color: #7b2c1e;
+        font-size: 12px;
+        border: 1px solid rgba(212, 91, 63, 0.3);
+      }
+
+      .warning.hidden {
+        display: none;
+      }
+
+      .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(47, 111, 100, 0.12);
+        border: 1px solid rgba(47, 111, 100, 0.3);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .chip.empty,
+      .file-list.empty,
+      .cards-list.empty,
+      .trace-list.empty {
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .file-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .file-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border-radius: 12px;
+        border: 1px dashed rgba(31, 26, 23, 0.12);
+      }
+
+      .file-list li.ok {
+        background: rgba(47, 111, 100, 0.08);
+      }
+
+      .file-list li.missing {
+        background: rgba(212, 91, 63, 0.08);
+      }
+
+      .cards-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .card-item {
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(31, 26, 23, 0.12);
+        background: #fffaf5;
+        display: grid;
+        gap: 6px;
+        animation: fadeIn 0.5s ease forwards;
+        opacity: 0;
+      }
+
+      .card-title {
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      .card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .status-tag {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 11px;
+        border: 1px solid transparent;
+      }
+
+      .status-tag.good {
+        background: rgba(47, 111, 100, 0.18);
+        border-color: rgba(47, 111, 100, 0.35);
+        color: #245147;
+      }
+
+      .status-tag.mid {
+        background: rgba(212, 91, 63, 0.18);
+        border-color: rgba(212, 91, 63, 0.35);
+        color: #7b2c1e;
+      }
+
+      .status-tag.warn {
+        background: rgba(31, 26, 23, 0.12);
+        border-color: rgba(31, 26, 23, 0.2);
+        color: #3b352f;
+      }
+
+      .status-tag.neutral {
+        background: rgba(31, 26, 23, 0.06);
+        border-color: rgba(31, 26, 23, 0.15);
+        color: var(--muted);
+      }
+
+      .trace-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .trace-item {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px dashed rgba(31, 26, 23, 0.12);
+        background: #fffaf5;
+        display: grid;
+        gap: 6px;
+      }
+
+      .trace-event {
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .trace-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .trace-message {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .trace-form {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .trace-form input,
+      .trace-form textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-family: inherit;
+        background: #fffaf5;
+      }
+
+      .trace-form textarea {
+        min-height: 72px;
+        resize: vertical;
+      }
+
+      .trace-form.disabled {
+        opacity: 0.65;
+        pointer-events: none;
+      }
+
+      .footer {
+        margin-top: 26px;
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .cta {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .kv {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-main">
+          <div class="badge">TowerJS v0.1</div>
+          <h1>Browser-first Tower directory explorer</h1>
+          <p>
+            Local-only UI for Tower control files, cards, and status. Open a Tower
+            directory and inspect it without a server or uploads.
+          </p>
+          <div class="cta">
+            <button id="pickDirectory" class="btn primary">Pick Tower Folder</button>
+            <label class="btn ghost">
+              <input id="folderInput" type="file" webkitdirectory directory multiple>
+              Folder Upload
+            </label>
+          </div>
+          <div id="supportNote" class="note"></div>
+        </div>
+        <div class="hero-panel">
+          <div class="hero-panel-inner">
+            <div class="stat-label">Scan Status</div>
+            <div id="heroStatus" class="stat-value">Waiting for folder</div>
+            <div id="heroMeta" class="stat-meta">Select a Tower directory to begin.</div>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel">
+          <div class="panel-title">Project Summary</div>
+          <div class="panel-body">
+            <div class="kv"><span>Root</span><span id="summaryRoot">-</span></div>
+            <div class="kv"><span>Spec</span><span id="summarySpec">-</span></div>
+            <div class="kv"><span>Updated</span><span id="summaryUpdated">-</span></div>
+            <div class="kv"><span>Source</span><span id="summarySource">-</span></div>
+          </div>
+          <div id="warningBox" class="warning hidden"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Status Counts</div>
+          <div class="panel-body">
+            <div id="statusCounts" class="chip-grid empty">No status data loaded.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Control Files</div>
+          <div class="panel-body">
+            <ul id="controlFiles" class="file-list empty">
+              <li>Waiting for scan.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Cards</div>
+          <div class="panel-body">
+            <div id="cardsList" class="cards-list empty">No cards loaded.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Trace DB</div>
+          <div class="panel-body">
+            <div id="traceMeta" class="note">Trace DB path: control/trace_db.jsonl</div>
+            <div id="traceList" class="trace-list empty">No traces loaded.</div>
+            <div id="traceForm" class="trace-form disabled">
+              <input id="traceEvent" type="text" placeholder="Event (required)">
+              <input id="traceCard" type="text" placeholder="Card ID (optional)">
+              <input id="traceRun" type="text" placeholder="Run ID (optional)">
+              <textarea id="traceMessage" placeholder="Message (optional)"></textarea>
+              <button id="traceAppend" class="btn">Append Trace</button>
+              <div id="traceStatus" class="note"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Runs entirely in the browser. No server, no uploads.</span>
+        <span>|</span>
+        <span>MIT Licensed</span>
+      </footer>
+    </div>
+
+    <script>
+/*
+  TowerJS v0.1.0
+  Browser-first Tower directory reader (no server required).
+  MIT License: see LICENSE.
+*/
+(function (global) {
+  "use strict";
+
+  var VERSION = "0.1.0";
+  var DEFAULT_CONTROL_FILES = [
+    "status.json",
+    "backlog.json",
+    "quota.json",
+    "machines.json",
+    "costs.json",
+    "model_scorecard.json",
+    "pc_scorecard.json",
+    "capacity_baseline.json",
+    "experiments.json",
+    "drift_config.json"
+  ];
+  var DEFAULT_TRACE_DB_PATH = "control/trace_db.jsonl";
+
+  function normalizePath(path) {
+    if (!path) {
+      return "";
+    }
+    var cleaned = String(path).replace(/\\/g, "/");
+    var parts = cleaned.split("/");
+    var out = [];
+    for (var i = 0; i < parts.length; i += 1) {
+      var part = parts[i];
+      if (!part || part === ".") {
+        continue;
+      }
+      if (part === "..") {
+        throw new Error("Parent path segments are not supported: " + path);
+      }
+      out.push(part);
+    }
+    return out.join("/");
+  }
+
+  function joinPath() {
+    var parts = [];
+    for (var i = 0; i < arguments.length; i += 1) {
+      if (arguments[i]) {
+        parts.push(arguments[i]);
+      }
+    }
+    return normalizePath(parts.join("/"));
+  }
+
+  function parseJsonSafe(text) {
+    try {
+      return { ok: true, data: JSON.parse(text) };
+    } catch (err) {
+      return { ok: false, error: String(err && err.message ? err.message : err) };
+    }
+  }
+
+  function parseJsonLines(text) {
+    var lines = String(text || "").split(/\r?\n/);
+    var entries = [];
+    var errors = [];
+    for (var i = 0; i < lines.length; i += 1) {
+      var line = lines[i].trim();
+      if (!line) {
+        continue;
+      }
+      var parsed = parseJsonSafe(line);
+      if (parsed.ok) {
+        entries.push(parsed.data);
+      } else {
+        errors.push({ line: i + 1, error: parsed.error, raw: line });
+      }
+    }
+    return { entries: entries, errors: errors };
+  }
+
+  function ensureIsoTimestamp(value) {
+    if (!value) {
+      return new Date().toISOString();
+    }
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return new Date().toISOString();
+    }
+    return date.toISOString();
+  }
+
+  function normalizeTraceEntry(entry) {
+    var payload = entry;
+    if (typeof payload === "string") {
+      payload = { event: payload };
+    }
+    if (!payload || typeof payload !== "object") {
+      payload = {};
+    }
+    var result = {};
+    for (var key in payload) {
+      if (Object.prototype.hasOwnProperty.call(payload, key)) {
+        result[key] = payload[key];
+      }
+    }
+    if (!result.event) {
+      result.event = "trace";
+    }
+    result.timestamp = ensureIsoTimestamp(
+      result.timestamp || result.created_at || result.time
+    );
+    if (!result.source) {
+      result.source = "towerjs";
+    }
+    return result;
+  }
+
+  function cleanYamlValue(value) {
+    var trimmed = value.trim();
+    var commentIndex = trimmed.indexOf(" #");
+    if (commentIndex >= 0) {
+      trimmed = trimmed.slice(0, commentIndex).trim();
+    }
+    if (trimmed === "|" || trimmed === ">") {
+      return "";
+    }
+    if (
+      (trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))
+    ) {
+      trimmed = trimmed.slice(1, -1);
+    }
+    return trimmed;
+  }
+
+  function parseCardMeta(yamlText) {
+    var wanted = {
+      card_id: true,
+      title: true,
+      status: true,
+      stream: true,
+      created_at: true,
+      assigned_to: true
+    };
+    var meta = {};
+    var lines = String(yamlText || "").split(/\r?\n/);
+    for (var i = 0; i < lines.length; i += 1) {
+      var line = lines[i];
+      if (!line || line.trim().startsWith("#")) {
+        continue;
+      }
+      if (/^\s/.test(line)) {
+        continue;
+      }
+      var match = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/);
+      if (!match) {
+        continue;
+      }
+      var key = match[1];
+      if (!wanted[key]) {
+        continue;
+      }
+      var value = cleanYamlValue(match[2]);
+      if (value) {
+        meta[key] = value;
+      }
+    }
+    return meta;
+  }
+
+  function detectRootPrefix(paths) {
+    var candidates = [];
+    for (var i = 0; i < paths.length; i += 1) {
+      var path = paths[i];
+      if (!path) {
+        continue;
+      }
+      if (path.startsWith("control/")) {
+        candidates.push("");
+        continue;
+      }
+      var index = path.indexOf("/control/");
+      if (index >= 0) {
+        candidates.push(path.slice(0, index));
+      }
+    }
+    if (!candidates.length) {
+      return "";
+    }
+    candidates.sort(function (a, b) {
+      return a.split("/").length - b.split("/").length;
+    });
+    return candidates[0];
+  }
+
+  function FileListFS(fileList) {
+    this.files = Array.prototype.slice.call(fileList || []);
+    this.fileMap = new Map();
+    this.paths = [];
+    this.canWrite = false;
+    for (var i = 0; i < this.files.length; i += 1) {
+      var file = this.files[i];
+      var relPath = normalizePath(file.webkitRelativePath || file.name);
+      this.fileMap.set(relPath, file);
+      this.paths.push(relPath);
+    }
+    this.rootPrefix = detectRootPrefix(this.paths);
+  }
+
+  FileListFS.prototype.resolve = function (path) {
+    var rel = normalizePath(path);
+    if (!this.rootPrefix) {
+      return rel;
+    }
+    return joinPath(this.rootPrefix, rel);
+  };
+
+  FileListFS.prototype.readText = async function (path) {
+    var key = this.resolve(path);
+    var file = this.fileMap.get(key);
+    if (!file) {
+      throw new Error("Missing file: " + path);
+    }
+    return await file.text();
+  };
+
+  FileListFS.prototype.readJSON = async function (path) {
+    var text = await this.readText(path);
+    var parsed = parseJsonSafe(text);
+    if (!parsed.ok) {
+      throw new Error("Invalid JSON in " + path + ": " + parsed.error);
+    }
+    return parsed.data;
+  };
+
+  FileListFS.prototype.exists = async function (path) {
+    var key = this.resolve(path);
+    if (this.fileMap.has(key)) {
+      return true;
+    }
+    var prefix = key ? key + "/" : "";
+    for (var i = 0; i < this.paths.length; i += 1) {
+      if (this.paths[i].startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  FileListFS.prototype.listDir = async function (path) {
+    var key = this.resolve(path);
+    var prefix = key ? key + "/" : "";
+    var seen = new Map();
+    for (var i = 0; i < this.paths.length; i += 1) {
+      var current = this.paths[i];
+      if (!current.startsWith(prefix)) {
+        continue;
+      }
+      var rest = current.slice(prefix.length);
+      if (!rest) {
+        continue;
+      }
+      var parts = rest.split("/");
+      var name = parts[0];
+      if (!name) {
+        continue;
+      }
+      if (!seen.has(name)) {
+        seen.set(name, { name: name, kind: parts.length > 1 ? "directory" : "file" });
+      } else if (parts.length > 1) {
+        var existing = seen.get(name);
+        existing.kind = "directory";
+      }
+    }
+    return Array.from(seen.values()).sort(function (a, b) {
+      return a.name.localeCompare(b.name);
+    });
+  };
+
+  FileListFS.prototype.writeText = async function () {
+    throw new Error("Write not supported for fileList sources.");
+  };
+
+  function DirectoryHandleFS(rootHandle) {
+    this.root = rootHandle;
+    this.canWrite = true;
+  }
+
+  DirectoryHandleFS.prototype._getDirHandle = async function (path, create) {
+    var clean = normalizePath(path);
+    if (!clean) {
+      return this.root;
+    }
+    var parts = clean.split("/");
+    var current = this.root;
+    for (var i = 0; i < parts.length; i += 1) {
+      current = await current.getDirectoryHandle(parts[i], {
+        create: Boolean(create)
+      });
+    }
+    return current;
+  };
+
+  DirectoryHandleFS.prototype._getFileHandle = async function (path, createFile) {
+    var clean = normalizePath(path);
+    var parts = clean.split("/");
+    var fileName = parts.pop();
+    var dir = await this._getDirHandle(parts.join("/"), false);
+    return await dir.getFileHandle(fileName, { create: Boolean(createFile) });
+  };
+
+  DirectoryHandleFS.prototype.readText = async function (path) {
+    var fileHandle = await this._getFileHandle(path);
+    var file = await fileHandle.getFile();
+    return await file.text();
+  };
+
+  DirectoryHandleFS.prototype.readJSON = async function (path) {
+    var text = await this.readText(path);
+    var parsed = parseJsonSafe(text);
+    if (!parsed.ok) {
+      throw new Error("Invalid JSON in " + path + ": " + parsed.error);
+    }
+    return parsed.data;
+  };
+
+  DirectoryHandleFS.prototype.exists = async function (path) {
+    var clean = normalizePath(path);
+    if (!clean) {
+      return true;
+    }
+    try {
+      await this._getFileHandle(clean);
+      return true;
+    } catch (fileErr) {
+      try {
+        await this._getDirHandle(clean);
+        return true;
+      } catch (dirErr) {
+        return false;
+      }
+    }
+  };
+
+  DirectoryHandleFS.prototype.listDir = async function (path) {
+    var dirHandle = await this._getDirHandle(path);
+    var entries = [];
+    for await (var entry of dirHandle.entries()) {
+      entries.push({ name: entry[0], kind: entry[1].kind });
+    }
+    entries.sort(function (a, b) {
+      return a.name.localeCompare(b.name);
+    });
+    return entries;
+  };
+
+  DirectoryHandleFS.prototype.writeText = async function (path, text) {
+    var fileHandle = await this._getFileHandle(path, true);
+    var writable = await fileHandle.createWritable({ keepExistingData: false });
+    await writable.write(text);
+    await writable.close();
+  };
+
+  function TowerProject(fs, basePath, rootInfo) {
+    this.fs = fs;
+    this.basePath = normalizePath(basePath || "");
+    this.rootInfo = rootInfo || {};
+  }
+
+  TowerProject.prototype._resolve = function (path) {
+    return this.basePath ? joinPath(this.basePath, path) : normalizePath(path);
+  };
+
+  TowerProject.prototype.readText = async function (path) {
+    return await this.fs.readText(this._resolve(path));
+  };
+
+  TowerProject.prototype.readJSON = async function (path) {
+    return await this.fs.readJSON(this._resolve(path));
+  };
+
+  TowerProject.prototype.writeText = async function (path, text) {
+    if (!this.supportsWrite() || !this.fs.writeText) {
+      throw new Error("Write not supported.");
+    }
+    return await this.fs.writeText(this._resolve(path), text);
+  };
+
+  TowerProject.prototype.exists = async function (path) {
+    return await this.fs.exists(this._resolve(path));
+  };
+
+  TowerProject.prototype.listDir = async function (path) {
+    return await this.fs.listDir(this._resolve(path));
+  };
+
+  TowerProject.prototype.supportsWrite = function () {
+    return Boolean(this.fs && this.fs.canWrite);
+  };
+
+  TowerProject.prototype._safeReadJSON = async function (path) {
+    try {
+      var text = await this.readText(path);
+      return parseJsonSafe(text);
+    } catch (err) {
+      return { ok: false, error: String(err && err.message ? err.message : err) };
+    }
+  };
+
+  TowerProject.prototype._loadControlEntries = async function () {
+    var result = { exists: false, entries: [], files: [], directories: [] };
+    if (!(await this.exists("control"))) {
+      return result;
+    }
+    result.exists = true;
+    var entries = await this.listDir("control");
+    result.entries = entries;
+    for (var i = 0; i < entries.length; i += 1) {
+      if (entries[i].kind === "file") {
+        result.files.push(entries[i].name);
+      } else {
+        result.directories.push(entries[i].name);
+      }
+    }
+    return result;
+  };
+
+  TowerProject.prototype._summarizeStatus = function (statusData) {
+    if (!statusData || !Array.isArray(statusData.cards)) {
+      return { counts: {}, cards: [] };
+    }
+    var counts = {};
+    for (var i = 0; i < statusData.cards.length; i += 1) {
+      var card = statusData.cards[i];
+      var state = card.state || "UNKNOWN";
+      counts[state] = (counts[state] || 0) + 1;
+    }
+    return { counts: counts, cards: statusData.cards.slice() };
+  };
+
+  TowerProject.prototype._mergeCards = function (yamlCards, statusCards) {
+    var map = new Map();
+    for (var i = 0; i < yamlCards.length; i += 1) {
+      var yamlCard = yamlCards[i];
+      var key = yamlCard.card_id || yamlCard.file;
+      map.set(key, yamlCard);
+    }
+    for (var j = 0; j < statusCards.length; j += 1) {
+      var statusCard = statusCards[j];
+      var existing = map.get(statusCard.card_id) || {
+        card_id: statusCard.card_id,
+        title: statusCard.title || "",
+        status: "",
+        stream: "",
+        file: ""
+      };
+      existing.state = statusCard.state || existing.state;
+      if (!existing.title && statusCard.title) {
+        existing.title = statusCard.title;
+      }
+      map.set(statusCard.card_id, existing);
+    }
+    return Array.from(map.values()).sort(function (a, b) {
+      return String(a.card_id || a.file).localeCompare(String(b.card_id || b.file));
+    });
+  };
+
+  TowerProject.prototype.listCards = async function (limit, statusData) {
+    var cards = [];
+    if (await this.exists("control/cards")) {
+      var entries = await this.listDir("control/cards");
+      for (var i = 0; i < entries.length; i += 1) {
+        var entry = entries[i];
+        if (entry.kind !== "file") {
+          continue;
+        }
+        if (!entry.name.endsWith(".yaml") && !entry.name.endsWith(".yml")) {
+          continue;
+        }
+        try {
+          var text = await this.readText(joinPath("control/cards", entry.name));
+          var meta = parseCardMeta(text);
+          meta.file = entry.name;
+          if (!meta.card_id) {
+            meta.card_id = entry.name.replace(/\.(yaml|yml)$/i, "");
+          }
+          cards.push(meta);
+        } catch (err) {
+          cards.push({
+            card_id: entry.name.replace(/\.(yaml|yml)$/i, ""),
+            title: "",
+            status: "",
+            stream: "",
+            file: entry.name,
+            error: String(err && err.message ? err.message : err)
+          });
+        }
+      }
+    }
+    var statusCards = Array.isArray(statusData && statusData.cards) ? statusData.cards : [];
+    var merged = this._mergeCards(cards, statusCards);
+    if (typeof limit === "number" && limit > 0) {
+      return merged.slice(0, limit);
+    }
+    return merged;
+  };
+
+  TowerProject.prototype.readTraceDb = async function (options) {
+    var settings = options || {};
+    var tracePath = settings.path || DEFAULT_TRACE_DB_PATH;
+    var result = {
+      ok: true,
+      path: tracePath,
+      exists: false,
+      entries: [],
+      errors: []
+    };
+    if (!(await this.exists(tracePath))) {
+      return result;
+    }
+    result.exists = true;
+    var text = await this.readText(tracePath);
+    var parsed = parseJsonLines(text);
+    result.entries = parsed.entries;
+    result.errors = parsed.errors;
+    if (result.errors.length) {
+      result.ok = false;
+    }
+    return result;
+  };
+
+  TowerProject.prototype.appendTrace = async function (entry, options) {
+    if (!this.supportsWrite()) {
+      throw new Error("Write not supported for this source.");
+    }
+    var settings = options || {};
+    var tracePath = settings.path || DEFAULT_TRACE_DB_PATH;
+    var normalized = normalizeTraceEntry(entry);
+    var line = JSON.stringify(normalized);
+    var existing = "";
+    if (await this.exists(tracePath)) {
+      existing = await this.readText(tracePath);
+    }
+    if (existing && !existing.endsWith("\n")) {
+      existing += "\n";
+    }
+    var next = existing + line + "\n";
+    await this.writeText(tracePath, next);
+    return { ok: true, path: tracePath, entry: normalized, bytes: next.length };
+  };
+
+  TowerProject.prototype.scan = async function (options) {
+    var settings = options || {};
+    var cardLimit = typeof settings.cardLimit === "number" ? settings.cardLimit : 50;
+    var summary = {
+      version: VERSION,
+      rootPath: this.basePath || ".",
+      source: this.rootInfo.source || "",
+      rootPrefix: this.rootInfo.rootPrefix || "",
+      control: { exists: false, entries: [], files: [], directories: [] },
+      status: null,
+      backlog: null,
+      statusCounts: {},
+      cards: [],
+      specVersion: "",
+      lastUpdated: "",
+      warnings: []
+    };
+
+    summary.control = await this._loadControlEntries();
+    if (!summary.control.exists) {
+      summary.warnings.push("No control/ directory found.");
+    }
+
+    var statusResult = await this._safeReadJSON("control/status.json");
+    if (statusResult.ok) {
+      summary.status = statusResult.data;
+      var statusSummary = this._summarizeStatus(statusResult.data);
+      summary.statusCounts = statusSummary.counts;
+      summary.specVersion = statusResult.data.spec_version || summary.specVersion;
+      summary.lastUpdated = statusResult.data.last_updated || summary.lastUpdated;
+    } else if (await this.exists("control/status.json")) {
+      summary.warnings.push("status.json not readable: " + statusResult.error);
+    }
+
+    var backlogResult = await this._safeReadJSON("control/backlog.json");
+    if (backlogResult.ok) {
+      summary.backlog = backlogResult.data;
+      summary.specVersion = summary.specVersion || backlogResult.data.spec_version || "";
+      summary.lastUpdated = summary.lastUpdated || backlogResult.data.last_updated || "";
+    } else if (await this.exists("control/backlog.json")) {
+      summary.warnings.push("backlog.json not readable: " + backlogResult.error);
+    }
+
+    summary.cards = await this.listCards(cardLimit, summary.status);
+
+    summary.controlFiles = [];
+    for (var i = 0; i < DEFAULT_CONTROL_FILES.length; i += 1) {
+      var controlName = DEFAULT_CONTROL_FILES[i];
+      var controlPath = joinPath("control", controlName);
+      var exists = await this.exists(controlPath);
+      summary.controlFiles.push({ name: controlName, path: controlPath, exists: exists });
+    }
+
+    return summary;
+  };
+
+  async function detectBasePath(fs) {
+    if (await fs.exists("control")) {
+      return "";
+    }
+    if (await fs.exists("tower/control")) {
+      return "tower";
+    }
+    return "";
+  }
+
+  async function connect(options) {
+    if (!options || (!options.directoryHandle && !options.fileList)) {
+      throw new Error("Provide directoryHandle or fileList.");
+    }
+    var fs;
+    var rootInfo = {};
+    if (options.directoryHandle) {
+      fs = new DirectoryHandleFS(options.directoryHandle);
+      rootInfo.source = "directoryHandle";
+    } else {
+      fs = new FileListFS(options.fileList);
+      rootInfo.source = "fileList";
+      rootInfo.rootPrefix = fs.rootPrefix || "";
+    }
+    var basePath = await detectBasePath(fs);
+    return new TowerProject(fs, basePath, rootInfo);
+  }
+
+  async function openDirectory() {
+    if (!global.showDirectoryPicker || !global.isSecureContext) {
+      throw new Error("File System Access API not available.");
+    }
+    return await global.showDirectoryPicker({ mode: "read" });
+  }
+
+  var TowerJS = {
+    version: VERSION,
+    supportsFileSystemAccess: Boolean(global.showDirectoryPicker && global.isSecureContext),
+    connect: connect,
+    openDirectory: openDirectory,
+    DEFAULT_CONTROL_FILES: DEFAULT_CONTROL_FILES,
+    DEFAULT_TRACE_DB_PATH: DEFAULT_TRACE_DB_PATH,
+    _internal: {
+      parseCardMeta: parseCardMeta,
+      normalizePath: normalizePath
+    }
+  };
+
+  global.TowerJS = TowerJS;
+})(typeof window !== "undefined" ? window : globalThis);
+
+    </script>
+    <script>
+      (function () {
+        "use strict";
+
+        var pickButton = document.getElementById("pickDirectory");
+        var folderInput = document.getElementById("folderInput");
+        var supportNote = document.getElementById("supportNote");
+        var heroStatus = document.getElementById("heroStatus");
+        var heroMeta = document.getElementById("heroMeta");
+        var summaryRoot = document.getElementById("summaryRoot");
+        var summarySpec = document.getElementById("summarySpec");
+        var summaryUpdated = document.getElementById("summaryUpdated");
+        var summarySource = document.getElementById("summarySource");
+        var warningBox = document.getElementById("warningBox");
+        var statusCounts = document.getElementById("statusCounts");
+        var controlFiles = document.getElementById("controlFiles");
+        var cardsList = document.getElementById("cardsList");
+        var traceMeta = document.getElementById("traceMeta");
+        var traceList = document.getElementById("traceList");
+        var traceForm = document.getElementById("traceForm");
+        var traceEvent = document.getElementById("traceEvent");
+        var traceCard = document.getElementById("traceCard");
+        var traceRun = document.getElementById("traceRun");
+        var traceMessage = document.getElementById("traceMessage");
+        var traceAppend = document.getElementById("traceAppend");
+        var traceStatus = document.getElementById("traceStatus");
+        var currentProject = null;
+
+        if (!window.TowerJS) {
+          heroStatus.textContent = "TowerJS not loaded";
+          heroMeta.textContent = "Inline TowerJS missing from this file.";
+          return;
+        }
+
+        if (TowerJS.supportsFileSystemAccess) {
+          supportNote.textContent = "Folder picker available. You can also use the folder upload option.";
+        } else {
+          supportNote.textContent = "Folder picker not available in this browser. Use folder upload.";
+          pickButton.disabled = true;
+        }
+
+        function setHero(status, meta) {
+          heroStatus.textContent = status;
+          heroMeta.textContent = meta || "";
+        }
+
+        function setTraceStatus(message) {
+          traceStatus.textContent = message || "";
+        }
+
+        function makeEl(tag, className, text) {
+          var el = document.createElement(tag);
+          if (className) {
+            el.className = className;
+          }
+          if (text !== undefined) {
+            el.textContent = text;
+          }
+          return el;
+        }
+
+        function renderStatus(counts) {
+          statusCounts.innerHTML = "";
+          statusCounts.classList.remove("empty");
+          var keys = Object.keys(counts || {});
+          if (!keys.length) {
+            statusCounts.textContent = "No status data loaded.";
+            statusCounts.classList.add("empty");
+            return;
+          }
+          keys.sort();
+          keys.forEach(function (key) {
+            var chip = makeEl("div", "chip", key + ": " + counts[key]);
+            statusCounts.appendChild(chip);
+          });
+        }
+
+        function renderControlFilesList(files) {
+          controlFiles.innerHTML = "";
+          controlFiles.classList.remove("empty");
+          if (!files || !files.length) {
+            var emptyItem = makeEl("li", "", "No control files listed.");
+            controlFiles.appendChild(emptyItem);
+            controlFiles.classList.add("empty");
+            return;
+          }
+          files.forEach(function (file) {
+            var item = makeEl("li", file.exists ? "ok" : "missing");
+            var name = makeEl("span", "", file.name);
+            var status = makeEl("span", "", file.exists ? "present" : "missing");
+            item.appendChild(name);
+            item.appendChild(status);
+            controlFiles.appendChild(item);
+          });
+        }
+
+        function statusClass(status) {
+          var value = String(status || "").toUpperCase();
+          if (value === "MERGED" || value === "GOLD" || value === "GREEN") {
+            return "good";
+          }
+          if (value === "BLOCKED" || value === "ABANDONED" || value === "ESCALATED") {
+            return "warn";
+          }
+          if (value === "ACTIVE" || value === "READY" || value === "REVIEW") {
+            return "mid";
+          }
+          return "neutral";
+        }
+
+        function renderCards(cards) {
+          cardsList.innerHTML = "";
+          cardsList.classList.remove("empty");
+          if (!cards || !cards.length) {
+            cardsList.textContent = "No cards loaded.";
+            cardsList.classList.add("empty");
+            return;
+          }
+          cards.forEach(function (card, index) {
+            var item = makeEl("div", "card-item");
+            item.style.setProperty("animation-delay", (index * 0.03) + "s");
+            var title = card.title ? card.title : "Untitled";
+            var headline = makeEl("div", "card-title", (card.card_id || "Card") + " - " + title);
+            var meta = makeEl("div", "card-meta");
+            var state = card.state || card.status || "UNKNOWN";
+            var statusTag = makeEl("span", "status-tag " + statusClass(state), state);
+            meta.appendChild(statusTag);
+            if (card.stream) {
+              meta.appendChild(makeEl("span", "", "stream: " + card.stream));
+            }
+            if (card.file) {
+              meta.appendChild(makeEl("span", "", "file: " + card.file));
+            }
+            if (card.error) {
+              meta.appendChild(makeEl("span", "", "error: " + card.error));
+            }
+            item.appendChild(headline);
+            item.appendChild(meta);
+            cardsList.appendChild(item);
+          });
+        }
+
+        function renderWarnings(warnings) {
+          if (warnings && warnings.length) {
+            warningBox.classList.remove("hidden");
+            warningBox.textContent = warnings.join(" | ");
+          } else {
+            warningBox.classList.add("hidden");
+            warningBox.textContent = "";
+          }
+        }
+
+        function updateTraceWriteState(project) {
+          var canWrite = project && project.supportsWrite && project.supportsWrite();
+          traceForm.classList.toggle("disabled", !canWrite);
+          traceAppend.disabled = !canWrite;
+          if (canWrite) {
+            setTraceStatus("Ready to append to " + TowerJS.DEFAULT_TRACE_DB_PATH + ".");
+          } else {
+            setTraceStatus("Read-only mode. Use folder picker to enable writes.");
+          }
+        }
+
+        function renderTraceList(entries) {
+          traceList.innerHTML = "";
+          traceList.classList.remove("empty");
+          if (!entries || !entries.length) {
+            traceList.textContent = "No traces loaded.";
+            traceList.classList.add("empty");
+            return;
+          }
+          var recent = entries.slice(-8).reverse();
+          recent.forEach(function (entry) {
+            var item = makeEl("div", "trace-item");
+            var eventName = entry.event || "trace";
+            var event = makeEl("div", "trace-event", eventName);
+            var meta = makeEl("div", "trace-meta");
+            var timestamp = entry.timestamp || entry.created_at || entry.time || "";
+            if (timestamp) {
+              meta.appendChild(makeEl("span", "", timestamp));
+            }
+            if (entry.card_id) {
+              meta.appendChild(makeEl("span", "", "card: " + entry.card_id));
+            }
+            if (entry.run_id) {
+              meta.appendChild(makeEl("span", "", "run: " + entry.run_id));
+            }
+            if (entry.source) {
+              meta.appendChild(makeEl("span", "", "src: " + entry.source));
+            }
+            item.appendChild(event);
+            if (meta.childNodes.length) {
+              item.appendChild(meta);
+            }
+            if (entry.message) {
+              item.appendChild(makeEl("div", "trace-message", entry.message));
+            }
+            traceList.appendChild(item);
+          });
+        }
+
+        function updateSummary(scan) {
+          var rootLabel = scan.rootPath;
+          if (rootLabel === "." && scan.rootPrefix) {
+            rootLabel = scan.rootPrefix;
+          }
+          summaryRoot.textContent = rootLabel || "-";
+          summarySpec.textContent = scan.specVersion || "-";
+          summaryUpdated.textContent = scan.lastUpdated || "-";
+          var sourceLabel = scan.source || "-";
+          if (currentProject && currentProject.supportsWrite && currentProject.supportsWrite()) {
+            sourceLabel += " (write)";
+          }
+          summarySource.textContent = sourceLabel;
+        }
+
+        async function loadTraces(project) {
+          if (!project || !project.readTraceDb) {
+            return;
+          }
+          try {
+            var result = await project.readTraceDb();
+            if (result.exists) {
+              traceMeta.textContent = "Trace DB: " + result.path + " (" + result.entries.length + " entries)";
+            } else {
+              traceMeta.textContent = "Trace DB missing (" + result.path + ")";
+            }
+            renderTraceList(result.entries);
+            if (!result.ok && result.errors.length) {
+              setTraceStatus("Trace DB parse errors: " + result.errors.length + ".");
+            }
+          } catch (err) {
+            traceMeta.textContent = "Trace DB read failed.";
+            renderTraceList([]);
+            setTraceStatus(String(err && err.message ? err.message : err));
+          }
+        }
+
+        async function loadProject(project) {
+          setHero("Scanning...", "Reading Tower control files.");
+          currentProject = project;
+          updateTraceWriteState(project);
+          try {
+            var scan = await project.scan({ cardLimit: 120 });
+            updateSummary(scan);
+            renderWarnings(scan.warnings);
+            renderStatus(scan.statusCounts);
+            renderControlFilesList(scan.controlFiles);
+            renderCards(scan.cards);
+            await loadTraces(project);
+            setHero("Loaded " + scan.cards.length + " cards", scan.control.exists ? "Control directory detected." : "Control directory missing.");
+          } catch (err) {
+            setHero("Scan failed", String(err && err.message ? err.message : err));
+          }
+        }
+
+        pickButton.addEventListener("click", async function () {
+          try {
+            var handle = await TowerJS.openDirectory();
+            var project = await TowerJS.connect({ directoryHandle: handle });
+            await loadProject(project);
+          } catch (err) {
+            setHero("Folder pick failed", String(err && err.message ? err.message : err));
+          }
+        });
+
+        folderInput.addEventListener("change", async function (event) {
+          var files = event.target.files;
+          if (!files || !files.length) {
+            return;
+          }
+          try {
+            var project = await TowerJS.connect({ fileList: files });
+            await loadProject(project);
+          } catch (err) {
+            setHero("Folder upload failed", String(err && err.message ? err.message : err));
+          } finally {
+            folderInput.value = "";
+          }
+        });
+
+        traceAppend.addEventListener("click", async function () {
+          if (!currentProject) {
+            setTraceStatus("Load a Tower directory first.");
+            return;
+          }
+          var eventName = traceEvent.value.trim();
+          if (!eventName) {
+            setTraceStatus("Event is required.");
+            return;
+          }
+          var entry = {
+            event: eventName,
+            card_id: traceCard.value.trim() || undefined,
+            run_id: traceRun.value.trim() || undefined,
+            message: traceMessage.value.trim() || undefined,
+            source: "towerjs-ui"
+          };
+          try {
+            setTraceStatus("Appending...");
+            await currentProject.appendTrace(entry);
+            traceEvent.value = "";
+            traceCard.value = "";
+            traceRun.value = "";
+            traceMessage.value = "";
+            await loadTraces(currentProject);
+            setTraceStatus("Trace appended.");
+          } catch (err) {
+            setTraceStatus(String(err && err.message ? err.message : err));
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

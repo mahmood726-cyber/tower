@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Control</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>🗼 Tower Control</h1>
+        <div class="header-status">
+            {% if freeze.active %}
+            <span class="status-badge freeze">🔒 FREEZE</span>
+            {% elif slo.overall_status == 'BREACHED' %}
+            <span class="status-badge red">⚠️ SLO BREACHED</span>
+            {% else %}
+            <span class="status-badge green">✓ NOMINAL</span>
+            {% endif %}
+            <span class="timestamp">Updated: {{ timestamp[:19] }}</span>
+        </div>
+    </header>
+
+    {% if freeze.active %}
+    <div class="alert alert-freeze">
+        <strong>Merge Freeze Active:</strong> {{ freeze.reason or 'No reason specified' }}
+        {% if not readonly %}
+        <button onclick="unfreeze()" class="btn btn-small">Clear Freeze</button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="dashboard">
+        <!-- Stats Panel -->
+        <section class="panel stats-panel">
+            <h2>Overview</h2>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-value">{{ status.cards|length if status.cards else 0 }}</div>
+                    <div class="stat-label">Total Cards</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ kanban.active|length }}</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ kanban.green|length }}</div>
+                    <div class="stat-label">Green</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ kanban.merged|length }}</div>
+                    <div class="stat-label">Merged</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLO Panel -->
+        <section class="panel slo-panel">
+            <h2>SLO & Error Budget</h2>
+            {% if slo %}
+            <div class="slo-status {{ slo.overall_status|lower if slo.overall_status else 'unknown' }}">
+                <span class="slo-indicator"></span>
+                {{ slo.overall_status or 'N/A' }}
+            </div>
+            <div class="budget-bar">
+                <div class="budget-fill" style="width: {{ slo.error_budget_remaining or 100 }}%"></div>
+            </div>
+            <div class="budget-label">Error Budget: {{ slo.error_budget_remaining or 'N/A' }}% remaining</div>
+            {% else %}
+            <p class="muted">No SLO data available</p>
+            {% endif %}
+        </section>
+
+        <!-- Quota Panel -->
+        <section class="panel quota-panel">
+            <h2>Token Quota</h2>
+            {% if quota and quota.daily_limit %}
+            <div class="quota-progress">
+                <div class="quota-fill" style="width: {{ (quota.daily_used / quota.daily_limit * 100)|round }}%"></div>
+            </div>
+            <div class="quota-stats">
+                <span>Used: {{ "{:,}".format(quota.daily_used|int) }}</span>
+                <span>Limit: {{ "{:,}".format(quota.daily_limit|int) }}</span>
+            </div>
+            {% else %}
+            <p class="muted">No quota data available</p>
+            {% endif %}
+        </section>
+
+        <!-- Actions Panel -->
+        <section class="panel actions-panel">
+            <h2>Actions</h2>
+            {% if readonly %}
+            <p class="muted">Server is in read-only mode</p>
+            {% else %}
+            <div class="action-buttons">
+                <button onclick="runValidate()" class="btn btn-primary">
+                    ✓ Validate All
+                </button>
+                <button onclick="runDashboard()" class="btn btn-secondary">
+                    📊 Refresh Dashboard
+                </button>
+                {% if freeze.active %}
+                <button onclick="unfreeze()" class="btn btn-warning">
+                    🔓 Clear Freeze
+                </button>
+                {% else %}
+                <button onclick="activateFreeze()" class="btn btn-danger">
+                    🔒 Activate Freeze
+                </button>
+                {% endif %}
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Kanban Board -->
+    <section class="kanban-section">
+        <h2>Card Board</h2>
+        <div class="kanban-board">
+            <div class="kanban-column">
+                <div class="column-header backlog">Backlog ({{ kanban.backlog|length }})</div>
+                <div class="column-cards">
+                    {% for card in kanban.backlog %}
+                    <div class="card-item" onclick="viewCard('{{ card.card_id }}')">
+                        <div class="card-id">{{ card.card_id }}</div>
+                        <div class="card-title">{{ card.title or 'Untitled' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header active">Active ({{ kanban.active|length }})</div>
+                <div class="column-cards">
+                    {% for card in kanban.active %}
+                    <div class="card-item" onclick="viewCard('{{ card.card_id }}')">
+                        <div class="card-id">{{ card.card_id }}</div>
+                        <div class="card-title">{{ card.title or 'Untitled' }}</div>
+                        <div class="card-state">{{ card.state }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header validating">Validating ({{ kanban.validating|length }})</div>
+                <div class="column-cards">
+                    {% for card in kanban.validating %}
+                    <div class="card-item" onclick="viewCard('{{ card.card_id }}')">
+                        <div class="card-id">{{ card.card_id }}</div>
+                        <div class="card-title">{{ card.title or 'Untitled' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header green">Green ({{ kanban.green|length }})</div>
+                <div class="column-cards">
+                    {% for card in kanban.green %}
+                    <div class="card-item" onclick="viewCard('{{ card.card_id }}')">
+                        <div class="card-id">{{ card.card_id }}</div>
+                        <div class="card-title">{{ card.title or 'Untitled' }}</div>
+                        {% if not readonly %}
+                        <button onclick="event.stopPropagation(); runGatecheck('{{ card.card_id }}')" class="btn btn-small">
+                            Gatecheck
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header merged">Merged ({{ kanban.merged|length }})</div>
+                <div class="column-cards">
+                    {% for card in kanban.merged %}
+                    <div class="card-item" onclick="viewCard('{{ card.card_id }}')">
+                        <div class="card-id">{{ card.card_id }}</div>
+                        <div class="card-title">{{ card.title or 'Untitled' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="kanban-column">
+                <div class="column-header blocked">Blocked ({{ kanban.blocked|length }})</div>
+                <div class="column-cards">
+                    {% for card in kanban.blocked %}
+                    <div class="card-item blocked" onclick="viewCard('{{ card.card_id }}')">
+                        <div class="card-id">{{ card.card_id }}</div>
+                        <div class="card-title">{{ card.title or 'Untitled' }}</div>
+                        <div class="card-state">{{ card.state }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

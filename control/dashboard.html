@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Cockpit vv1.5.5</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .header { background: #16213e; padding: 15px 20px; border-bottom: 2px solid #0f3460; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5em; color: #e94560; }
+        .header .meta { color: #888; font-size: 0.85em; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+
+        /* Summary tiles */
+        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .tile { background: #16213e; border-radius: 8px; padding: 15px; border-left: 4px solid #0f3460; }
+        .tile.green { border-left-color: #28a745; }
+        .tile.yellow { border-left-color: #ffc107; }
+        .tile.red { border-left-color: #dc3545; }
+        .tile-title { color: #888; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px; }
+        .tile-value { font-size: 2em; font-weight: bold; }
+        .tile-sub { font-size: 0.85em; color: #aaa; margin-top: 5px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { background: #16213e; border: none; color: #888; padding: 10px 20px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.9em; }
+        .tab:hover { background: #1f2b47; }
+        .tab.active { background: #0f3460; color: #fff; }
+        .tab-content { display: none; background: #16213e; border-radius: 0 8px 8px 8px; padding: 20px; min-height: 400px; }
+        .tab-content.active { display: block; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #0f3460; }
+        th { background: #0f3460; font-weight: 600; font-size: 0.85em; color: #aaa; text-transform: uppercase; }
+        tr:hover { background: #1f2b47; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
+        .badge-green { background: #28a745; color: white; }
+        .badge-yellow { background: #ffc107; color: #333; }
+        .badge-red { background: #dc3545; color: white; }
+        .badge-blue { background: #17a2b8; color: white; }
+        .badge-gray { background: #6c757d; color: white; }
+
+        /* Status */
+        .status-online { color: #28a745; }
+        .status-offline { color: #dc3545; }
+
+        /* Progress */
+        .progress { background: #0f3460; border-radius: 4px; height: 8px; overflow: hidden; width: 100px; display: inline-block; vertical-align: middle; margin-right: 8px; }
+        .progress-bar { height: 100%; transition: width 0.3s; }
+        .progress-bar.low { background: #28a745; }
+        .progress-bar.medium { background: #ffc107; }
+        .progress-bar.high { background: #dc3545; }
+
+        /* Links */
+        a { color: #17a2b8; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Controls */
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .search-input { background: #0f3460; border: 1px solid #1f2b47; color: #fff; padding: 8px 12px; border-radius: 4px; min-width: 200px; }
+        .search-input::placeholder { color: #666; }
+        select { background: #0f3460; border: 1px solid #1f2b47; color: #fff; padding: 8px 12px; border-radius: 4px; }
+
+        /* Buttons */
+        .btn { background: #0f3460; border: 1px solid #1f2b47; color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+        .btn:hover { background: #1f2b47; }
+        .btn-copy { background: #17a2b8; border-color: #17a2b8; }
+        .btn-copy:hover { background: #138496; }
+
+        /* Alerts */
+        .alert-item { background: #1f2b47; padding: 10px 15px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #ffc107; }
+        .alert-item.drift { border-left-color: #dc3545; }
+        .alert-item .alert-type { font-size: 0.75em; color: #888; text-transform: uppercase; }
+        .alert-item .alert-message { margin-top: 4px; }
+
+        /* Empty state */
+        .empty { text-align: center; padding: 40px; color: #666; }
+
+        /* Footer */
+        .footer { margin-top: 30px; padding: 20px; text-align: center; color: #666; font-size: 0.85em; border-top: 1px solid #0f3460; }
+        .footer a { color: #888; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Tower Cockpit</h1>
+        <div class="meta">Spec v1.5.5 | Generated: <span id="gen-time"></span></div>
+    </div>
+
+    <div class="container">
+        <!-- Summary Tiles -->
+        <div class="tiles" id="summary-tiles"></div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="inbox">Inbox</button>
+            <button class="tab" data-tab="merge">Merge Ready</button>
+            <button class="tab" data-tab="cards">All Cards</button>
+            <button class="tab" data-tab="quotas">Quotas & PCs</button>
+            <button class="tab" data-tab="alerts">Alerts</button>
+            <button class="tab" data-tab="papers">Papers</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="tab-content active" id="tab-inbox"></div>
+        <div class="tab-content" id="tab-merge"></div>
+        <div class="tab-content" id="tab-cards"></div>
+        <div class="tab-content" id="tab-quotas"></div>
+        <div class="tab-content" id="tab-alerts"></div>
+        <div class="tab-content" id="tab-papers"></div>
+
+        <div class="footer">
+            <a href="dashboard.json">dashboard.json</a> |
+            <a href="../artifacts/">artifacts/</a> |
+            <a href="../proofpacks/">proofpacks/</a>
+        </div>
+    </div>
+
+    <script type="application/json" id="dash-data">
+{
+  "spec_version": "v1.5.5",
+  "generated_at": "2026-01-16T22:26:01.468406",
+  "card_counts_by_state": {},
+  "cards": [],
+  "quota_summary": [
+    {
+      "model": "claude_opus",
+      "daily_limit": 100,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 500,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "claude_sonnet",
+      "daily_limit": 200,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 1000,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "gemini",
+      "daily_limit": 150,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 750,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "glm_4_7",
+      "daily_limit": 100,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 500,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    },
+    {
+      "model": "codex",
+      "daily_limit": 50,
+      "daily_used": 0,
+      "daily_percent": 0.0,
+      "weekly_limit": 250,
+      "weekly_used": 0,
+      "weekly_percent": 0.0
+    }
+  ],
+  "pc_summary": [
+    {
+      "pc_id": "pc1",
+      "online": false,
+      "last_seen": null,
+      "cpu_utilization": null,
+      "ram_utilization": null
+    },
+    {
+      "pc_id": "pc2",
+      "online": false,
+      "last_seen": null,
+      "cpu_utilization": null,
+      "ram_utilization": null
+    },
+    {
+      "pc_id": "pc3",
+      "online": false,
+      "last_seen": null,
+      "cpu_utilization": null,
+      "ram_utilization": null
+    }
+  ],
+  "alerts": {
+    "total_count": 0,
+    "items": []
+  },
+  "papers": {
+    "counts_by_status": {},
+    "total": 0
+  }
+}
+    </script>
+
+    <script>
+    (function() {
+        const data = JSON.parse(document.getElementById('dash-data').textContent);
+
+        // Update generation time
+        document.getElementById('gen-time').textContent = new Date(data.generated_at).toLocaleString();
+
+        // Helper functions
+        function getStateBadge(state, color) {
+            const colorClass = {GREEN: 'badge-green', YELLOW: 'badge-yellow', RED: 'badge-red'}[color] || 'badge-gray';
+            return `<span class="badge ${colorClass}">${state}</span>`;
+        }
+
+        function getProgressBar(percent) {
+            const cls = percent < 50 ? 'low' : percent < 80 ? 'medium' : 'high';
+            return `<div class="progress"><div class="progress-bar ${cls}" style="width:${Math.min(percent, 100)}%"></div></div>${percent.toFixed(1)}%`;
+        }
+
+        // Render summary tiles
+        const tiles = document.getElementById('summary-tiles');
+        const counts = data.card_counts_by_state || {};
+        const total = Object.values(counts).reduce((a,b) => a+b, 0);
+        const green = (counts['GOLD'] || 0) + (counts['MERGED'] || 0) + (counts['VALIDATORS_PASS'] || 0);
+        const yellow = (counts['ACTIVE'] || 0) + (counts['READY'] || 0) + (counts['REVIEW'] || 0);
+        const red = (counts['BLOCKED'] || 0) + (counts['ESCALATED'] || 0);
+
+        tiles.innerHTML = `
+            <div class="tile"><div class="tile-title">Total Cards</div><div class="tile-value">${total}</div></div>
+            <div class="tile green"><div class="tile-title">GREEN</div><div class="tile-value">${green}</div><div class="tile-sub">GOLD + MERGED</div></div>
+            <div class="tile yellow"><div class="tile-title">In Progress</div><div class="tile-value">${yellow}</div><div class="tile-sub">ACTIVE + READY</div></div>
+            <div class="tile red"><div class="tile-title">Needs Attention</div><div class="tile-value">${red}</div><div class="tile-sub">BLOCKED + ESCALATED</div></div>
+            <div class="tile"><div class="tile-title">Alerts</div><div class="tile-value">${data.alerts?.total_count || 0}</div></div>
+            <div class="tile"><div class="tile-title">PCs Online</div><div class="tile-value">${(data.pc_summary || []).filter(p => p.online).length}/${(data.pc_summary || []).length}</div></div>
+        `;
+
+        // Inbox: ESCALATED first, then drift alerts, then REVIEW, then BLOCKED
+        const inboxCards = (data.cards || []).filter(c =>
+            ['ESCALATED', 'BLOCKED', 'REVIEW'].includes(c.state) || c.has_drift_alert
+        ).sort((a, b) => {
+            const priority = {'ESCALATED': 0, 'drift': 1, 'REVIEW': 2, 'BLOCKED': 3};
+            const pa = a.state === 'ESCALATED' ? 0 : a.has_drift_alert ? 1 : priority[a.state] || 4;
+            const pb = b.state === 'ESCALATED' ? 0 : b.has_drift_alert ? 1 : priority[b.state] || 4;
+            return pa - pb;
+        });
+
+        document.getElementById('tab-inbox').innerHTML = inboxCards.length ? `
+            <table>
+                <tr><th>Card</th><th>Title</th><th>State</th><th>Issue</th><th>Last Update</th></tr>
+                ${inboxCards.map(c => `
+                    <tr>
+                        <td>${c.card_id}</td>
+                        <td>${c.title || '-'}</td>
+                        <td>${getStateBadge(c.state, c.color)}</td>
+                        <td>${c.has_drift_alert ? '<span class="badge badge-red">DRIFT</span>' : c.state}</td>
+                        <td>${c.last_update ? new Date(c.last_update).toLocaleString() : '-'}</td>
+                    </tr>
+                `).join('')}
+            </table>
+        ` : '<div class="empty">No items need attention</div>';
+
+        // Merge Ready: GREEN with proofpack
+        const mergeCards = (data.cards || []).filter(c => c.color === 'GREEN' && c.latest_proofpack_path);
+
+        document.getElementById('tab-merge').innerHTML = mergeCards.length ? `
+            <table>
+                <tr><th>Card</th><th>Proofpack</th><th>Action</th></tr>
+                ${mergeCards.map(c => `
+                    <tr>
+                        <td>${c.card_id}</td>
+                        <td><a href="../${c.latest_proofpack_path}">${c.latest_proofpack_path}</a></td>
+                        <td><button class="btn btn-copy" onclick="navigator.clipboard.writeText('bash tower/scripts/merge_gold.sh --card ${c.card_id} --do-merge').then(() => alert('Copied!'))">Copy Merge Command</button></td>
+                    </tr>
+                `).join('')}
+            </table>
+        ` : '<div class="empty">No cards ready for merge</div>';
+
+        // All Cards with search and filter
+        let allCards = data.cards || [];
+        const cardsTab = document.getElementById('tab-cards');
+
+        function renderCards(cards) {
+            return cards.length ? `
+                <table>
+                    <tr><th>Card</th><th>Title</th><th>Stream</th><th>State</th><th>Artifacts</th><th>Last Update</th></tr>
+                    ${cards.map(c => `
+                        <tr>
+                            <td>${c.card_id}</td>
+                            <td>${c.title || '-'}</td>
+                            <td>${c.stream || '-'}</td>
+                            <td>${getStateBadge(c.state, c.color)}</td>
+                            <td>${c.latest_artifacts_path ? `<a href="../${c.latest_artifacts_path}">View</a>` : '-'}</td>
+                            <td>${c.last_update ? new Date(c.last_update).toLocaleString() : '-'}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            ` : '<div class="empty">No cards</div>';
+        }
+
+        cardsTab.innerHTML = `
+            <div class="controls">
+                <input type="text" class="search-input" id="card-search" placeholder="Search cards...">
+                <select id="state-filter">
+                    <option value="">All States</option>
+                    ${[...new Set((data.cards || []).map(c => c.state))].map(s => `<option value="${s}">${s}</option>`).join('')}
+                </select>
+                <select id="stream-filter">
+                    <option value="">All Streams</option>
+                    ${[...new Set((data.cards || []).map(c => c.stream).filter(Boolean))].map(s => `<option value="${s}">${s}</option>`).join('')}
+                </select>
+            </div>
+            <div id="cards-table">${renderCards(allCards)}</div>
+        `;
+
+        function filterCards() {
+            const search = document.getElementById('card-search').value.toLowerCase();
+            const state = document.getElementById('state-filter').value;
+            const stream = document.getElementById('stream-filter').value;
+
+            const filtered = allCards.filter(c => {
+                if (search && !c.card_id.toLowerCase().includes(search) && !(c.title || '').toLowerCase().includes(search)) return false;
+                if (state && c.state !== state) return false;
+                if (stream && c.stream !== stream) return false;
+                return true;
+            });
+
+            document.getElementById('cards-table').innerHTML = renderCards(filtered);
+        }
+
+        document.getElementById('card-search').addEventListener('input', filterCards);
+        document.getElementById('state-filter').addEventListener('change', filterCards);
+        document.getElementById('stream-filter').addEventListener('change', filterCards);
+
+        // Quotas & PCs
+        document.getElementById('tab-quotas').innerHTML = `
+            <h3 style="margin-bottom:15px">Quota Utilization</h3>
+            <table>
+                <tr><th>Model</th><th>Daily Usage</th><th>Weekly Usage</th></tr>
+                ${(data.quota_summary || []).map(q => `
+                    <tr>
+                        <td>${q.model}</td>
+                        <td>${getProgressBar(q.daily_percent)} (${q.daily_used}/${q.daily_limit})</td>
+                        <td>${getProgressBar(q.weekly_percent)} (${q.weekly_used}/${q.weekly_limit})</td>
+                    </tr>
+                `).join('')}
+            </table>
+
+            <h3 style="margin:25px 0 15px">PC Fleet</h3>
+            <table>
+                <tr><th>PC</th><th>Status</th><th>Last Seen</th><th>CPU</th><th>RAM</th></tr>
+                ${(data.pc_summary || []).map(p => `
+                    <tr>
+                        <td>${p.pc_id}</td>
+                        <td><span class="status-${p.online ? 'online' : 'offline'}">${p.online ? 'ONLINE' : 'OFFLINE'}</span></td>
+                        <td>${p.last_seen ? new Date(p.last_seen).toLocaleString() : '-'}</td>
+                        <td>${p.cpu_utilization != null ? p.cpu_utilization + '%' : '-'}</td>
+                        <td>${p.ram_utilization != null ? p.ram_utilization + '%' : '-'}</td>
+                    </tr>
+                `).join('')}
+            </table>
+        `;
+
+        // Alerts
+        document.getElementById('tab-alerts').innerHTML = (data.alerts?.items || []).length ? `
+            ${(data.alerts.items).map(a => `
+                <div class="alert-item ${a.type}">
+                    <div class="alert-type">${a.type}${a.card_id ? ' - ' + a.card_id : ''}</div>
+                    <div class="alert-message">${a.message}</div>
+                </div>
+            `).join('')}
+        ` : '<div class="empty">No active alerts</div>';
+
+        // Papers
+        const paperCounts = data.papers?.counts_by_status || {};
+        document.getElementById('tab-papers').innerHTML = `
+            <div class="tiles" style="margin-bottom:20px">
+                ${Object.entries(paperCounts).map(([status, count]) => `
+                    <div class="tile"><div class="tile-title">${status}</div><div class="tile-value">${count}</div></div>
+                `).join('')}
+            </div>
+            <p>Total papers: ${data.papers?.total || 0}</p>
+        `;
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

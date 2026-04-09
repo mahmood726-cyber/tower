@@ -1,0 +1,5 @@
+TowerJS Hash Tree Signature
+algorithm: rsa-pkcs1v15-sha256
+signed_data: hash_tree.root (hex)
+root_hash: 2f897fbacf23290df988b1a9aa9de8a86e50a7481a90f8befb33de8752eb92dc
+signature_base64: Kg9ZL59rZ/2eM0Rv8CetBrQ7y2XyhQN4WZgaVitLxDe+07GpM2a302iR1+xIje49mhZ0GqqCToS3inrGWnt/2tnG+jOaMFx0vqqzA7XS81rdfm6MDo59gTX2OeJ55n7DYClMAlakVjhl4H+D/P4Nr19rLhMPKyZImyXOgqt2qDM=

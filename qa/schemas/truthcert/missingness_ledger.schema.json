@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/missingness_ledger.schema.json",
+  "title": "TruthCert Missingness Ledger",
+  "description": "Missingness ledger per Spec v0.8 Section 9 (required)",
+  "type": "object",
+  "required": ["spec_version", "entries", "generated_at"],
+  "properties": {
+    "spec_version": {
+      "type": "string"
+    },
+    "capsule_id": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["trial_id", "outcome_id", "timepoint", "planned_status", "observed_status"],
+        "properties": {
+          "trial_id": {
+            "type": "string"
+          },
+          "outcome_id": {
+            "type": "string"
+          },
+          "timepoint": {
+            "type": "object",
+            "properties": {
+              "target_value": { "type": "number" },
+              "unit": { "type": "string" }
+            }
+          },
+          "planned_status": {
+            "type": "string",
+            "enum": ["planned", "not_planned", "unknown"],
+            "description": "Was this outcome planned at this timepoint?"
+          },
+          "observed_status": {
+            "type": "string",
+            "enum": ["observed", "missing", "partial", "ambiguous"],
+            "description": "Was this outcome actually reported?"
+          },
+          "planned_witness_id": {
+            "type": "string",
+            "description": "Witness for planned status (e.g., registry snapshot)"
+          },
+          "observed_witness_id": {
+            "type": "string",
+            "description": "Witness for observed status (e.g., publication)"
+          },
+          "missingness_reason": {
+            "type": "string",
+            "enum": ["not_collected", "collected_not_reported", "reported_different_timepoint", "unclear", "na"]
+          },
+          "rob_implication": {
+            "type": "string",
+            "enum": ["none", "low_concern", "some_concern", "high_concern"]
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_trial_outcome_timepoints": { "type": "integer" },
+        "planned_and_observed": { "type": "integer" },
+        "planned_but_missing": { "type": "integer" },
+        "not_planned_but_observed": { "type": "integer" },
+        "unknown_planned": { "type": "integer" }
+      }
+    }
+  }
+}

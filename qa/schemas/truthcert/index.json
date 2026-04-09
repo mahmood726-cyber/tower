@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/index.json",
+  "title": "TruthCert/Burhan Evidence Graph Schema Index",
+  "description": "Schema index for TruthCert v0.8 'Nets-Level, Witness-Governed'",
+  "spec_version": "0.8.0",
+  "schemas": {
+    "core_nodes": {
+      "description": "Core node types per Section 4.1",
+      "schemas": [
+        "trial.schema.json",
+        "registry_snapshot.schema.json",
+        "publication.schema.json",
+        "extracted_result.schema.json",
+        "outcome_definition.schema.json",
+        "claim.schema.json",
+        "witness.schema.json",
+        "consensus.schema.json",
+        "linkage_decision.schema.json",
+        "conflict.schema.json",
+        "adjudication.schema.json",
+        "abstention.schema.json",
+        "capsule_run.schema.json",
+        "drift_event.schema.json",
+        "explain_report.schema.json"
+      ]
+    },
+    "identifiers": {
+      "description": "CURIE-style ID patterns per Section 4.3",
+      "schemas": ["curie_ids.schema.json"]
+    },
+    "witness_system": {
+      "description": "Witness grades and quorum per Section 7",
+      "schemas": [
+        "witness.schema.json",
+        "quorum.schema.json"
+      ]
+    },
+    "lanes": {
+      "description": "Lane configurations per Sections 11-14",
+      "schemas": [
+        "lane_config.schema.json",
+        "meta_method_registry.schema.json",
+        "transport_config.schema.json",
+        "hta_config.schema.json"
+      ]
+    },
+    "ledgers": {
+      "description": "Required ledgers per Sections 9, 17",
+      "schemas": [
+        "missingness_ledger.schema.json",
+        "drift_event.schema.json"
+      ]
+    },
+    "outputs": {
+      "description": "Output schemas per Sections 20, 25",
+      "schemas": [
+        "explain_report.schema.json",
+        "number_card.schema.json",
+        "capsule_manifest.schema.json"
+      ]
+    }
+  },
+  "seven_rules": {
+    "description": "The Seven Straight-Path Rules (Fatiha-inspired governance)",
+    "rules": [
+      "1. Witness-first: no published number without a witness chain",
+      "2. Guardianship: validators never generate; they only recompute/check/veto",
+      "3. Right names: ontology is law; free-text is quarantined until mapped",
+      "4. Mercy-by-impact: maps publish early; meta/transport/HTA require stronger gates",
+      "5. Consultation: disagreements become explicit objects; adjudications are logged",
+      "6. Change-aware: everything is versioned; diffs + drift ledgers are mandatory",
+      "7. Abstention: 'insufficient certainty—do not publish' is first-class"
+    ]
+  },
+  "assurance_ladder": {
+    "bronze": "Map-grade: navigable graph + provenance; P0 schema validators pass; warnings allowed",
+    "silver": "Meta-grade: publishable meta outputs; all P0 validators pass; quorum satisfied",
+    "gold": "Decision-grade: stable meta over ≥N releases; transport/HTA eligible; strong witness density"
+  }
+}

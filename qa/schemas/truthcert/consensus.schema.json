@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/consensus.schema.json",
+  "title": "TruthCert Consensus Node",
+  "description": "Consensus resolution for claims per Spec v0.8 Section 4.1",
+  "type": "object",
+  "required": ["consensus_id", "claims", "resolution_method", "final_value", "resolved_at"],
+  "properties": {
+    "consensus_id": {
+      "type": "string",
+      "pattern": "^consensus:[a-f0-9]{16,64}$"
+    },
+    "claims": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Claim IDs that were reconciled"
+    },
+    "resolution_method": {
+      "type": "string",
+      "enum": ["single_source", "multi_witness_agree", "weighted_average", "priority_rule", "adjudication", "abstention"],
+      "description": "Method used to reach consensus"
+    },
+    "final_value": {
+      "type": "number"
+    },
+    "final_uncertainty": {
+      "type": "object",
+      "properties": {
+        "se": { "type": "number" },
+        "ci_lower": { "type": "number" },
+        "ci_upper": { "type": "number" }
+      }
+    },
+    "priority_rule_applied": {
+      "type": "string",
+      "description": "If resolution_method=priority_rule, which rule was applied"
+    },
+    "quorum_achieved": {
+      "type": "boolean"
+    },
+    "disagreement_notes": {
+      "type": "string"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by": {
+      "type": "string",
+      "enum": ["automated", "manual", "adjudicator"]
+    },
+    "adjudication_id": {
+      "type": "string",
+      "description": "If manual resolution, reference to Adjudication"
+    }
+  }
+}

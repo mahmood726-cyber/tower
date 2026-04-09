@@ -1,0 +1,11 @@
+{
+  "case_id": "EV-101",
+  "title": "Validate MANIFEST.json is valid",
+  "description": "Ensures addon manifest parses and has required structure",
+  "command": "python -c \"import json; m = json.load(open('tower/addons/MANIFEST.json')); assert 'addons' in m; assert 'manifest_version' in m; print(f'Found {len(m[\"addons\"])} addons')\"",
+  "cwd": null,
+  "timeout_seconds": 10,
+  "expected_exit_code": 0,
+  "points": 2,
+  "tags": ["addon", "manifest", "smoke"]
+}

@@ -1,0 +1,78 @@
+{
+  "spec_version": "v1.5.5",
+  "generated_at": "2026-01-16T22:30:13.706177",
+  "alerts": [
+    {
+      "type": "quota_underutilized",
+      "model": "claude_opus",
+      "utilization": 0.0,
+      "target": 0.9,
+      "message": "Underutilized: assign more work to claude_opus",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "quota_underutilized",
+      "model": "claude_sonnet",
+      "utilization": 0.0,
+      "target": 0.9,
+      "message": "Underutilized: assign more work to claude_sonnet",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "quota_underutilized",
+      "model": "gemini",
+      "utilization": 0.0,
+      "target": 0.9,
+      "message": "Underutilized: assign more work to gemini",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "quota_underutilized",
+      "model": "glm_4_7",
+      "utilization": 0.0,
+      "target": 0.9,
+      "message": "Underutilized: assign more work to glm_4_7",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "quota_underutilized",
+      "model": "codex",
+      "utilization": 0.0,
+      "target": 0.9,
+      "message": "Underutilized: assign more work to codex",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "low_backlog",
+      "stream": "apps",
+      "ready_count": 0,
+      "minimum": 3,
+      "message": "Low backlog in apps: add more READY cards",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "low_backlog",
+      "stream": "methods",
+      "ready_count": 0,
+      "minimum": 3,
+      "message": "Low backlog in methods: add more READY cards",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "low_backlog",
+      "stream": "hta",
+      "ready_count": 0,
+      "minimum": 3,
+      "message": "Low backlog in hta: add more READY cards",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    },
+    {
+      "type": "low_backlog",
+      "stream": "live",
+      "ready_count": 0,
+      "minimum": 3,
+      "message": "Low backlog in live: add more READY cards",
+      "timestamp": "2026-01-16T22:30:13.706177"
+    }
+  ]
+}

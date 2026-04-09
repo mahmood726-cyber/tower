@@ -1,0 +1,7 @@
+{
+  "name": "@tower/core",
+  "version": "0.1.0",
+  "description": "TowerJS core logic (browser-first, no DOM)",
+  "main": "tower-core.js",
+  "license": "MIT"
+}

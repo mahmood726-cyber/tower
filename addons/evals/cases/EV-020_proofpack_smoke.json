@@ -1,0 +1,10 @@
+{
+  "case_id": "EV-020",
+  "title": "Proofpack smoke test (skips if no card worktree exists)",
+  "command": "bash -c 'set -euo pipefail; d=\"tower/worktrees\"; if [ ! -d \"$d\" ]; then echo \"SKIP: no tower/worktrees\"; exit 0; fi; c=$(ls -1 \"$d\" 2>/dev/null | head -n 1 || true); if [ -z \"${c:-}\" ]; then echo \"SKIP: no card worktrees\"; exit 0; fi; echo \"Using card: $c\"; bash tower/scripts/tower_proofpack.sh --card \"$c\"'",
+  "cwd": null,
+  "timeout_seconds": 1800,
+  "expected_exit_code": 0,
+  "checks": [],
+  "points": 2
+}

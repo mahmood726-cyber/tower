@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/model_scorecard.schema.json",
+  "title": "Model Scorecard",
+  "description": "Performance metrics per LLM model",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "models"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["model_id"],
+        "properties": {
+          "model_id": {"type": "string"},
+          "total_runs": {"type": "integer", "minimum": 0, "default": 0},
+          "successful_runs": {"type": "integer", "minimum": 0, "default": 0},
+          "failed_runs": {"type": "integer", "minimum": 0, "default": 0},
+          "success_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+          "avg_duration_seconds": {"type": ["number", "null"]},
+          "total_cost": {"type": ["number", "null"]},
+          "cards_completed": {"type": "integer", "minimum": 0, "default": 0},
+          "gates_passed": {"type": "integer", "minimum": 0, "default": 0},
+          "gates_failed": {"type": "integer", "minimum": 0, "default": 0},
+          "escalations": {"type": "integer", "minimum": 0, "default": 0},
+          "audit_score": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+          "last_run": {"type": ["string", "null"], "format": "date-time"}
+        }
+      }
+    }
+  }
+}

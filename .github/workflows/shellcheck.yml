@@ -1,0 +1,90 @@
+name: ShellCheck
+
+on:
+  push:
+    paths:
+      - '**/*.sh'
+      - '.github/workflows/shellcheck.yml'
+  pull_request:
+    paths:
+      - '**/*.sh'
+      - '.github/workflows/shellcheck.yml'
+  workflow_dispatch:
+
+jobs:
+  shellcheck:
+    name: ShellCheck Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Find shell scripts
+        id: find-scripts
+        run: |
+          # Find all .sh files, excluding vendor directories
+          scripts=$(find . -name '*.sh' \
+            -not -path './.git/*' \
+            -not -path './node_modules/*' \
+            -not -path './vendor/*' \
+            -not -path './**/venv/*' \
+            | sort)
+          echo "Found scripts:"
+          echo "$scripts"
+          echo "scripts<<EOF" >> $GITHUB_OUTPUT
+          echo "$scripts" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run ShellCheck on Tower core scripts
+        run: |
+          echo "=== Checking Tower Core Scripts ==="
+          find tower/scripts -name '*.sh' -exec shellcheck -x -S warning {} \; 2>&1 || true
+
+      - name: Run ShellCheck on Addon scripts
+        run: |
+          echo "=== Checking Addon Scripts ==="
+          find tower/addons -name '*.sh' -exec shellcheck -x -S warning {} \; 2>&1 || true
+
+      - name: Run ShellCheck with strict mode (informational)
+        continue-on-error: true
+        run: |
+          echo "=== Strict Analysis (informational) ==="
+          find . -name '*.sh' \
+            -not -path './.git/*' \
+            -not -path './node_modules/*' \
+            -exec shellcheck -x -S info {} \; 2>&1 | head -200 || true
+
+      - name: Generate ShellCheck report
+        if: always()
+        run: |
+          echo "=== ShellCheck Summary ===" > shellcheck-report.txt
+          echo "Generated: $(date -Iseconds)" >> shellcheck-report.txt
+          echo "" >> shellcheck-report.txt
+
+          # Count scripts
+          total=$(find . -name '*.sh' -not -path './.git/*' | wc -l)
+          echo "Total scripts found: $total" >> shellcheck-report.txt
+
+          # Run with JSON output for summary
+          find . -name '*.sh' \
+            -not -path './.git/*' \
+            -not -path './node_modules/*' \
+            -exec shellcheck -f json -S warning {} \; 2>/dev/null \
+            | jq -s 'flatten | group_by(.level) | map({level: .[0].level, count: length})' \
+            >> shellcheck-report.txt 2>/dev/null || echo "JSON summary not available" >> shellcheck-report.txt
+
+          cat shellcheck-report.txt
+
+      - name: Upload ShellCheck report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shellcheck-report
+          path: shellcheck-report.txt
+          retention-days: 30

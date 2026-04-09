@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dashboard_plus_status.schema.json",
+  "title": "Tower Dashboard Plus Status",
+  "description": "Schema for dashboard plus status output file",
+  "type": "object",
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp when dashboard was generated"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["GREEN", "YELLOW", "RED", "FREEZE", "UNKNOWN"],
+      "description": "Overall system status"
+    },
+    "is_frozen": {
+      "type": "boolean",
+      "description": "Whether merge freeze is active"
+    },
+    "freeze_reason": {
+      "type": "string",
+      "description": "Reason for freeze (if frozen)"
+    },
+    "error_budget_remaining": {
+      "type": "string",
+      "description": "Error budget remaining percentage"
+    },
+    "error_budget_depleted": {
+      "type": "boolean",
+      "description": "Whether error budget is exhausted"
+    },
+    "slo_status": {
+      "type": "string",
+      "enum": ["OK", "WARNING", "BREACHED", "N/A"],
+      "description": "Overall SLO status"
+    },
+    "slo_breached": {
+      "type": "boolean",
+      "description": "Whether any SLO is breached"
+    },
+    "spc_alert_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of active SPC alerts"
+    },
+    "drift_alert_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of active drift alerts"
+    },
+    "active_cards": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of active cards"
+    },
+    "output_file": {
+      "type": "string",
+      "description": "Path to generated dashboard HTML"
+    }
+  },
+  "required": ["generated_at", "status"],
+  "additionalProperties": false
+}

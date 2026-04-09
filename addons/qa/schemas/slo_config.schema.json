@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "slo_config.schema.json",
+  "title": "Tower SLO Configuration",
+  "description": "Schema for SLO addon configuration in addons/slo/slo_config.json",
+  "type": "object",
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Tower specification version"
+    },
+    "timezone": {
+      "type": "string",
+      "pattern": "^[A-Za-z]+/[A-Za-z_]+$",
+      "description": "IANA timezone for SLO calculations"
+    },
+    "windows_days": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 365
+      },
+      "minItems": 1,
+      "description": "Rolling window sizes in days for SLO calculation"
+    },
+    "default_window_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "description": "Default window size for SLO reporting"
+    },
+    "thresholds": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Target threshold value (green zone)"
+            },
+            "breach": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Breach threshold value (red zone)"
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable description of this SLI"
+            }
+          },
+          "required": ["target", "breach"],
+          "additionalProperties": false
+        }
+      },
+      "description": "SLI threshold definitions"
+    },
+    "error_budget_policy": {
+      "type": "object",
+      "properties": {
+        "freeze_duration_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 168,
+          "description": "Recommended freeze duration when budget exhausted"
+        },
+        "recommended_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Actions to take when error budget exhausted"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["spec_version", "thresholds"],
+  "additionalProperties": false
+}

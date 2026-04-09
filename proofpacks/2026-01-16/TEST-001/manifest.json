@@ -1,0 +1,14 @@
+{
+  "spec_version": "v1.5.5",
+  "card_id": "TEST-001",
+  "created_at": "2026-01-16T22:29:47+00:00",
+  "git_sha": "",
+  "git_branch": "",
+  "run_ids": ["run_20260116_212210_ef53","run_20260116_222812_c0a3279a"],
+  "artifacts": [{"path": "run_20260116_212210_ef53\\validator_report.json", "type": "json", "sha256": "4983671d04f3a80a0555b8f83da5bd0219a351ea1a808480fae6ab4e9ac27049"}, {"path": "run_20260116_222812_c0a3279a\\run_context.json", "type": "json", "sha256": "96d5193411c0ede9f2487ee2a65ecaf4af0487692ec6a5bc1f54ca9d2b8d98f0"}, {"path": "run_20260116_222812_c0a3279a\\run_summary.json", "type": "json", "sha256": "aecd33c947d4ae0ef427504ca58c0afb789c242b38618012a7a4883cc58fa823"}, {"path": "run_20260116_222812_c0a3279a\\stderr.log", "type": "log", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, {"path": "run_20260116_222812_c0a3279a\\stdout.log", "type": "log", "sha256": "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03"}],
+  "evidence_paths": ["run_20260116_212210_ef53/validator_report.json", "run_20260116_222812_c0a3279a/run_context.json", "run_20260116_222812_c0a3279a/run_summary.json", "run_20260116_222812_c0a3279a/stderr.log", "run_20260116_222812_c0a3279a/stdout.log"],
+  "gates": {"tests": "NOT_RUN", "validators": "NOT_RUN", "proofpack": "NOT_RUN"},
+  "validators": {"overall_status": "NOT_RUN", "report_path": "run_20260116_212210_ef53/validator_report.json"},
+  "proofpack_path": "/c/Users/user/tower/proofpacks/2026-01-16/TEST-001",
+  "zip_path": "/c/Users/user/tower/proofpacks/2026-01-16/TEST-001/proofpack.zip"
+}

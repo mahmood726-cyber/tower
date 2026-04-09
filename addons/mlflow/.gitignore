@@ -1,0 +1,12 @@
+# MLflow local tracking data
+mlruns/
+
+# Run logs (keep directory structure)
+runs/**/*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment files with secrets
+.env

@@ -1,0 +1,33 @@
+{
+    "version":  "1.0",
+    "algorithm":  "sha256",
+    "generated_at":  "2026-01-18T22:21:03.9754452+00:00",
+    "root":  "b9911b97a72810ad327167f099743fe44f3c52ca74449eee0dc3c46de1087d52",
+    "files":  [
+                  {
+                      "path":  "LICENSE",
+                      "sha256":  "30d7de41e98d51586d76239fe21d18a6b90a4720f372f1c8c01ef7dc989e052d",
+                      "bytes":  1073
+                  },
+                  {
+                      "path":  "README.md",
+                      "sha256":  "8112f8fa18c0992388d3ce1ee06ce3aec9927d5fb1caa9c41ad439dd2dac517d",
+                      "bytes":  1502
+                  },
+                  {
+                      "path":  "towerjs.js",
+                      "sha256":  "959299e0962a93a305a818d367beb8f7ae9c0890ecd587959fcc9a102a2f3a9c",
+                      "bytes":  15522
+                  },
+                  {
+                      "path":  "towerjs_v0_1.html",
+                      "sha256":  "66cdd277d6f46720af6974f2cb86085d1c93b5c70dbec33b2eb012229a01703f",
+                      "bytes":  18930
+                  }
+              ],
+    "excluded":  [
+                     "hash_tree.json",
+                     "signature.txt",
+                     "public_key.txt"
+                 ]
+}

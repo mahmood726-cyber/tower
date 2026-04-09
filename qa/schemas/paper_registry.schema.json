@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/paper_registry.schema.json",
+  "title": "Paper Registry",
+  "description": "Registry of research papers and their status",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "papers"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "papers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["paper_id", "title", "status"],
+        "properties": {
+          "paper_id": {"type": "string"},
+          "title": {"type": "string"},
+          "status": {
+            "type": "string",
+            "enum": ["draft", "in_review", "revision", "accepted", "published", "archived"]
+          },
+          "stream": {
+            "type": "string",
+            "enum": ["apps", "methods", "hta", "live"]
+          },
+          "related_cards": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^CARD-[0-9]+$"}
+          },
+          "journal": {"type": ["string", "null"]},
+          "created_at": {"type": "string", "format": "date-time"},
+          "updated_at": {"type": ["string", "null"], "format": "date-time"},
+          "path": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

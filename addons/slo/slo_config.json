@@ -1,0 +1,37 @@
+{
+  "spec_version": "v1.5.5",
+  "timezone": "Europe/London",
+  "windows_days": [7, 30],
+  "default_window_days": 30,
+  "thresholds": {
+    "rollback_rate_monthly_pct": {
+      "target": 3,
+      "breach": 5,
+      "description": "Percentage of cards rolled back per month"
+    },
+    "validator_fail_rate_pct": {
+      "target": 15,
+      "breach": 25,
+      "description": "Percentage of validator failures"
+    },
+    "glm_pass_audit_disagreement_pct": {
+      "target": 10,
+      "breach": 15,
+      "description": "Disagreement between GLM pass and manual audit"
+    },
+    "drift_incidents_per_100_active_hours": {
+      "target": 2,
+      "breach": 4,
+      "description": "Drift incidents per 100 active hours"
+    }
+  },
+  "error_budget_policy": {
+    "freeze_duration_hours": 24,
+    "recommended_actions": [
+      "Freeze merges for 24h (recommendation only)",
+      "Increase PASS audit sampling",
+      "Run nightly evals",
+      "Open Kaizen proposal"
+    ]
+  }
+}

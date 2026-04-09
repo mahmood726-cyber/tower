@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/registry_snapshot.schema.json",
+  "title": "TruthCert RegistrySnapshot Node",
+  "description": "Immutable registry snapshot per Spec v0.8 Section 4.1",
+  "type": "object",
+  "required": ["snapshot_id", "trial_id", "registry", "content_hash", "retrieved_at"],
+  "properties": {
+    "snapshot_id": {
+      "type": "string",
+      "pattern": "^reg:(ctgov|ctis|isrctn|euctr|other):[A-Za-z0-9-]+:snap:[a-f0-9]{64}$"
+    },
+    "trial_id": {
+      "type": "string",
+      "pattern": "^trial:.+$"
+    },
+    "registry": {
+      "type": "string",
+      "enum": ["ctgov", "ctis", "isrctn", "euctr", "other"]
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "retrieved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "version_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Registry-reported version date if available"
+    },
+    "is_lock_snapshot": {
+      "type": "boolean",
+      "description": "True if this is the trial_lock_snapshot per Section 5.4",
+      "default": false
+    },
+    "storage_path": {
+      "type": "string",
+      "description": "Local path to stored snapshot content"
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "run_id": { "type": "string" },
+        "machine_id": { "type": "string" },
+        "api_version": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/trial.schema.json",
+  "title": "TruthCert Trial Node",
+  "description": "Core Trial node per Spec v0.8 Section 4.1",
+  "type": "object",
+  "required": ["trial_id", "registry", "registry_id", "title", "study_design"],
+  "properties": {
+    "trial_id": {
+      "type": "string",
+      "pattern": "^trial:(ctgov|ctis|isrctn|euctr|jprn|chictr|anzctr|drks|irct|pactr|rebec|rpcec|slctr|tctr|other):[A-Za-z0-9-]+$"
+    },
+    "registry": {
+      "type": "string",
+      "enum": ["ctgov", "ctis", "isrctn", "euctr", "jprn", "chictr", "anzctr", "drks", "irct", "pactr", "rebec", "rpcec", "slctr", "tctr", "other"]
+    },
+    "registry_id": {
+      "type": "string",
+      "description": "Native registry identifier (e.g., NCT01234567)"
+    },
+    "title": {
+      "type": "string"
+    },
+    "brief_title": {
+      "type": "string"
+    },
+    "study_design": {
+      "type": "string",
+      "enum": ["parallel", "cluster", "crossover", "factorial", "other"],
+      "description": "Per Section 6.1"
+    },
+    "study_design_modifiers": {
+      "type": "object",
+      "properties": {
+        "cluster_unit": { "type": "string" },
+        "icc": { "type": "number", "minimum": 0, "maximum": 1 },
+        "icc_missing": { "type": "boolean", "default": false },
+        "crossover_periods": { "type": "integer", "minimum": 2 },
+        "washout_days": { "type": "number" },
+        "factorial_factors": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["1", "1/2", "2", "2/3", "3", "4", "NA", "other"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["not_yet_recruiting", "recruiting", "enrolling_by_invitation", "active_not_recruiting", "suspended", "terminated", "completed", "withdrawn", "unknown"]
+    },
+    "first_enrollment_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "primary_completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "trial_lock_snapshot_id": {
+      "type": "string",
+      "description": "Per Section 5.4: earliest snapshot on/after first_enrollment_date"
+    },
+    "arms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["arm_id", "label", "arm_type"],
+        "properties": {
+          "arm_id": { "type": "string" },
+          "label": { "type": "string" },
+          "arm_type": { "type": "string", "enum": ["experimental", "active_comparator", "placebo_comparator", "sham_comparator", "no_intervention", "other"] },
+          "n_enrolled": { "type": "integer" },
+          "n_analyzed": { "type": "integer" }
+        }
+      }
+    },
+    "primary_outcomes": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/outcome_ref" }
+    },
+    "secondary_outcomes": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/outcome_ref" }
+    },
+    "condition": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "intervention": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sponsor": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "definitions": {
+    "outcome_ref": {
+      "type": "object",
+      "properties": {
+        "outcome_id": { "type": "string" },
+        "measure": { "type": "string" },
+        "timeframe": { "type": "string" }
+      }
+    }
+  }
+}

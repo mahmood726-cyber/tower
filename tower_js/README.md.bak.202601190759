@@ -1,0 +1,72 @@
+# TowerJS Workspace v0.1
+
+Browser-first Tower tooling that runs locally with no server. All runtime usage is a single offline HTML file.
+
+## Deliverables
+
+- `packages/core/` - `@tower/core` pure logic library (no DOM, no network).
+- `dist/tower-ui.html` - Single-file offline UI (everything inlined).
+- `src/` - UI source and HTML template for optional rebuilds.
+- `vendor/ajv/` - Vendored Ajv for JSON Schema validation (MIT license included).
+- `packages/core/schemas/` - JSON Schemas for key control files and trace entries.
+
+## Quick Start
+
+1. Open `tower_js/dist/tower-ui.html` in a modern browser (standalone, offline).
+2. Click **Pick Tower Folder** (read/write) or use **Folder Upload** (read-only).
+3. The UI validates key control files, reads traces, and builds proofpacks.
+
+The folder picker requires a secure context (HTTPS or localhost). Folder upload works in any browser but is read-only.
+
+## Trace DB (NDJSON)
+
+- Path: `control/trace_db.jsonl`
+- Format: one JSON object per line, strict schema.
+- Required fields: `timestamp`, `event`, `source`.
+- Optional fields: `card_id`, `run_id`, `level`, `message`, `tags`, `data`.
+
+## Proofpack Builder
+
+The UI builds a proofpack from the selected folder:
+
+- `manifest.json` - list of `{path, sha256, bytes}`
+- `hash_tree.json` - root hash over the manifest list
+- `signature.txt` - optional Ed25519 signature over the hash tree payload
+- `public_key.txt` - optional Ed25519 public key (base64 raw)
+- `proofpack.zip` - zipped bundle of files + manifest + hash tree (+ signature)
+
+## JSON Schema Validation (Ajv)
+
+Key control files validated with Ajv (strict mode):
+
+- `control/status.json`
+- `control/backlog.json`
+- `control/quota.json`
+
+Missing required files or schema violations mark the scan as `ISSUES` (no green by omission).
+
+## Optional Build (Node)
+
+```powershell
+node tower_js/scripts/build.mjs
+```
+
+This regenerates `tower_js/dist/tower-ui.html` from `src/`, `packages/core/`, and `vendor/ajv/`.
+
+## Verify Proofpack (Optional, Node 20+)
+
+```powershell
+# Extract zip
+Expand-Archive -Path path\to\proofpack.zip -DestinationPath path\to\proofpack
+
+# Verify manifest + hash tree + signature (if present)
+node tower_js/scripts/verify-proofpack.mjs path\to\proofpack
+```
+
+## Legacy Files
+
+Older TowerJS demo files may still exist at the workspace root. The current deliverables are listed above.
+
+## License
+
+MIT. See `tower_js/LICENSE`.

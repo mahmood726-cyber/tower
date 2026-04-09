@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/conflict.schema.json",
+  "title": "TruthCert Conflict Node",
+  "description": "Conflict between claims/results per Spec v0.8 Section 4.1, Rule 5",
+  "type": "object",
+  "required": ["conflict_id", "conflict_type", "parties", "status", "detected_at"],
+  "properties": {
+    "conflict_id": {
+      "type": "string",
+      "pattern": "^conflict:[a-f0-9]{16,64}$"
+    },
+    "conflict_type": {
+      "type": "string",
+      "enum": ["value_mismatch", "sign_flip", "outcome_mapping", "timepoint_mismatch", "arm_mismatch", "linkage_uncertain", "prespec_change", "registry_drift"]
+    },
+    "parties": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 2,
+      "description": "IDs of conflicting objects (claims, results, etc.)"
+    },
+    "description": {
+      "type": "string"
+    },
+    "magnitude": {
+      "type": "object",
+      "properties": {
+        "absolute_difference": { "type": "number" },
+        "relative_difference": { "type": "number" },
+        "tolerance_exceeded": { "type": "boolean" }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "adjudicated", "abstained", "auto_resolved"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["P0", "P1", "P2"],
+      "description": "Priority for resolution"
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolution_id": {
+      "type": "string",
+      "description": "Adjudication or Consensus ID if resolved"
+    }
+  }
+}

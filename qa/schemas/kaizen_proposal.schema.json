@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/kaizen_proposal.schema.json",
+  "title": "Kaizen Proposal",
+  "description": "Continuous improvement proposal",
+  "type": "object",
+  "required": ["proposal_id", "title", "status", "created_at", "spec_version"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "proposal_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "rationale": {
+      "type": ["string", "null"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "approved", "implemented", "rejected", "pending_verification"]
+    },
+    "metrics_before": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "proposed_change": {
+      "type": ["string", "null"]
+    },
+    "expected_improvement": {
+      "type": ["string", "null"]
+    },
+    "actual_improvement": {
+      "type": ["object", "null"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "implemented_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "verification_date": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "source": {
+      "type": ["string", "null"],
+      "description": "How the proposal was generated (auto, manual)"
+    }
+  }
+}

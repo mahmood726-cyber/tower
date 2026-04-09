@@ -1,0 +1,59 @@
+# Tower Card Template v1.5.5
+# Copy this file and rename to CARD-XXX.yaml when creating a new card
+
+card_id: CARD-XXX  # Replace with actual card ID
+title: "Brief descriptive title"
+description: |
+  Longer description of the task.
+  Can be multiple lines.
+
+# Classification
+stream: apps  # apps | methods | hta | live
+status: READY  # BACKLOG | READY | ACTIVE | REVIEW | BLOCKED | GATES_PASS | VALIDATORS_PASS | GOLD | MERGED | ESCALATED | ABANDONED
+
+# Estimates
+estimates:
+  duration_minutes: 60
+  complexity: medium  # low | medium | high
+  quota_consumption: medium  # low | medium | high
+
+# Compute requirements
+compute:
+  category: light  # light | medium | heavy
+  preferred_machine: laptop  # laptop | pc1 | pc2 | pc3 | any
+  night_safe: false  # Can this run in night batch?
+  gpu_required: false
+
+# Tags for filtering/search
+tags:
+  - feature
+  - dta-pro
+
+# Risk assessment
+risk:
+  level: medium  # low | medium | high
+  notes: ""
+
+# Dependencies (other cards that must complete first)
+dependencies: []
+  # - CARD-045
+  # - CARD-046
+
+# Acceptance criteria
+acceptance_criteria:
+  - "Criteria 1"
+  - "Criteria 2"
+
+# Metadata
+created_at: "2026-01-16T00:00:00Z"
+created_by: ""
+assigned_to: null
+window: null  # tmux window (e.g., apps_dev1)
+
+# Tracking
+run_ids: []
+artifacts: []
+proofpack: null
+
+# Spec version
+spec_version: "v1.5.5"

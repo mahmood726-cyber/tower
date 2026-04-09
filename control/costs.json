@@ -1,0 +1,44 @@
+{
+  "spec_version": "v1.5.5",
+  "last_updated": "2026-01-16T00:00:00Z",
+  "currency": "USD",
+  "totals": {
+    "today": 0,
+    "this_week": 0,
+    "this_month": 0,
+    "all_time": 0
+  },
+  "by_model": {
+    "claude_opus": {
+      "today": 0,
+      "this_week": 0,
+      "this_month": 0,
+      "all_time": 0
+    },
+    "claude_sonnet": {
+      "today": 0,
+      "this_week": 0,
+      "this_month": 0,
+      "all_time": 0
+    },
+    "gemini": {
+      "today": 0,
+      "this_week": 0,
+      "this_month": 0,
+      "all_time": 0
+    },
+    "glm_4_7": {
+      "today": 0,
+      "this_week": 0,
+      "this_month": 0,
+      "all_time": 0
+    },
+    "codex": {
+      "today": 0,
+      "this_week": 0,
+      "this_month": 0,
+      "all_time": 0
+    }
+  },
+  "by_card": {}
+}

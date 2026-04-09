@@ -1,0 +1,11 @@
+{
+  "name": "tower-js-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TowerJS browser-first workspace",
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "verify-proofpack": "node scripts/verify-proofpack.mjs"
+  }
+}

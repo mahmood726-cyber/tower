@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/lane_config.schema.json",
+  "title": "TruthCert Lane Configuration",
+  "description": "Lane configuration per Spec v0.8 Section 11 (yin-yang: generator vs validator)",
+  "type": "object",
+  "required": ["spec_version", "lanes"],
+  "properties": {
+    "spec_version": {
+      "type": "string"
+    },
+    "lanes": {
+      "type": "object",
+      "properties": {
+        "map": {
+          "$ref": "#/definitions/lane_def"
+        },
+        "meta": {
+          "$ref": "#/definitions/lane_def"
+        },
+        "transport": {
+          "$ref": "#/definitions/lane_def"
+        },
+        "hta": {
+          "$ref": "#/definitions/lane_def"
+        }
+      }
+    },
+    "machine_assignments": {
+      "type": "object",
+      "description": "Which machine runs which lanes (3-box architecture)",
+      "properties": {
+        "box_a": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["map", "meta", "transport", "hta"] }
+        },
+        "box_b": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["map", "meta", "transport", "hta"] }
+        },
+        "box_c": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["map", "meta", "transport", "hta"] }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "lane_def": {
+      "type": "object",
+      "required": ["enabled", "generator", "validator"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "gated": {
+          "type": "boolean",
+          "description": "True if this lane requires gate checks before output"
+        },
+        "generator": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "script": { "type": "string" }
+          }
+        },
+        "validator": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "script": { "type": "string" },
+            "independent_implementation": {
+              "type": "boolean",
+              "description": "Per Section 11: validator should be independent where feasible"
+            }
+          }
+        },
+        "required_badge": {
+          "type": "string",
+          "enum": ["none", "bronze", "silver", "gold"],
+          "description": "Minimum badge required to run this lane"
+        },
+        "p0_validators": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of P0 validators that must pass"
+        }
+      }
+    }
+  }
+}

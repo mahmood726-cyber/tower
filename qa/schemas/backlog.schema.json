@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/backlog.schema.json",
+  "title": "Tower Backlog",
+  "description": "Prioritized work queues by stream",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "streams"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "streams": {
+      "type": "object",
+      "properties": {
+        "apps": {"$ref": "#/$defs/stream"},
+        "methods": {"$ref": "#/$defs/stream"},
+        "hta": {"$ref": "#/$defs/stream"},
+        "live": {"$ref": "#/$defs/stream"}
+      },
+      "additionalProperties": {"$ref": "#/$defs/stream"}
+    }
+  },
+  "$defs": {
+    "stream": {
+      "type": "object",
+      "properties": {
+        "ready_cards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["card_id"],
+            "properties": {
+              "card_id": {"type": "string", "pattern": "^CARD-[0-9]+$"},
+              "priority": {"type": "integer", "minimum": 1},
+              "title": {"type": ["string", "null"]},
+              "added_at": {"type": "string", "format": "date-time"}
+            }
+          }
+        },
+        "active_cards": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^CARD-[0-9]+$"}
+        },
+        "blocked_cards": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^CARD-[0-9]+$"}
+        },
+        "minimum_ready": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,657 @@
+/*
+  TowerJS v0.1.0
+  Browser-first Tower directory reader (no server required).
+  MIT License: see LICENSE.
+*/
+(function (global) {
+  "use strict";
+
+  var VERSION = "0.1.0";
+  var DEFAULT_CONTROL_FILES = [
+    "status.json",
+    "backlog.json",
+    "quota.json",
+    "machines.json",
+    "costs.json",
+    "model_scorecard.json",
+    "pc_scorecard.json",
+    "capacity_baseline.json",
+    "experiments.json",
+    "drift_config.json"
+  ];
+  var DEFAULT_TRACE_DB_PATH = "control/trace_db.jsonl";
+
+  function normalizePath(path) {
+    if (!path) {
+      return "";
+    }
+    var cleaned = String(path).replace(/\\/g, "/");
+    var parts = cleaned.split("/");
+    var out = [];
+    for (var i = 0; i < parts.length; i += 1) {
+      var part = parts[i];
+      if (!part || part === ".") {
+        continue;
+      }
+      if (part === "..") {
+        throw new Error("Parent path segments are not supported: " + path);
+      }
+      out.push(part);
+    }
+    return out.join("/");
+  }
+
+  function joinPath() {
+    var parts = [];
+    for (var i = 0; i < arguments.length; i += 1) {
+      if (arguments[i]) {
+        parts.push(arguments[i]);
+      }
+    }
+    return normalizePath(parts.join("/"));
+  }
+
+  function parseJsonSafe(text) {
+    try {
+      return { ok: true, data: JSON.parse(text) };
+    } catch (err) {
+      return { ok: false, error: String(err && err.message ? err.message : err) };
+    }
+  }
+
+  function parseJsonLines(text) {
+    var lines = String(text || "").split(/\r?\n/);
+    var entries = [];
+    var errors = [];
+    for (var i = 0; i < lines.length; i += 1) {
+      var line = lines[i].trim();
+      if (!line) {
+        continue;
+      }
+      var parsed = parseJsonSafe(line);
+      if (parsed.ok) {
+        entries.push(parsed.data);
+      } else {
+        errors.push({ line: i + 1, error: parsed.error, raw: line });
+      }
+    }
+    return { entries: entries, errors: errors };
+  }
+
+  function ensureIsoTimestamp(value) {
+    if (!value) {
+      return new Date().toISOString();
+    }
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return new Date().toISOString();
+    }
+    return date.toISOString();
+  }
+
+  function normalizeTraceEntry(entry) {
+    var payload = entry;
+    if (typeof payload === "string") {
+      payload = { event: payload };
+    }
+    if (!payload || typeof payload !== "object") {
+      payload = {};
+    }
+    var result = {};
+    for (var key in payload) {
+      if (Object.prototype.hasOwnProperty.call(payload, key)) {
+        result[key] = payload[key];
+      }
+    }
+    if (!result.event) {
+      result.event = "trace";
+    }
+    result.timestamp = ensureIsoTimestamp(
+      result.timestamp || result.created_at || result.time
+    );
+    if (!result.source) {
+      result.source = "towerjs";
+    }
+    return result;
+  }
+
+  function cleanYamlValue(value) {
+    var trimmed = value.trim();
+    var commentIndex = trimmed.indexOf(" #");
+    if (commentIndex >= 0) {
+      trimmed = trimmed.slice(0, commentIndex).trim();
+    }
+    if (trimmed === "|" || trimmed === ">") {
+      return "";
+    }
+    if (
+      (trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))
+    ) {
+      trimmed = trimmed.slice(1, -1);
+    }
+    return trimmed;
+  }
+
+  function parseCardMeta(yamlText) {
+    var wanted = {
+      card_id: true,
+      title: true,
+      status: true,
+      stream: true,
+      created_at: true,
+      assigned_to: true
+    };
+    var meta = {};
+    var lines = String(yamlText || "").split(/\r?\n/);
+    for (var i = 0; i < lines.length; i += 1) {
+      var line = lines[i];
+      if (!line || line.trim().startsWith("#")) {
+        continue;
+      }
+      if (/^\s/.test(line)) {
+        continue;
+      }
+      var match = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/);
+      if (!match) {
+        continue;
+      }
+      var key = match[1];
+      if (!wanted[key]) {
+        continue;
+      }
+      var value = cleanYamlValue(match[2]);
+      if (value) {
+        meta[key] = value;
+      }
+    }
+    return meta;
+  }
+
+  function detectRootPrefix(paths) {
+    var candidates = [];
+    for (var i = 0; i < paths.length; i += 1) {
+      var path = paths[i];
+      if (!path) {
+        continue;
+      }
+      if (path.startsWith("control/")) {
+        candidates.push("");
+        continue;
+      }
+      var index = path.indexOf("/control/");
+      if (index >= 0) {
+        candidates.push(path.slice(0, index));
+      }
+    }
+    if (!candidates.length) {
+      return "";
+    }
+    candidates.sort(function (a, b) {
+      return a.split("/").length - b.split("/").length;
+    });
+    return candidates[0];
+  }
+
+  function FileListFS(fileList) {
+    this.files = Array.prototype.slice.call(fileList || []);
+    this.fileMap = new Map();
+    this.paths = [];
+    this.canWrite = false;
+    for (var i = 0; i < this.files.length; i += 1) {
+      var file = this.files[i];
+      var relPath = normalizePath(file.webkitRelativePath || file.name);
+      this.fileMap.set(relPath, file);
+      this.paths.push(relPath);
+    }
+    this.rootPrefix = detectRootPrefix(this.paths);
+  }
+
+  FileListFS.prototype.resolve = function (path) {
+    var rel = normalizePath(path);
+    if (!this.rootPrefix) {
+      return rel;
+    }
+    return joinPath(this.rootPrefix, rel);
+  };
+
+  FileListFS.prototype.readText = async function (path) {
+    var key = this.resolve(path);
+    var file = this.fileMap.get(key);
+    if (!file) {
+      throw new Error("Missing file: " + path);
+    }
+    return await file.text();
+  };
+
+  FileListFS.prototype.readJSON = async function (path) {
+    var text = await this.readText(path);
+    var parsed = parseJsonSafe(text);
+    if (!parsed.ok) {
+      throw new Error("Invalid JSON in " + path + ": " + parsed.error);
+    }
+    return parsed.data;
+  };
+
+  FileListFS.prototype.exists = async function (path) {
+    var key = this.resolve(path);
+    if (this.fileMap.has(key)) {
+      return true;
+    }
+    var prefix = key ? key + "/" : "";
+    for (var i = 0; i < this.paths.length; i += 1) {
+      if (this.paths[i].startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  FileListFS.prototype.listDir = async function (path) {
+    var key = this.resolve(path);
+    var prefix = key ? key + "/" : "";
+    var seen = new Map();
+    for (var i = 0; i < this.paths.length; i += 1) {
+      var current = this.paths[i];
+      if (!current.startsWith(prefix)) {
+        continue;
+      }
+      var rest = current.slice(prefix.length);
+      if (!rest) {
+        continue;
+      }
+      var parts = rest.split("/");
+      var name = parts[0];
+      if (!name) {
+        continue;
+      }
+      if (!seen.has(name)) {
+        seen.set(name, { name: name, kind: parts.length > 1 ? "directory" : "file" });
+      } else if (parts.length > 1) {
+        var existing = seen.get(name);
+        existing.kind = "directory";
+      }
+    }
+    return Array.from(seen.values()).sort(function (a, b) {
+      return a.name.localeCompare(b.name);
+    });
+  };
+
+  FileListFS.prototype.writeText = async function () {
+    throw new Error("Write not supported for fileList sources.");
+  };
+
+  function DirectoryHandleFS(rootHandle) {
+    this.root = rootHandle;
+    this.canWrite = true;
+  }
+
+  DirectoryHandleFS.prototype._getDirHandle = async function (path, create) {
+    var clean = normalizePath(path);
+    if (!clean) {
+      return this.root;
+    }
+    var parts = clean.split("/");
+    var current = this.root;
+    for (var i = 0; i < parts.length; i += 1) {
+      current = await current.getDirectoryHandle(parts[i], {
+        create: Boolean(create)
+      });
+    }
+    return current;
+  };
+
+  DirectoryHandleFS.prototype._getFileHandle = async function (path, createFile) {
+    var clean = normalizePath(path);
+    var parts = clean.split("/");
+    var fileName = parts.pop();
+    var dir = await this._getDirHandle(parts.join("/"), false);
+    return await dir.getFileHandle(fileName, { create: Boolean(createFile) });
+  };
+
+  DirectoryHandleFS.prototype.readText = async function (path) {
+    var fileHandle = await this._getFileHandle(path);
+    var file = await fileHandle.getFile();
+    return await file.text();
+  };
+
+  DirectoryHandleFS.prototype.readJSON = async function (path) {
+    var text = await this.readText(path);
+    var parsed = parseJsonSafe(text);
+    if (!parsed.ok) {
+      throw new Error("Invalid JSON in " + path + ": " + parsed.error);
+    }
+    return parsed.data;
+  };
+
+  DirectoryHandleFS.prototype.exists = async function (path) {
+    var clean = normalizePath(path);
+    if (!clean) {
+      return true;
+    }
+    try {
+      await this._getFileHandle(clean);
+      return true;
+    } catch (fileErr) {
+      try {
+        await this._getDirHandle(clean);
+        return true;
+      } catch (dirErr) {
+        return false;
+      }
+    }
+  };
+
+  DirectoryHandleFS.prototype.listDir = async function (path) {
+    var dirHandle = await this._getDirHandle(path);
+    var entries = [];
+    for await (var entry of dirHandle.entries()) {
+      entries.push({ name: entry[0], kind: entry[1].kind });
+    }
+    entries.sort(function (a, b) {
+      return a.name.localeCompare(b.name);
+    });
+    return entries;
+  };
+
+  DirectoryHandleFS.prototype.writeText = async function (path, text) {
+    var fileHandle = await this._getFileHandle(path, true);
+    var writable = await fileHandle.createWritable({ keepExistingData: false });
+    await writable.write(text);
+    await writable.close();
+  };
+
+  function TowerProject(fs, basePath, rootInfo) {
+    this.fs = fs;
+    this.basePath = normalizePath(basePath || "");
+    this.rootInfo = rootInfo || {};
+  }
+
+  TowerProject.prototype._resolve = function (path) {
+    return this.basePath ? joinPath(this.basePath, path) : normalizePath(path);
+  };
+
+  TowerProject.prototype.readText = async function (path) {
+    return await this.fs.readText(this._resolve(path));
+  };
+
+  TowerProject.prototype.readJSON = async function (path) {
+    return await this.fs.readJSON(this._resolve(path));
+  };
+
+  TowerProject.prototype.writeText = async function (path, text) {
+    if (!this.supportsWrite() || !this.fs.writeText) {
+      throw new Error("Write not supported.");
+    }
+    return await this.fs.writeText(this._resolve(path), text);
+  };
+
+  TowerProject.prototype.exists = async function (path) {
+    return await this.fs.exists(this._resolve(path));
+  };
+
+  TowerProject.prototype.listDir = async function (path) {
+    return await this.fs.listDir(this._resolve(path));
+  };
+
+  TowerProject.prototype.supportsWrite = function () {
+    return Boolean(this.fs && this.fs.canWrite);
+  };
+
+  TowerProject.prototype._safeReadJSON = async function (path) {
+    try {
+      var text = await this.readText(path);
+      return parseJsonSafe(text);
+    } catch (err) {
+      return { ok: false, error: String(err && err.message ? err.message : err) };
+    }
+  };
+
+  TowerProject.prototype._loadControlEntries = async function () {
+    var result = { exists: false, entries: [], files: [], directories: [] };
+    if (!(await this.exists("control"))) {
+      return result;
+    }
+    result.exists = true;
+    var entries = await this.listDir("control");
+    result.entries = entries;
+    for (var i = 0; i < entries.length; i += 1) {
+      if (entries[i].kind === "file") {
+        result.files.push(entries[i].name);
+      } else {
+        result.directories.push(entries[i].name);
+      }
+    }
+    return result;
+  };
+
+  TowerProject.prototype._summarizeStatus = function (statusData) {
+    if (!statusData || !Array.isArray(statusData.cards)) {
+      return { counts: {}, cards: [] };
+    }
+    var counts = {};
+    for (var i = 0; i < statusData.cards.length; i += 1) {
+      var card = statusData.cards[i];
+      var state = card.state || "UNKNOWN";
+      counts[state] = (counts[state] || 0) + 1;
+    }
+    return { counts: counts, cards: statusData.cards.slice() };
+  };
+
+  TowerProject.prototype._mergeCards = function (yamlCards, statusCards) {
+    var map = new Map();
+    for (var i = 0; i < yamlCards.length; i += 1) {
+      var yamlCard = yamlCards[i];
+      var key = yamlCard.card_id || yamlCard.file;
+      map.set(key, yamlCard);
+    }
+    for (var j = 0; j < statusCards.length; j += 1) {
+      var statusCard = statusCards[j];
+      var existing = map.get(statusCard.card_id) || {
+        card_id: statusCard.card_id,
+        title: statusCard.title || "",
+        status: "",
+        stream: "",
+        file: ""
+      };
+      existing.state = statusCard.state || existing.state;
+      if (!existing.title && statusCard.title) {
+        existing.title = statusCard.title;
+      }
+      map.set(statusCard.card_id, existing);
+    }
+    return Array.from(map.values()).sort(function (a, b) {
+      return String(a.card_id || a.file).localeCompare(String(b.card_id || b.file));
+    });
+  };
+
+  TowerProject.prototype.listCards = async function (limit, statusData) {
+    var cards = [];
+    if (await this.exists("control/cards")) {
+      var entries = await this.listDir("control/cards");
+      for (var i = 0; i < entries.length; i += 1) {
+        var entry = entries[i];
+        if (entry.kind !== "file") {
+          continue;
+        }
+        if (!entry.name.endsWith(".yaml") && !entry.name.endsWith(".yml")) {
+          continue;
+        }
+        try {
+          var text = await this.readText(joinPath("control/cards", entry.name));
+          var meta = parseCardMeta(text);
+          meta.file = entry.name;
+          if (!meta.card_id) {
+            meta.card_id = entry.name.replace(/\.(yaml|yml)$/i, "");
+          }
+          cards.push(meta);
+        } catch (err) {
+          cards.push({
+            card_id: entry.name.replace(/\.(yaml|yml)$/i, ""),
+            title: "",
+            status: "",
+            stream: "",
+            file: entry.name,
+            error: String(err && err.message ? err.message : err)
+          });
+        }
+      }
+    }
+    var statusCards = Array.isArray(statusData && statusData.cards) ? statusData.cards : [];
+    var merged = this._mergeCards(cards, statusCards);
+    if (typeof limit === "number" && limit > 0) {
+      return merged.slice(0, limit);
+    }
+    return merged;
+  };
+
+  TowerProject.prototype.readTraceDb = async function (options) {
+    var settings = options || {};
+    var tracePath = settings.path || DEFAULT_TRACE_DB_PATH;
+    var result = {
+      ok: true,
+      path: tracePath,
+      exists: false,
+      entries: [],
+      errors: []
+    };
+    if (!(await this.exists(tracePath))) {
+      return result;
+    }
+    result.exists = true;
+    var text = await this.readText(tracePath);
+    var parsed = parseJsonLines(text);
+    result.entries = parsed.entries;
+    result.errors = parsed.errors;
+    if (result.errors.length) {
+      result.ok = false;
+    }
+    return result;
+  };
+
+  TowerProject.prototype.appendTrace = async function (entry, options) {
+    if (!this.supportsWrite()) {
+      throw new Error("Write not supported for this source.");
+    }
+    var settings = options || {};
+    var tracePath = settings.path || DEFAULT_TRACE_DB_PATH;
+    var normalized = normalizeTraceEntry(entry);
+    var line = JSON.stringify(normalized);
+    var existing = "";
+    if (await this.exists(tracePath)) {
+      existing = await this.readText(tracePath);
+    }
+    if (existing && !existing.endsWith("\n")) {
+      existing += "\n";
+    }
+    var next = existing + line + "\n";
+    await this.writeText(tracePath, next);
+    return { ok: true, path: tracePath, entry: normalized, bytes: next.length };
+  };
+
+  TowerProject.prototype.scan = async function (options) {
+    var settings = options || {};
+    var cardLimit = typeof settings.cardLimit === "number" ? settings.cardLimit : 50;
+    var summary = {
+      version: VERSION,
+      rootPath: this.basePath || ".",
+      source: this.rootInfo.source || "",
+      rootPrefix: this.rootInfo.rootPrefix || "",
+      control: { exists: false, entries: [], files: [], directories: [] },
+      status: null,
+      backlog: null,
+      statusCounts: {},
+      cards: [],
+      specVersion: "",
+      lastUpdated: "",
+      warnings: []
+    };
+
+    summary.control = await this._loadControlEntries();
+    if (!summary.control.exists) {
+      summary.warnings.push("No control/ directory found.");
+    }
+
+    var statusResult = await this._safeReadJSON("control/status.json");
+    if (statusResult.ok) {
+      summary.status = statusResult.data;
+      var statusSummary = this._summarizeStatus(statusResult.data);
+      summary.statusCounts = statusSummary.counts;
+      summary.specVersion = statusResult.data.spec_version || summary.specVersion;
+      summary.lastUpdated = statusResult.data.last_updated || summary.lastUpdated;
+    } else if (await this.exists("control/status.json")) {
+      summary.warnings.push("status.json not readable: " + statusResult.error);
+    }
+
+    var backlogResult = await this._safeReadJSON("control/backlog.json");
+    if (backlogResult.ok) {
+      summary.backlog = backlogResult.data;
+      summary.specVersion = summary.specVersion || backlogResult.data.spec_version || "";
+      summary.lastUpdated = summary.lastUpdated || backlogResult.data.last_updated || "";
+    } else if (await this.exists("control/backlog.json")) {
+      summary.warnings.push("backlog.json not readable: " + backlogResult.error);
+    }
+
+    summary.cards = await this.listCards(cardLimit, summary.status);
+
+    summary.controlFiles = [];
+    for (var i = 0; i < DEFAULT_CONTROL_FILES.length; i += 1) {
+      var controlName = DEFAULT_CONTROL_FILES[i];
+      var controlPath = joinPath("control", controlName);
+      var exists = await this.exists(controlPath);
+      summary.controlFiles.push({ name: controlName, path: controlPath, exists: exists });
+    }
+
+    return summary;
+  };
+
+  async function detectBasePath(fs) {
+    if (await fs.exists("control")) {
+      return "";
+    }
+    if (await fs.exists("tower/control")) {
+      return "tower";
+    }
+    return "";
+  }
+
+  async function connect(options) {
+    if (!options || (!options.directoryHandle && !options.fileList)) {
+      throw new Error("Provide directoryHandle or fileList.");
+    }
+    var fs;
+    var rootInfo = {};
+    if (options.directoryHandle) {
+      fs = new DirectoryHandleFS(options.directoryHandle);
+      rootInfo.source = "directoryHandle";
+    } else {
+      fs = new FileListFS(options.fileList);
+      rootInfo.source = "fileList";
+      rootInfo.rootPrefix = fs.rootPrefix || "";
+    }
+    var basePath = await detectBasePath(fs);
+    return new TowerProject(fs, basePath, rootInfo);
+  }
+
+  async function openDirectory() {
+    if (!global.showDirectoryPicker || !global.isSecureContext) {
+      throw new Error("File System Access API not available.");
+    }
+    return await global.showDirectoryPicker({ mode: "read" });
+  }
+
+  var TowerJS = {
+    version: VERSION,
+    supportsFileSystemAccess: Boolean(global.showDirectoryPicker && global.isSecureContext),
+    connect: connect,
+    openDirectory: openDirectory,
+    DEFAULT_CONTROL_FILES: DEFAULT_CONTROL_FILES,
+    DEFAULT_TRACE_DB_PATH: DEFAULT_TRACE_DB_PATH,
+    _internal: {
+      parseCardMeta: parseCardMeta,
+      normalizePath: normalizePath
+    }
+  };
+
+  global.TowerJS = TowerJS;
+})(typeof window !== "undefined" ? window : globalThis);

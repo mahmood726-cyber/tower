@@ -1,0 +1,14 @@
+{
+  "run_id": "20260116_222907_1dbdd9b1",
+  "card_id": "TEST-002",
+  "session": "test"test,
+  "model": null,
+  "command": "echo test",
+  "start_time": "2026-01-16T22:29:08+00:00",
+  "working_dir": "/c/Users/user/tower",
+  "git_sha": null,
+  "git_branch": null,
+  "spec_version": "v1.5.5",
+  "machine": "laptop",
+  "environment": {}
+}

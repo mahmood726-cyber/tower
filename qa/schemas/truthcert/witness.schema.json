@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/witness.schema.json",
+  "title": "TruthCert Witness",
+  "description": "Witness node with grades per Spec v0.8 Section 7 (isnad → engineering)",
+  "type": "object",
+  "required": ["witness_id", "source_type", "locator", "content_hash", "grade", "timestamp"],
+  "properties": {
+    "witness_id": {
+      "type": "string",
+      "pattern": "^witness:[a-f0-9]{16,64}$"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["registry_results_table", "primary_paper_table", "curated_extract", "sr_extract", "inferred_text", "fuzzy_linkage", "other"],
+      "description": "Type of source material"
+    },
+    "locator": {
+      "type": "string",
+      "description": "URL, file path, or stable identifier for the source"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "SHA-256 hash of the witnessed content"
+    },
+    "grade": {
+      "type": "string",
+      "enum": ["A", "B", "C"],
+      "description": "Witness grade per Section 7.1: A=registry/primary table, B=SR extract with traceable list, C=inferred/fuzzy"
+    },
+    "grade_rationale": {
+      "type": "string",
+      "description": "Why this grade was assigned"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the witness was captured"
+    },
+    "retrieval_method": {
+      "type": "string",
+      "enum": ["api", "scrape", "manual", "cached", "other"]
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "run_id": { "type": "string" },
+        "machine_id": { "type": "string" },
+        "script_version": { "type": "string" }
+      }
+    },
+    "arms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Arm labels if this witness covers specific arms"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "Outcome definition this witness supports"
+    },
+    "timepoint": {
+      "$ref": "#/definitions/timepoint_window"
+    }
+  },
+  "definitions": {
+    "timepoint_window": {
+      "type": "object",
+      "description": "Timepoint window model per Section 5.1",
+      "required": ["target_value", "unit"],
+      "properties": {
+        "target_value": { "type": "number" },
+        "unit": { "type": "string", "enum": ["days", "weeks", "months", "years"] },
+        "lower_window": { "type": "number", "default": 0 },
+        "upper_window": { "type": "number", "default": 0 },
+        "match_type": {
+          "type": "string",
+          "enum": ["exact", "windowed", "inferred"],
+          "default": "exact"
+        }
+      }
+    }
+  }
+}

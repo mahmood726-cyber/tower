@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/claim.schema.json",
+  "title": "TruthCert Claim Node",
+  "description": "Claim node with witness support per Spec v0.8 Section 4.1",
+  "type": "object",
+  "required": ["claim_id", "claim_type", "value", "witnesses", "quorum"],
+  "properties": {
+    "claim_id": {
+      "type": "string",
+      "pattern": "^claim:[a-f0-9]{16,64}$"
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": ["effect_estimate", "event_count", "sample_size", "mean_value", "prevalence", "incidence", "composite"]
+    },
+    "source_result_id": {
+      "type": "string",
+      "description": "ExtractedResult this claim derives from"
+    },
+    "trial_id": {
+      "type": "string"
+    },
+    "outcome_id": {
+      "type": "string"
+    },
+    "value": {
+      "type": "number"
+    },
+    "uncertainty": {
+      "type": "object",
+      "properties": {
+        "se": { "type": "number" },
+        "ci_lower": { "type": "number" },
+        "ci_upper": { "type": "number" },
+        "ci_level": { "type": "number", "default": 0.95 }
+      }
+    },
+    "unit": {
+      "type": "string"
+    },
+    "witnesses": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Per Rule 1: no published number without witness chain"
+    },
+    "quorum": {
+      "$ref": "quorum.schema.json"
+    },
+    "publishable_grade": {
+      "type": "boolean",
+      "description": "True if quorum satisfied per Section 7.2"
+    },
+    "conflicts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of conflicting claims"
+    },
+    "consensus_id": {
+      "type": "string",
+      "description": "Reference to Consensus resolution if applicable"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

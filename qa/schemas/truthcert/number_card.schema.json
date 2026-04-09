@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/number_card.schema.json",
+  "title": "TruthCert NUMBER_CARD.json",
+  "description": "NUMBER_CARD.json per Spec v0.8 Section 20.2 (required for any published number)",
+  "type": "object",
+  "required": ["spec_version", "number_card_id", "value", "badge", "witnesses", "consensus_rule"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "const": "0.8.0"
+    },
+    "number_card_id": {
+      "type": "string"
+    },
+    "capsule_id": {
+      "type": "string"
+    },
+    "claim_id": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable label for the number"
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "domain": { "type": "string" },
+        "outcome": { "type": "string" },
+        "comparison": { "type": "string" },
+        "population": { "type": "string" }
+      }
+    },
+    "value": {
+      "type": "number"
+    },
+    "uncertainty": {
+      "type": "object",
+      "required": ["ci_lower", "ci_upper"],
+      "properties": {
+        "se": { "type": "number" },
+        "ci_lower": { "type": "number" },
+        "ci_upper": { "type": "number" },
+        "ci_level": { "type": "number", "default": 0.95 },
+        "pi_lower": { "type": "number" },
+        "pi_upper": { "type": "number" }
+      }
+    },
+    "unit": {
+      "type": "string"
+    },
+    "effect_measure": {
+      "type": "string",
+      "enum": ["RR", "OR", "HR", "RD", "MD", "SMD", "other"]
+    },
+    "badge": {
+      "type": "object",
+      "required": ["level"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["none", "bronze", "silver", "gold"]
+        },
+        "algorithm_version": { "type": "string" }
+      }
+    },
+    "certainty_stub": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["low", "moderate", "high"]
+        },
+        "drivers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "concerns": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "drift_summary": {
+      "type": "object",
+      "properties": {
+        "stable_since": { "type": "string", "format": "date" },
+        "releases_stable": { "type": "integer" },
+        "last_drift_type": { "type": "string" },
+        "last_drift_date": { "type": "string", "format": "date" }
+      }
+    },
+    "witnesses": {
+      "type": "object",
+      "required": ["count", "grades"],
+      "properties": {
+        "count": { "type": "integer" },
+        "grades": {
+          "type": "object",
+          "properties": {
+            "A": { "type": "integer" },
+            "B": { "type": "integer" },
+            "C": { "type": "integer" }
+          }
+        },
+        "locators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "witness_id": { "type": "string" },
+              "grade": { "type": "string" },
+              "locator": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "consensus_rule": {
+      "type": "string",
+      "description": "Which consensus rule was used (e.g., Q1, Q2, priority_rule)"
+    },
+    "known_limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

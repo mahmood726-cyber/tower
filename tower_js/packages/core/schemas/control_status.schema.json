@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "towerjs://schemas/control_status.schema.json",
+  "title": "Tower Status",
+  "type": "object",
+  "required": ["spec_version", "cards"],
+  "properties": {
+    "spec_version": { "type": "string", "minLength": 1 },
+    "last_updated": { "type": "string" },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["card_id", "state"],
+        "properties": {
+          "card_id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string" },
+          "state": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

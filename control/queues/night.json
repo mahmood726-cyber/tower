@@ -1,0 +1,10 @@
+{
+  "spec_version": "v1.5.5",
+  "last_updated": "2026-01-16T22:29:29.492709",
+  "enabled": true,
+  "window": {
+    "start": "22:00",
+    "end": "06:00"
+  },
+  "jobs": []
+}

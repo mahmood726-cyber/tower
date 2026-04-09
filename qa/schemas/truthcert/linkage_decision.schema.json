@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/linkage_decision.schema.json",
+  "title": "TruthCert LinkageDecision Node",
+  "description": "Record linkage decision per Spec v0.8 Section 10",
+  "type": "object",
+  "required": ["linkage_id", "entity_a", "entity_b", "decision", "score", "method_version"],
+  "properties": {
+    "linkage_id": {
+      "type": "string",
+      "pattern": "^linkage:[a-f0-9]{16,64}$"
+    },
+    "linkage_type": {
+      "type": "string",
+      "enum": ["trial_publication", "trial_trial", "publication_publication", "other"]
+    },
+    "entity_a": {
+      "type": "string",
+      "description": "First entity ID"
+    },
+    "entity_b": {
+      "type": "string",
+      "description": "Second entity ID"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["link", "non_link", "possible_link"]
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "thresholds": {
+      "type": "object",
+      "properties": {
+        "link_threshold": { "type": "number" },
+        "non_link_threshold": { "type": "number" }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "feature": { "type": "string" },
+          "value_a": { "type": "string" },
+          "value_b": { "type": "string" },
+          "similarity": { "type": "number" },
+          "weight": { "type": "number" }
+        }
+      }
+    },
+    "method_version": {
+      "type": "string"
+    },
+    "requires_adjudication": {
+      "type": "boolean",
+      "description": "True if decision=possible_link per Section 10"
+    },
+    "adjudication_id": {
+      "type": "string"
+    },
+    "source_trust_flag": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Optional per Section 10: P1 warnings only, never censorship"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

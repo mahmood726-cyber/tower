@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/costs.schema.json",
+  "title": "Tower Costs",
+  "description": "Cost tracking per model and card",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "currency"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "totals": {
+      "type": "object",
+      "properties": {
+        "today": {"type": "number", "minimum": 0, "default": 0},
+        "this_week": {"type": "number", "minimum": 0, "default": 0},
+        "this_month": {"type": "number", "minimum": 0, "default": 0},
+        "all_time": {"type": "number", "minimum": 0, "default": 0}
+      }
+    },
+    "by_model": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "today": {"type": "number", "minimum": 0, "default": 0},
+          "this_week": {"type": "number", "minimum": 0, "default": 0},
+          "this_month": {"type": "number", "minimum": 0, "default": 0},
+          "all_time": {"type": "number", "minimum": 0, "default": 0}
+        }
+      }
+    },
+    "by_card": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    }
+  }
+}

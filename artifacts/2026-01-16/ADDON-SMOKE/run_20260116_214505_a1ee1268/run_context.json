@@ -1,0 +1,14 @@
+{
+  "run_id": "20260116_214505_a1ee1268",
+  "card_id": "ADDON-SMOKE",
+  "session": "apps_dev1"apps_dev1,
+  "model": "noop"noop,
+  "command": "echo ADDON_SMOKE_OK",
+  "start_time": "2026-01-16T21:45:05+00:00",
+  "working_dir": "/c/Users/user/tower",
+  "git_sha": null,
+  "git_branch": null,
+  "spec_version": "v1.5.5",
+  "machine": "laptop",
+  "environment": {}
+}

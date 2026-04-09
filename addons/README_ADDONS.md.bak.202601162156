@@ -1,0 +1,158 @@
+# Tower v1.5.5 - Observability & Orchestration Add-on Pack
+
+## Overview
+
+This add-on pack provides **optional** integrations for:
+- **Prefect** - Local workflow orchestration and scheduling
+- **MLflow** - Run tracking and artifact indexing
+- **LangSmith** - LLM tracing (disabled by default)
+
+**Important:** These are purely optional. Tower functions completely without them.
+Tower remains the source of truth for all control files, artifacts, and proofpacks.
+
+## Why Optional?
+
+1. **Zero Dependencies by Default**: Tower core only needs bash, coreutils, jq, and python3
+2. **Graceful Degradation**: All add-on scripts work even if dependencies are missing
+3. **Local-First**: All integrations default to local file storage, no cloud required
+4. **Non-Invasive**: Add-ons never modify existing Tower scripts or artifacts
+
+## Installation
+
+### Core Dependencies (already required by Tower)
+```bash
+# Already installed for Tower
+pip install jsonschema
+```
+
+### Optional: Prefect (Local Orchestration)
+```bash
+pip install prefect
+# No Prefect Cloud account needed - runs locally
+```
+
+### Optional: MLflow (Run Tracking)
+```bash
+pip install mlflow
+# Uses local file store by default
+```
+
+### Optional: LangSmith (Tracing)
+```bash
+pip install langsmith
+# Requires API key - see env.template
+```
+
+## Configuration
+
+1. Copy the environment template:
+   ```bash
+   cp tower/addons/env.template ~/.tower_addons.env
+   ```
+
+2. Edit `~/.tower_addons.env` with your preferences
+
+3. Source it in your shell:
+   ```bash
+   source ~/.tower_addons.env
+   ```
+
+**Security Note:** Never commit secrets. The `env.template` contains only placeholders.
+
+## Usage
+
+### Enhanced Run Wrapper
+```bash
+# Run with MLflow logging
+bash tower/scripts/tower_run_plus.sh \
+  --card CARD-001 \
+  --session apps_dev1 \
+  --model claude_opus \
+  --cmd "python my_script.py" \
+  --enable-mlflow
+
+# Run with tracing (if configured)
+bash tower/scripts/tower_run_plus.sh \
+  --card CARD-001 \
+  --session apps_dev1 \
+  --model claude_opus \
+  --cmd "python my_script.py" \
+  --enable-tracing
+```
+
+### Prefect Orchestration
+```bash
+# Run validation flow
+bash tower/scripts/addons/prefect_run_local.sh validate
+
+# Run daily maintenance flow
+bash tower/scripts/addons/prefect_run_local.sh daily
+
+# Run night batch flow
+bash tower/scripts/addons/prefect_run_local.sh night
+```
+
+### Extended Dashboard
+```bash
+# Generate dashboard with add-on status
+bash tower/scripts/addons/tower_dashboard_addons.sh
+# Output: tower/control/dashboard_addons.html
+```
+
+## How Tower Stays Source of Truth
+
+1. **Artifacts**: All Tower artifacts remain in `tower/artifacts/`
+2. **Control Files**: All control JSON in `tower/control/`
+3. **Proofpacks**: Evidence bundles in `tower/proofpacks/`
+
+Add-ons only:
+- Create receipts in `tower/addons/*/state/`
+- Write small event JSON into run directories
+- Index existing Tower data (never move or copy it)
+
+## Directory Structure
+
+```
+tower/addons/
+├── README_ADDONS.md      # This file
+├── env.template          # Environment variable template
+├── prefect/
+│   ├── flows/            # Prefect flow definitions
+│   └── state/            # Local Prefect state/receipts
+├── mlflow/
+│   └── state/
+│       ├── mlruns/       # MLflow local tracking store
+│       └── receipts/     # Run logging receipts
+├── tracing/
+│   └── state/            # Tracing state/receipts
+└── qa/
+    └── schemas/          # Add-on event schemas
+```
+
+## Troubleshooting
+
+### "Module not found" errors
+The add-on is not installed. Scripts will gracefully skip and log:
+```json
+{"status": "NOT_INSTALLED", "addon": "mlflow", ...}
+```
+
+### MLflow UI
+```bash
+cd tower/addons/mlflow/state
+mlflow ui
+# Open http://localhost:5000
+```
+
+### Prefect UI (optional)
+```bash
+prefect server start
+# Open http://localhost:4200
+```
+
+## Security Notes
+
+1. **No secrets in repo**: All API keys via environment variables only
+2. **Local by default**: No cloud uploads without explicit configuration
+3. **Tracing disabled**: LangSmith tracing requires explicit opt-in
+4. **Metadata only**: Tracing never uploads prompt contents by default

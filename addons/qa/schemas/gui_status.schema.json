@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gui_status.schema.json",
+  "title": "Tower GUI Status Response",
+  "description": "Schema for Tower GUI API /api/status response",
+  "type": "object",
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Tower specification version"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when status was generated"
+    },
+    "tower_state": {
+      "type": "string",
+      "enum": ["RUNNING", "IDLE", "FROZEN", "ERROR"],
+      "description": "Overall Tower state"
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "card_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,50}$"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["BACKLOG", "ACTIVE", "IN_REVIEW", "VALIDATING", "GREEN", "MERGED", "ESCALATED", "BLOCKED", "ROLLED_BACK"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "assigned_to": {
+            "type": ["string", "null"]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["card_id", "state"]
+      },
+      "description": "List of cards"
+    },
+    "active_session": {
+      "type": ["string", "null"],
+      "description": "Currently active session name"
+    },
+    "last_run": {
+      "type": "object",
+      "properties": {
+        "run_id": { "type": "string" },
+        "card_id": { "type": "string" },
+        "status": { "type": "string" },
+        "completed_at": { "type": "string", "format": "date-time" }
+      },
+      "description": "Information about the last run"
+    }
+  },
+  "required": ["spec_version", "cards"],
+  "additionalProperties": true
+}

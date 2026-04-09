@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "orchestrator_run.schema.json",
+  "title": "Tower Orchestrator Run Receipt",
+  "description": "Schema for receipts written by tower_run_plus.sh and add-on wrappers",
+  "type": "object",
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Tower specification version"
+    },
+    "receipt_type": {
+      "type": "string",
+      "enum": ["tower_run_plus", "prefect_flow", "addon_receipt"],
+      "description": "Type of receipt"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp when receipt was created"
+    },
+    "card_id": {
+      "type": "string",
+      "description": "Card ID for this run"
+    },
+    "run_id": {
+      "type": ["string", "null"],
+      "description": "Tower run ID"
+    },
+    "run_dir": {
+      "type": ["string", "null"],
+      "description": "Path to the Tower run directory"
+    },
+    "tower_run_exit_code": {
+      "type": ["integer", "null"],
+      "description": "Exit code from tower_run.sh"
+    },
+    "addons_enabled": {
+      "type": "object",
+      "properties": {
+        "mlflow": {
+          "type": "boolean"
+        },
+        "tracing": {
+          "type": "boolean"
+        },
+        "prefect": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "addon_results": {
+      "type": "object",
+      "properties": {
+        "mlflow": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["OK", "NOT_INSTALLED", "FAILED", "SKIPPED", "DISABLED"]
+            },
+            "mlflow_run_id": {
+              "type": ["string", "null"]
+            },
+            "receipt_path": {
+              "type": ["string", "null"]
+            }
+          }
+        },
+        "tracing": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["OK", "NOT_INSTALLED", "FAILED", "SKIPPED", "DISABLED"]
+            },
+            "trace_url": {
+              "type": ["string", "null"]
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "command": {
+      "type": ["string", "null"],
+      "description": "The command that was executed"
+    },
+    "session": {
+      "type": ["string", "null"],
+      "description": "Session name"
+    },
+    "model": {
+      "type": ["string", "null"],
+      "description": "Model identifier"
+    }
+  },
+  "required": ["spec_version", "receipt_type", "created_at", "card_id"],
+  "additionalProperties": false
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/curie_ids.schema.json",
+  "title": "TruthCert CURIE ID Patterns",
+  "description": "CURIE-style identifiers for TruthCert Evidence Graph (Spec v0.8 Section 4.3)",
+  "definitions": {
+    "trial_id": {
+      "type": "string",
+      "pattern": "^trial:(ctgov|ctis|isrctn|euctr|jprn|chictr|anzctr|drks|irct|pactr|rebec|rpcec|slctr|tctr|other):[A-Za-z0-9-]+$",
+      "examples": ["trial:ctgov:NCT01234567", "trial:isrctn:ISRCTN12345678"]
+    },
+    "snapshot_id": {
+      "type": "string",
+      "pattern": "^reg:(ctgov|ctis|isrctn|euctr|other):[A-Za-z0-9-]+:snap:[a-f0-9]{64}$",
+      "description": "Registry snapshot with SHA-256 hash",
+      "examples": ["reg:ctgov:NCT01234567:snap:a1b2c3d4..."]
+    },
+    "publication_id": {
+      "type": "string",
+      "pattern": "^pub:(pmid|doi|pmcid):.+$",
+      "examples": ["pub:pmid:12345678", "pub:doi:10.1001/jama.2024.1234"]
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^run:[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})?:[a-f0-9]{7,40}:[a-zA-Z0-9_-]+$",
+      "description": "Run ID: run:<UTC_ISO8601>:<git_sha>:<machine_id>",
+      "examples": ["run:2026-02-07T10:30:00Z:abc1234:box-c"]
+    },
+    "capsule_id": {
+      "type": "string",
+      "pattern": "^capsule:[a-f0-9]{64}$",
+      "description": "Capsule ID = sha256(MANIFEST.json)"
+    },
+    "claim_id": {
+      "type": "string",
+      "pattern": "^claim:[a-f0-9]{16,64}$"
+    },
+    "witness_id": {
+      "type": "string",
+      "pattern": "^witness:[a-f0-9]{16,64}$"
+    },
+    "outcome_id": {
+      "type": "string",
+      "pattern": "^outcome:[a-z0-9_-]+:[a-z0-9_-]+$",
+      "description": "outcome:<domain>:<canonical_name>",
+      "examples": ["outcome:cardio:mace_3", "outcome:cardio:all_cause_mortality"]
+    },
+    "any_curie": {
+      "type": "string",
+      "pattern": "^(trial|reg|pub|run|capsule|claim|witness|outcome|linkage|conflict|adjudication|abstention):[a-zA-Z0-9_./:+-]+$"
+    }
+  }
+}

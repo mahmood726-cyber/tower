@@ -1,0 +1,10 @@
+{
+  "case_id": "EV-010",
+  "title": "Gatecheck smoke test",
+  "command": "bash tower/scripts/tower_gatecheck.sh",
+  "cwd": null,
+  "timeout_seconds": 900,
+  "expected_exit_code": 0,
+  "checks": [],
+  "points": 2
+}

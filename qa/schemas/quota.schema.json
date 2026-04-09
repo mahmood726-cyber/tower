@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/quota.schema.json",
+  "title": "Tower Quota",
+  "description": "Quota limits and usage for models",
+  "type": "object",
+  "required": ["spec_version", "last_updated", "models"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reset_time_daily": {
+      "type": "string",
+      "pattern": "^[0-9]{2}:[0-9]{2}$",
+      "description": "Time of day when daily quotas reset (HH:MM)"
+    },
+    "reset_day_weekly": {
+      "type": "string",
+      "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    },
+    "timezone": {
+      "type": "string",
+      "default": "Europe/London"
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["daily_limit", "weekly_limit", "used_today", "used_this_week", "unit"],
+        "properties": {
+          "daily_limit": {"type": "integer", "minimum": 0},
+          "weekly_limit": {"type": "integer", "minimum": 0},
+          "used_today": {"type": "integer", "minimum": 0},
+          "used_this_week": {"type": "integer", "minimum": 0},
+          "unit": {"type": "string"},
+          "targets": {
+            "type": "object",
+            "properties": {
+              "daily_utilization": {"type": "number", "minimum": 0, "maximum": 1},
+              "weekly_utilization": {"type": "number", "minimum": 0, "maximum": 1}
+            }
+          },
+          "last_updated": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TowerJS v0.1</title>
+    <style>
+      :root {
+        --bg: #f4efe4;
+        --bg-accent: #e6f1e6;
+        --ink: #1f1a17;
+        --muted: #5a564f;
+        --accent: #d45b3f;
+        --accent-2: #2f6f64;
+        --panel: #fff8ee;
+        --panel-alt: #f5ede1;
+        --line: rgba(31, 26, 23, 0.15);
+        --shadow: 0 26px 55px rgba(31, 26, 23, 0.18);
+        --radius: 20px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 10%, rgba(212, 91, 63, 0.18), transparent 45%),
+          radial-gradient(circle at 88% 12%, rgba(47, 111, 100, 0.18), transparent 48%),
+          linear-gradient(140deg, var(--bg), var(--bg-accent));
+      }
+
+      .page {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 38px 24px 54px;
+        position: relative;
+      }
+
+      .page::before,
+      .page::after {
+        content: "";
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(31, 26, 23, 0.05);
+        filter: blur(2px);
+        z-index: 0;
+      }
+
+      .page::before {
+        top: 24px;
+        right: 10%;
+      }
+
+      .page::after {
+        bottom: 10%;
+        left: 4%;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 28px;
+        align-items: center;
+        margin-bottom: 32px;
+        position: relative;
+        z-index: 1;
+        animation: rise 0.8s ease both;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--panel-alt);
+        border: 1px solid var(--line);
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+
+      h1 {
+        font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+        font-size: clamp(28px, 4vw, 46px);
+        margin: 14px 0 12px;
+        line-height: 1.1;
+      }
+
+      .hero p {
+        margin: 0 0 20px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .btn {
+        border: 1px solid var(--line);
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--panel);
+        color: var(--ink);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(31, 26, 23, 0.12);
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #fff8f2;
+        border-color: transparent;
+      }
+
+      .btn.ghost {
+        background: transparent;
+      }
+
+      .btn input {
+        display: none;
+      }
+
+      .note {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .hero-panel {
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 20px;
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-panel::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border: 1px dashed rgba(47, 111, 100, 0.2);
+        border-radius: 16px;
+      }
+
+      .hero-panel-inner {
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-label {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 8px 0 6px;
+      }
+
+      .stat-meta {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .panel {
+        background: var(--panel);
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 35px rgba(31, 26, 23, 0.1);
+        animation: rise 0.6s ease both;
+      }
+
+      .panel-title {
+        font-weight: 700;
+        margin-bottom: 12px;
+        font-size: 15px;
+      }
+
+      .panel-body {
+        display: grid;
+        gap: 10px;
+        font-size: 13px;
+      }
+
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed rgba(31, 26, 23, 0.1);
+      }
+
+      .kv span:last-child {
+        font-weight: 600;
+      }
+
+      .warning {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(212, 91, 63, 0.12);
+        color: #7b2c1e;
+        font-size: 12px;
+        border: 1px solid rgba(212, 91, 63, 0.3);
+      }
+
+      .warning.hidden {
+        display: none;
+      }
+
+      .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(47, 111, 100, 0.12);
+        border: 1px solid rgba(47, 111, 100, 0.3);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .chip.empty,
+      .file-list.empty,
+      .cards-list.empty {
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .file-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .file-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border-radius: 12px;
+        border: 1px dashed rgba(31, 26, 23, 0.12);
+      }
+
+      .file-list li.ok {
+        background: rgba(47, 111, 100, 0.08);
+      }
+
+      .file-list li.missing {
+        background: rgba(212, 91, 63, 0.08);
+      }
+
+      .cards-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .card-item {
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(31, 26, 23, 0.12);
+        background: #fffaf5;
+        display: grid;
+        gap: 6px;
+        animation: fadeIn 0.5s ease forwards;
+        opacity: 0;
+      }
+
+      .card-title {
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      .card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .status-tag {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 11px;
+        border: 1px solid transparent;
+      }
+
+      .status-tag.good {
+        background: rgba(47, 111, 100, 0.18);
+        border-color: rgba(47, 111, 100, 0.35);
+        color: #245147;
+      }
+
+      .status-tag.mid {
+        background: rgba(212, 91, 63, 0.18);
+        border-color: rgba(212, 91, 63, 0.35);
+        color: #7b2c1e;
+      }
+
+      .status-tag.warn {
+        background: rgba(31, 26, 23, 0.12);
+        border-color: rgba(31, 26, 23, 0.2);
+        color: #3b352f;
+      }
+
+      .status-tag.neutral {
+        background: rgba(31, 26, 23, 0.06);
+        border-color: rgba(31, 26, 23, 0.15);
+        color: var(--muted);
+      }
+
+      .footer {
+        margin-top: 26px;
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .cta {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .kv {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-main">
+          <div class="badge">TowerJS v0.1</div>
+          <h1>Browser-first Tower directory explorer</h1>
+          <p>
+            Local-only UI for Tower control files, cards, and status. Open a Tower
+            directory and inspect it without a server or uploads.
+          </p>
+          <div class="cta">
+            <button id="pickDirectory" class="btn primary">Pick Tower Folder</button>
+            <label class="btn ghost">
+              <input id="folderInput" type="file" webkitdirectory directory multiple>
+              Folder Upload
+            </label>
+          </div>
+          <div id="supportNote" class="note"></div>
+        </div>
+        <div class="hero-panel">
+          <div class="hero-panel-inner">
+            <div class="stat-label">Scan Status</div>
+            <div id="heroStatus" class="stat-value">Waiting for folder</div>
+            <div id="heroMeta" class="stat-meta">Select a Tower directory to begin.</div>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel">
+          <div class="panel-title">Project Summary</div>
+          <div class="panel-body">
+            <div class="kv"><span>Root</span><span id="summaryRoot">-</span></div>
+            <div class="kv"><span>Spec</span><span id="summarySpec">-</span></div>
+            <div class="kv"><span>Updated</span><span id="summaryUpdated">-</span></div>
+            <div class="kv"><span>Source</span><span id="summarySource">-</span></div>
+          </div>
+          <div id="warningBox" class="warning hidden"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Status Counts</div>
+          <div class="panel-body">
+            <div id="statusCounts" class="chip-grid empty">No status data loaded.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Control Files</div>
+          <div class="panel-body">
+            <ul id="controlFiles" class="file-list empty">
+              <li>Waiting for scan.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Cards</div>
+          <div class="panel-body">
+            <div id="cardsList" class="cards-list empty">No cards loaded.</div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Runs entirely in the browser. No server, no uploads.</span>
+        <span>|</span>
+        <span>MIT Licensed</span>
+      </footer>
+    </div>
+
+    <script src="./towerjs.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        var pickButton = document.getElementById("pickDirectory");
+        var folderInput = document.getElementById("folderInput");
+        var supportNote = document.getElementById("supportNote");
+        var heroStatus = document.getElementById("heroStatus");
+        var heroMeta = document.getElementById("heroMeta");
+        var summaryRoot = document.getElementById("summaryRoot");
+        var summarySpec = document.getElementById("summarySpec");
+        var summaryUpdated = document.getElementById("summaryUpdated");
+        var summarySource = document.getElementById("summarySource");
+        var warningBox = document.getElementById("warningBox");
+        var statusCounts = document.getElementById("statusCounts");
+        var controlFiles = document.getElementById("controlFiles");
+        var cardsList = document.getElementById("cardsList");
+
+        if (!window.TowerJS) {
+          heroStatus.textContent = "TowerJS not loaded";
+          heroMeta.textContent = "Ensure towerjs.js is next to this file.";
+          return;
+        }
+
+        if (TowerJS.supportsFileSystemAccess) {
+          supportNote.textContent = "Folder picker available. You can also use the folder upload option.";
+        } else {
+          supportNote.textContent = "Folder picker not available in this browser. Use folder upload.";
+          pickButton.disabled = true;
+        }
+
+        function setHero(status, meta) {
+          heroStatus.textContent = status;
+          heroMeta.textContent = meta || "";
+        }
+
+        function makeEl(tag, className, text) {
+          var el = document.createElement(tag);
+          if (className) {
+            el.className = className;
+          }
+          if (text !== undefined) {
+            el.textContent = text;
+          }
+          return el;
+        }
+
+        function renderStatus(counts) {
+          statusCounts.innerHTML = "";
+          statusCounts.classList.remove("empty");
+          var keys = Object.keys(counts || {});
+          if (!keys.length) {
+            statusCounts.textContent = "No status data loaded.";
+            statusCounts.classList.add("empty");
+            return;
+          }
+          keys.sort();
+          keys.forEach(function (key) {
+            var chip = makeEl("div", "chip", key + ": " + counts[key]);
+            statusCounts.appendChild(chip);
+          });
+        }
+
+        function renderControlFilesList(files) {
+          controlFiles.innerHTML = "";
+          controlFiles.classList.remove("empty");
+          if (!files || !files.length) {
+            var emptyItem = makeEl("li", "", "No control files listed.");
+            controlFiles.appendChild(emptyItem);
+            controlFiles.classList.add("empty");
+            return;
+          }
+          files.forEach(function (file) {
+            var item = makeEl("li", file.exists ? "ok" : "missing");
+            var name = makeEl("span", "", file.name);
+            var status = makeEl("span", "", file.exists ? "present" : "missing");
+            item.appendChild(name);
+            item.appendChild(status);
+            controlFiles.appendChild(item);
+          });
+        }
+
+        function statusClass(status) {
+          var value = String(status || "").toUpperCase();
+          if (value === "MERGED" || value === "GOLD" || value === "GREEN") {
+            return "good";
+          }
+          if (value === "BLOCKED" || value === "ABANDONED" || value === "ESCALATED") {
+            return "warn";
+          }
+          if (value === "ACTIVE" || value === "READY" || value === "REVIEW") {
+            return "mid";
+          }
+          return "neutral";
+        }
+
+        function renderCards(cards) {
+          cardsList.innerHTML = "";
+          cardsList.classList.remove("empty");
+          if (!cards || !cards.length) {
+            cardsList.textContent = "No cards loaded.";
+            cardsList.classList.add("empty");
+            return;
+          }
+          cards.forEach(function (card, index) {
+            var item = makeEl("div", "card-item");
+            item.style.setProperty("animation-delay", (index * 0.03) + "s");
+            var title = card.title ? card.title : "Untitled";
+            var headline = makeEl("div", "card-title", (card.card_id || "Card") + " - " + title);
+            var meta = makeEl("div", "card-meta");
+            var state = card.state || card.status || "UNKNOWN";
+            var statusTag = makeEl("span", "status-tag " + statusClass(state), state);
+            meta.appendChild(statusTag);
+            if (card.stream) {
+              meta.appendChild(makeEl("span", "", "stream: " + card.stream));
+            }
+            if (card.file) {
+              meta.appendChild(makeEl("span", "", "file: " + card.file));
+            }
+            if (card.error) {
+              meta.appendChild(makeEl("span", "", "error: " + card.error));
+            }
+            item.appendChild(headline);
+            item.appendChild(meta);
+            cardsList.appendChild(item);
+          });
+        }
+
+        function renderWarnings(warnings) {
+          if (warnings && warnings.length) {
+            warningBox.classList.remove("hidden");
+            warningBox.textContent = warnings.join(" | ");
+          } else {
+            warningBox.classList.add("hidden");
+            warningBox.textContent = "";
+          }
+        }
+
+        function updateSummary(scan) {
+          var rootLabel = scan.rootPath;
+          if (rootLabel === "." && scan.rootPrefix) {
+            rootLabel = scan.rootPrefix;
+          }
+          summaryRoot.textContent = rootLabel || "-";
+          summarySpec.textContent = scan.specVersion || "-";
+          summaryUpdated.textContent = scan.lastUpdated || "-";
+          summarySource.textContent = scan.source || "-";
+        }
+
+        async function loadProject(project) {
+          setHero("Scanning...", "Reading Tower control files.");
+          try {
+            var scan = await project.scan({ cardLimit: 120 });
+            updateSummary(scan);
+            renderWarnings(scan.warnings);
+            renderStatus(scan.statusCounts);
+            renderControlFilesList(scan.controlFiles);
+            renderCards(scan.cards);
+            setHero("Loaded " + scan.cards.length + " cards", scan.control.exists ? "Control directory detected." : "Control directory missing.");
+          } catch (err) {
+            setHero("Scan failed", String(err && err.message ? err.message : err));
+          }
+        }
+
+        pickButton.addEventListener("click", async function () {
+          try {
+            var handle = await TowerJS.openDirectory();
+            var project = await TowerJS.connect({ directoryHandle: handle });
+            await loadProject(project);
+          } catch (err) {
+            setHero("Folder pick failed", String(err && err.message ? err.message : err));
+          }
+        });
+
+        folderInput.addEventListener("change", async function (event) {
+          var files = event.target.files;
+          if (!files || !files.length) {
+            return;
+          }
+          try {
+            var project = await TowerJS.connect({ fileList: files });
+            await loadProject(project);
+          } catch (err) {
+            setHero("Folder upload failed", String(err && err.message ? err.message : err));
+          } finally {
+            folderInput.value = "";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

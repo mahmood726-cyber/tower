@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eval_case.schema.json",
+  "title": "Tower Eval Test Case",
+  "description": "Schema for eval test case definitions in addons/evals/cases/",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,20}$",
+      "description": "Unique case identifier (e.g., EV-000, EV-010)"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Human-readable test case title"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional detailed description of what this test validates"
+    },
+    "command": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "description": "Shell command to execute for this test"
+    },
+    "cwd": {
+      "type": ["string", "null"],
+      "maxLength": 500,
+      "description": "Working directory relative to REPO_ROOT (null for REPO_ROOT)"
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7200,
+      "default": 300,
+      "description": "Maximum execution time in seconds"
+    },
+    "expected_exit_code": {
+      "type": "integer",
+      "minimum": -1,
+      "maximum": 255,
+      "default": 0,
+      "description": "Expected process exit code (0 for success)"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["file_exists", "file_contains", "json_valid", "stdout_contains", "stderr_empty"]
+          },
+          "path": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          }
+        },
+        "required": ["type"]
+      },
+      "description": "Additional validation checks to run after command"
+    },
+    "points": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 1,
+      "description": "Points awarded for passing this test"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]+$"
+      },
+      "description": "Tags for filtering tests (e.g., smoke, integration)"
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,20}$"
+      },
+      "description": "Case IDs that must pass before this test runs"
+    }
+  },
+  "required": ["case_id", "title", "command"],
+  "additionalProperties": false
+}

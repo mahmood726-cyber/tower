@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tower.local/schemas/proofpack_manifest.schema.json",
+  "title": "Proofpack Manifest",
+  "description": "TruthCert-style manifest for a proofpack bundle",
+  "type": "object",
+  "required": ["spec_version", "card_id", "created_at"],
+  "properties": {
+    "truthcert": {
+      "type": "object",
+      "description": "TruthCert metadata for proof-carrying numbers",
+      "properties": {
+        "spec_version": {"type": "string"},
+        "capsule_id": {"type": ["string", "null"]},
+        "assurance_level": {
+          "type": "string",
+          "enum": ["none", "bronze", "silver", "gold"]
+        },
+        "fail_closed": {"type": "boolean"}
+      }
+    },
+    "spec_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "card_id": {
+      "type": "string",
+      "pattern": "^CARD-[0-9]+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Source provenance information",
+      "properties": {
+        "git_sha": {"type": ["string", "null"]},
+        "git_branch": {"type": ["string", "null"]},
+        "machine_id": {"type": "string"}
+      }
+    },
+    "run_ids": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "type"],
+        "properties": {
+          "path": {"type": "string"},
+          "type": {"type": "string"},
+          "sha256": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "witnesses": {
+      "type": "array",
+      "description": "TruthCert witness chain with content hashes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source_type": {"type": "string"},
+          "locator": {"type": "string"},
+          "content_hash": {"type": "string"},
+          "timestamp": {"type": "string", "format": "date-time"},
+          "grade": {"type": "string", "enum": ["A", "B", "C", "D", "F"]}
+        }
+      }
+    },
+    "evidence_paths": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "gates": {
+          "type": "object",
+          "properties": {
+            "tests": {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED"]},
+            "validators": {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED"]},
+            "proofpack": {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "SKIPPED"]}
+          }
+        },
+        "validators": {
+          "type": "object",
+          "properties": {
+            "overall_status": {"type": "string", "enum": ["PASS", "FAIL", "NOT_RUN", "PARTIAL"]},
+            "report_path": {"type": ["string", "null"]}
+          }
+        }
+      }
+    },
+    "disclosures": {
+      "type": "object",
+      "description": "TruthCert transparency disclosures",
+      "properties": {
+        "witness_count": {"type": "integer"},
+        "validator_version": {"type": "string"},
+        "reproducible": {"type": "boolean"}
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "proofpack_path": {"type": ["string", "null"]},
+        "zip_path": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

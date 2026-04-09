@@ -1,0 +1,1731 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TowerJS v0.1</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #0c0f14;
+        --bg-soft: #121723;
+        --panel: #151c2b;
+        --panel-edge: #2b3550;
+        --accent: #f3a447;
+        --accent-2: #4bd0c1;
+        --accent-3: #ff7b6b;
+        --text: #f3f6ff;
+        --muted: #a6b0c8;
+        --ok: #4bd0c1;
+        --warn: #f3c247;
+        --err: #ff7b6b;
+        --code: #1c2538;
+        --shadow: 0 25px 60px rgba(4, 8, 20, 0.55);
+        --radius: 18px;
+        --radius-sm: 10px;
+        --font-main: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
+        --font-mono: "Courier Prime", "Courier New", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font-main);
+        background: radial-gradient(circle at top left, #1c2436, var(--bg)),
+          radial-gradient(circle at 80% 20%, #1b2a3d, transparent 60%),
+          linear-gradient(120deg, #0d121b 0%, #12182a 50%, #0b1018 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .orb {
+        position: fixed;
+        width: 480px;
+        height: 480px;
+        background: radial-gradient(circle, rgba(243, 164, 71, 0.25), transparent 70%);
+        top: -180px;
+        right: -120px;
+        filter: blur(10px);
+        z-index: 0;
+      }
+
+      .app {
+        position: relative;
+        z-index: 1;
+        padding: 48px clamp(16px, 4vw, 60px) 72px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header.hero {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+      }
+
+      header h1 {
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        margin: 0 0 12px;
+        letter-spacing: 0.02em;
+      }
+
+      .tagline {
+        color: var(--muted);
+        font-size: 1.05rem;
+        max-width: 520px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        background: rgba(243, 164, 71, 0.12);
+        border: 1px solid rgba(243, 164, 71, 0.4);
+        color: var(--accent);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+      }
+
+      .panel {
+        background: linear-gradient(160deg, rgba(33, 42, 66, 0.92), rgba(16, 22, 35, 0.98));
+        border: 1px solid rgba(70, 84, 120, 0.4);
+        border-radius: var(--radius);
+        padding: 22px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top left, rgba(75, 208, 193, 0.15), transparent 65%);
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .panel h2 {
+        margin: 0 0 14px;
+        font-size: 1.35rem;
+      }
+
+      .panel p {
+        color: var(--muted);
+        margin: 0 0 16px;
+      }
+
+      .status {
+        margin-top: 10px;
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        background: rgba(28, 37, 56, 0.6);
+        border: 1px solid rgba(60, 76, 110, 0.6);
+        font-size: 0.95rem;
+      }
+
+      .status[data-status="ok"] {
+        border-color: rgba(75, 208, 193, 0.7);
+        color: var(--ok);
+      }
+
+      .status[data-status="warn"] {
+        border-color: rgba(243, 194, 71, 0.7);
+        color: var(--warn);
+      }
+
+      .status[data-status="error"] {
+        border-color: rgba(255, 123, 107, 0.7);
+        color: var(--err);
+      }
+
+      label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      input[type="text"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        margin-top: 6px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(70, 84, 120, 0.7);
+        background: rgba(12, 16, 26, 0.8);
+        color: var(--text);
+        font-family: var(--font-main);
+      }
+
+      textarea {
+        min-height: 90px;
+        font-family: var(--font-mono);
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 18px;
+        background: var(--accent);
+        color: #241508;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid rgba(243, 164, 71, 0.6);
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 18px rgba(243, 164, 71, 0.2);
+      }
+
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+      }
+
+      .issue-list {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0 0;
+      }
+
+      .issue-list li {
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(18, 25, 40, 0.8);
+        margin-bottom: 8px;
+        border: 1px solid rgba(60, 76, 110, 0.45);
+      }
+
+      .issue-list li[data-level="error"] {
+        border-color: rgba(255, 123, 107, 0.5);
+        color: var(--err);
+      }
+
+      .issue-list li[data-level="warn"] {
+        border-color: rgba(243, 194, 71, 0.5);
+        color: var(--warn);
+      }
+
+      .issue-list li[data-level="info"] {
+        border-color: rgba(75, 208, 193, 0.5);
+        color: var(--ok);
+      }
+
+      .output {
+        background: var(--code);
+        border-radius: var(--radius-sm);
+        padding: 12px;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: #c8d1ef;
+        white-space: pre-wrap;
+        min-height: 70px;
+      }
+
+      .download {
+        margin-top: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--accent-2);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.8s ease both;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 640px) {
+        header.hero {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .panel {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orb"></div>
+    <div class="app fade-in">
+      <header class="hero">
+        <div>
+          <h1>TowerJS v0.1</h1>
+          <div class="tagline">
+            Browser-first Tower tools: scan control files, write trace DBs, and
+            build tamper-evident proofpacks. Offline, no server.
+          </div>
+        </div>
+        <div class="chips">
+          <div class="chip">Offline</div>
+          <div class="chip">Ed25519</div>
+          <div class="chip">Proofpack</div>
+        </div>
+      </header>
+
+      <section class="panel" id="connect-panel">
+        <h2>Connect Tower Folder</h2>
+        <p>
+          Choose a directory for full read/write (File System Access API) or
+          upload a folder for read-only scans.
+        </p>
+        <div class="grid">
+          <div>
+            <button id="pick-folder">Pick Tower Folder</button>
+            <div class="status" id="picker-status" data-status="warn">
+              File System Access API required for write access.
+            </div>
+          </div>
+          <div>
+            <label for="folder-upload">Folder Upload (read-only)</label>
+            <input id="folder-upload" type="file" webkitdirectory multiple />
+            <div class="status" id="upload-status" data-status="warn">
+              No folder selected.
+            </div>
+          </div>
+        </div>
+        <div class="status" id="connect-status" data-status="warn">
+          Not connected.
+        </div>
+      </section>
+
+      <section class="panel" id="scan-panel">
+        <h2>Control Scan</h2>
+        <p>Validates Tower control files against strict schemas.</p>
+        <div class="row">
+          <button id="scan-btn">Run Scan</button>
+          <div class="mono" id="file-count">Files: 0</div>
+        </div>
+        <div class="status" id="scan-status" data-status="warn">
+          No scan yet.
+        </div>
+        <ul class="issue-list" id="scan-issues"></ul>
+      </section>
+
+      <section class="panel" id="trace-panel">
+        <h2>Trace DB (NDJSON)</h2>
+        <p>Read or append trace entries to the file-based trace DB.</p>
+        <label for="trace-path">Trace DB Path</label>
+        <input id="trace-path" type="text" value="control/trace_db.jsonl" />
+        <div class="row" style="margin-top: 12px;">
+          <button id="trace-load">Load Trace</button>
+        </div>
+        <div class="status" id="trace-status" data-status="warn">
+          Trace not loaded.
+        </div>
+        <div class="output" id="trace-output">No entries loaded.</div>
+        <div style="margin-top: 16px;">
+          <label for="trace-event">Event</label>
+          <input id="trace-event" type="text" placeholder="card.move" />
+          <label for="trace-source" style="margin-top: 10px;">Source</label>
+          <input id="trace-source" type="text" placeholder="tower-ui" />
+          <label for="trace-message" style="margin-top: 10px;">Message</label>
+          <input id="trace-message" type="text" placeholder="Moved card to Done" />
+          <label for="trace-level" style="margin-top: 10px;">Level</label>
+          <select id="trace-level">
+            <option value="">(optional)</option>
+            <option value="debug">debug</option>
+            <option value="info">info</option>
+            <option value="warn">warn</option>
+            <option value="error">error</option>
+          </select>
+          <button id="trace-append" style="margin-top: 12px;">
+            Append Trace Entry
+          </button>
+        </div>
+      </section>
+
+      <section class="panel" id="proof-panel">
+        <h2>Proofpack Builder</h2>
+        <p>Build a manifest, hash tree, and signed zip bundle.</p>
+        <label for="include-prefixes">Include Prefixes (comma separated)</label>
+        <input id="include-prefixes" type="text" placeholder="control/, knowledge/" />
+        <label for="exclude-prefixes" style="margin-top: 10px;">Exclude Prefixes</label>
+        <input
+          id="exclude-prefixes"
+          type="text"
+          value=".git/, node_modules/, tower_js/, dist/"
+        />
+        <label for="exclude-names" style="margin-top: 10px;">Exclude Names</label>
+        <input
+          id="exclude-names"
+          type="text"
+          value="hash_tree.json, signature.txt, public_key.txt, proofpack.zip"
+        />
+        <label for="zip-name" style="margin-top: 10px;">Zip Name</label>
+        <input id="zip-name" type="text" value="proofpack.zip" />
+        <div class="grid" style="margin-top: 14px;">
+          <div>
+            <label for="public-key">Public Key (base64 raw)</label>
+            <textarea id="public-key" placeholder="Paste or generate"></textarea>
+          </div>
+          <div>
+            <label for="private-key">Private Key (base64 pkcs8)</label>
+            <textarea id="private-key" placeholder="Paste or generate"></textarea>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 12px;">
+          <button class="secondary" id="gen-keys">Generate Keypair</button>
+          <button class="secondary" id="load-keys">Use Keys</button>
+        </div>
+        <div class="row" style="margin-top: 12px;">
+          <button id="build-proofpack">Build Proofpack</button>
+        </div>
+        <div class="status" id="proof-status" data-status="warn">
+          No proofpack built yet.
+        </div>
+        <div class="output" id="proof-output">Waiting for build.</div>
+        <a class="download" id="proof-download" href="#" download>Download</a>
+      </section>
+    </div>
+    <script>
+// ajv.min.js
+/**
+ * Minified by jsDelivr using Terser v5.37.0.
+ * Original file: /npm/ajv@8.12.0/dist/ajv.js
+ *
+ * Do NOT use SRI with dynamically generated files! More information: https://www.jsdelivr.com/using-sri-with-dynamic-files
+ */
+"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.MissingRefError=exports.ValidationError=exports.CodeGen=exports.Name=exports.nil=exports.stringify=exports.str=exports._=exports.KeywordCxt=void 0;const core_1=require("./core"),draft7_1=require("./vocabularies/draft7"),discriminator_1=require("./vocabularies/discriminator"),draft7MetaSchema=require("./refs/json-schema-draft-07.json"),META_SUPPORT_DATA=["/properties"],META_SCHEMA_ID="http://json-schema.org/draft-07/schema";class Ajv extends core_1.default{_addVocabularies(){super._addVocabularies(),draft7_1.default.forEach((e=>this.addVocabulary(e))),this.opts.discriminator&&this.addKeyword(discriminator_1.default)}_addDefaultMetaSchema(){if(super._addDefaultMetaSchema(),!this.opts.meta)return;const e=this.opts.$data?this.$dataMetaSchema(draft7MetaSchema,META_SUPPORT_DATA):draft7MetaSchema;this.addMetaSchema(e,META_SCHEMA_ID,!1),this.refs["http://json-schema.org/schema"]=META_SCHEMA_ID}defaultMeta(){return this.opts.defaultMeta=super.defaultMeta()||(this.getSchema(META_SCHEMA_ID)?META_SCHEMA_ID:void 0)}}module.exports=exports=Ajv,Object.defineProperty(exports,"__esModule",{value:!0}),exports.default=Ajv;var validate_1=require("./compile/validate");Object.defineProperty(exports,"KeywordCxt",{enumerable:!0,get:function(){return validate_1.KeywordCxt}});var codegen_1=require("./compile/codegen");Object.defineProperty(exports,"_",{enumerable:!0,get:function(){return codegen_1._}}),Object.defineProperty(exports,"str",{enumerable:!0,get:function(){return codegen_1.str}}),Object.defineProperty(exports,"stringify",{enumerable:!0,get:function(){return codegen_1.stringify}}),Object.defineProperty(exports,"nil",{enumerable:!0,get:function(){return codegen_1.nil}}),Object.defineProperty(exports,"Name",{enumerable:!0,get:function(){return codegen_1.Name}}),Object.defineProperty(exports,"CodeGen",{enumerable:!0,get:function(){return codegen_1.CodeGen}});var validation_error_1=require("./runtime/validation_error");Object.defineProperty(exports,"ValidationError",{enumerable:!0,get:function(){return validation_error_1.default}});var ref_error_1=require("./compile/ref_error");Object.defineProperty(exports,"MissingRefError",{enumerable:!0,get:function(){return ref_error_1.default}});
+//# sourceMappingURL=/sm/6c8e0d8643424bd7aa95525e2db7b37146c555c593a57f2e6a77fdc7308a5e7e.map
+</script>
+
+<script>
+// tower-core.js
+/* TowerJS Core v0.1 - browser-first utilities */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) {
+    module.exports = factory();
+  } else {
+    root.TowerCore = factory();
+  }
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  const VERSION = "0.1.0";
+  const DEFAULT_TRACE_DB_PATH = "control/trace_db.jsonl";
+  const DEFAULT_CONTROL_FILES = {
+    status: "control/status.json",
+    backlog: "control/backlog.json",
+    quota: "control/quota.json",
+  };
+  const DEFAULT_REQUIRED_CONTROL_FILES = [
+    DEFAULT_CONTROL_FILES.status,
+    DEFAULT_CONTROL_FILES.backlog,
+    DEFAULT_CONTROL_FILES.quota,
+  ];
+  const DEFAULT_EXCLUDE_PREFIXES = [
+    ".git/",
+    "node_modules/",
+    "tower_js/",
+    "dist/",
+  ];
+  const DEFAULT_EXCLUDE_NAMES = [
+    "hash_tree.json",
+    "signature.txt",
+    "public_key.txt",
+    "proofpack.zip",
+  ];
+  const ISO_DATE_TIME_REGEX =
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+  const SCHEMAS = {
+    trace_entry: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      $id: "towerjs://schemas/trace_entry.schema.json",
+      title: "TowerJS Trace Entry",
+      type: "object",
+      additionalProperties: false,
+      required: ["timestamp", "event", "source"],
+      properties: {
+        timestamp: { type: "string", format: "date-time" },
+        event: { type: "string", minLength: 1 },
+        source: { type: "string", minLength: 1 },
+        card_id: { type: "string", minLength: 1 },
+        run_id: { type: "string", minLength: 1 },
+        level: { type: "string", enum: ["debug", "info", "warn", "error"] },
+        message: { type: "string" },
+        tags: { type: "array", items: { type: "string" }, minItems: 1 },
+        data: { type: "object", additionalProperties: true },
+      },
+    },
+    control_status: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      $id: "towerjs://schemas/control_status.schema.json",
+      title: "Tower Status",
+      type: "object",
+      required: ["spec_version", "cards"],
+      properties: {
+        spec_version: { type: "string", minLength: 1 },
+        last_updated: { type: "string" },
+        cards: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["card_id", "state"],
+            properties: {
+              card_id: { type: "string", minLength: 1 },
+              title: { type: "string" },
+              state: { type: "string", minLength: 1 },
+            },
+            additionalProperties: true,
+          },
+        },
+      },
+      additionalProperties: true,
+    },
+    control_backlog: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      $id: "towerjs://schemas/control_backlog.schema.json",
+      title: "Tower Backlog",
+      type: "object",
+      required: ["spec_version", "streams"],
+      properties: {
+        spec_version: { type: "string", minLength: 1 },
+        last_updated: { type: "string" },
+        streams: {
+          type: "object",
+          required: ["apps", "methods", "hta", "live"],
+          properties: {
+            apps: { $ref: "#/$defs/stream" },
+            methods: { $ref: "#/$defs/stream" },
+            hta: { $ref: "#/$defs/stream" },
+            live: { $ref: "#/$defs/stream" },
+          },
+          additionalProperties: true,
+        },
+      },
+      additionalProperties: true,
+      $defs: {
+        stream: {
+          type: "object",
+          required: ["ready_cards", "active_cards", "blocked_cards"],
+          properties: {
+            ready_cards: { type: "array", items: { type: "string" } },
+            active_cards: { type: "array", items: { type: "string" } },
+            blocked_cards: { type: "array", items: { type: "string" } },
+            minimum_ready: { type: "integer" },
+          },
+          additionalProperties: true,
+        },
+      },
+    },
+    control_quota: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      $id: "towerjs://schemas/control_quota.schema.json",
+      title: "Tower Quota",
+      type: "object",
+      required: ["spec_version"],
+      properties: {
+        spec_version: { type: "string", minLength: 1 },
+        last_updated: { type: "string" },
+        models: { type: "object", additionalProperties: true },
+        usage: { type: "object", additionalProperties: true },
+      },
+      additionalProperties: true,
+    },
+  };
+
+  const CONTROL_SCHEMA_MAP = {
+    [DEFAULT_CONTROL_FILES.status]: SCHEMAS.control_status,
+    [DEFAULT_CONTROL_FILES.backlog]: SCHEMAS.control_backlog,
+    [DEFAULT_CONTROL_FILES.quota]: SCHEMAS.control_quota,
+  };
+
+  function normalizePath(input) {
+    if (!input) return "";
+    let path = String(input).replace(/\\/g, "/");
+    path = path.replace(/^\.\//, "");
+    path = path.replace(/\/{2,}/g, "/");
+    path = path.replace(/^\/+/, "");
+    return path;
+  }
+
+  function joinPath(base, tail) {
+    const cleanBase = normalizePath(base);
+    const cleanTail = normalizePath(tail);
+    if (!cleanBase) return cleanTail;
+    if (!cleanTail) return cleanBase;
+    return cleanBase.replace(/\/+$/, "") + "/" + cleanTail.replace(/^\/+/, "");
+  }
+
+  function baseName(input) {
+    const path = normalizePath(input);
+    if (!path) return "";
+    const parts = path.split("/");
+    return parts[parts.length - 1];
+  }
+
+  function ensureTrailingSlash(input) {
+    const path = normalizePath(input);
+    if (!path) return "";
+    return path.endsWith("/") ? path : path + "/";
+  }
+
+  function textToBytes(text) {
+    return new TextEncoder().encode(String(text));
+  }
+
+  function bytesToHex(bytes) {
+    const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    let out = "";
+    for (let i = 0; i < arr.length; i += 1) {
+      out += arr[i].toString(16).padStart(2, "0");
+    }
+    return out;
+  }
+
+  function bytesToBase64(bytes) {
+    const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    let binary = "";
+    for (let i = 0; i < arr.length; i += 1) {
+      binary += String.fromCharCode(arr[i]);
+    }
+    return btoa(binary);
+  }
+
+  function base64ToBytes(base64) {
+    const binary = atob(base64);
+    const out = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      out[i] = binary.charCodeAt(i);
+    }
+    return out;
+  }
+
+  async function sha256(data) {
+    const buf =
+      data instanceof ArrayBuffer ? data : new Uint8Array(data).buffer;
+    const digest = await crypto.subtle.digest("SHA-256", buf);
+    return new Uint8Array(digest);
+  }
+
+  async function sha256Hex(data) {
+    const digest = await sha256(data);
+    return bytesToHex(digest);
+  }
+
+  function parseJsonSafe(text) {
+    try {
+      return { ok: true, value: JSON.parse(text) };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  function parseNdjson(text) {
+    const entries = [];
+    const errors = [];
+    const lines = String(text).split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const parsed = parseJsonSafe(line);
+      if (!parsed.ok) {
+        errors.push({
+          line: i + 1,
+          message: parsed.error || "Invalid JSON",
+        });
+        continue;
+      }
+      entries.push(parsed.value);
+    }
+    return { entries, errors };
+  }
+
+  const ajvCache = {
+    ajv: null,
+    validators: new Map(),
+  };
+
+  function resolveAjvConstructor() {
+    if (typeof Ajv !== "undefined") return Ajv;
+    if (typeof globalThis !== "undefined" && globalThis.Ajv) {
+      return globalThis.Ajv;
+    }
+    return null;
+  }
+
+  function getAjv() {
+    if (ajvCache.ajv) return ajvCache.ajv;
+    const AjvCtor = resolveAjvConstructor();
+    if (!AjvCtor) return null;
+    const ajv = new AjvCtor({
+      allErrors: true,
+      strict: true,
+      allowUnionTypes: false,
+    });
+    ajv.addFormat("date-time", {
+      type: "string",
+      validate: (value) => ISO_DATE_TIME_REGEX.test(value),
+    });
+    ajvCache.ajv = ajv;
+    return ajv;
+  }
+
+  function getValidator(schema) {
+    const key = schema.$id || JSON.stringify(schema);
+    if (ajvCache.validators.has(key)) {
+      return ajvCache.validators.get(key);
+    }
+    const ajv = getAjv();
+    if (!ajv) return null;
+    const validate = ajv.compile(schema);
+    ajvCache.validators.set(key, validate);
+    return validate;
+  }
+
+  function formatAjvErrors(errors) {
+    if (!errors || !errors.length) return [];
+    return errors.map((err) => {
+      const path = err.instancePath || err.schemaPath || "";
+      const msg = err.message || "schema validation error";
+      return `${path} ${msg}`.trim();
+    });
+  }
+
+  function validateWithSchema(schema, data) {
+    const validate = getValidator(schema);
+    if (!validate) {
+      return {
+        valid: false,
+        errors: ["AJV not available for schema validation."],
+      };
+    }
+    const valid = validate(data);
+    if (valid) return { valid: true, errors: [] };
+    return {
+      valid: false,
+      errors: formatAjvErrors(validate.errors),
+    };
+  }
+
+  function detectRootPrefix(paths) {
+    if (!paths.length) return "";
+    const first = normalizePath(paths[0]);
+    const parts = first.split("/");
+    if (parts.length < 2) return "";
+    const candidate = parts[0];
+    for (let i = 1; i < paths.length; i += 1) {
+      const path = normalizePath(paths[i]);
+      const prefix = path.split("/")[0];
+      if (prefix !== candidate) return "";
+    }
+    return ensureTrailingSlash(candidate);
+  }
+
+  class FileListFS {
+    constructor(fileList, options) {
+      this.kind = "filelist";
+      this.files = Array.from(fileList || []);
+      const paths = this.files.map((file) =>
+        normalizePath(file.webkitRelativePath || file.name)
+      );
+      this.rootPrefix = options && options.rootPrefix ? options.rootPrefix : detectRootPrefix(paths);
+      this.map = new Map();
+      for (const file of this.files) {
+        let path = normalizePath(file.webkitRelativePath || file.name);
+        if (this.rootPrefix && path.startsWith(this.rootPrefix)) {
+          path = path.slice(this.rootPrefix.length);
+        }
+        path = normalizePath(path);
+        if (!path) continue;
+        this.map.set(path, file);
+      }
+    }
+
+    supportsWrite() {
+      return false;
+    }
+
+    listFiles(prefix) {
+      const cleanPrefix = normalizePath(prefix || "");
+      const paths = Array.from(this.map.keys());
+      if (!cleanPrefix) return paths.slice().sort();
+      const prefixNorm = ensureTrailingSlash(cleanPrefix);
+      return paths.filter((path) => path.startsWith(prefixNorm)).sort();
+    }
+
+    async readBinary(path) {
+      const key = normalizePath(path);
+      const file = this.map.get(key);
+      if (!file) throw new Error(`File not found: ${key}`);
+      const buffer = await file.arrayBuffer();
+      return new Uint8Array(buffer);
+    }
+
+    async readText(path) {
+      const key = normalizePath(path);
+      const file = this.map.get(key);
+      if (!file) throw new Error(`File not found: ${key}`);
+      return await file.text();
+    }
+
+    async writeText() {
+      throw new Error("FileListFS is read-only.");
+    }
+
+    async exists(path) {
+      return this.map.has(normalizePath(path));
+    }
+  }
+
+  class DirectoryHandleFS {
+    constructor(directoryHandle, options) {
+      this.kind = "directory";
+      this.root = directoryHandle;
+      this.basePath = options && options.basePath ? normalizePath(options.basePath) : "";
+    }
+
+    supportsWrite() {
+      return true;
+    }
+
+    async _getDirectoryHandle(path) {
+      let handle = this.root;
+      const cleanPath = normalizePath(path);
+      if (!cleanPath) return handle;
+      const parts = cleanPath.split("/").filter(Boolean);
+      for (const part of parts) {
+        handle = await handle.getDirectoryHandle(part, { create: false });
+      }
+      return handle;
+    }
+
+    async _getFileHandle(path, create) {
+      const cleanPath = normalizePath(path);
+      const parts = cleanPath.split("/").filter(Boolean);
+      if (!parts.length) throw new Error("Invalid file path.");
+      const fileName = parts.pop();
+      const dir = await this._getDirectoryHandle(parts.join("/"));
+      return await dir.getFileHandle(fileName, { create: Boolean(create) });
+    }
+
+    async listFiles(prefix) {
+      const files = [];
+      const base = normalizePath(prefix || "");
+      const startHandle = base ? await this._getDirectoryHandle(base) : this.root;
+      const startPath = base ? ensureTrailingSlash(base) : "";
+      const walk = async (handle, currentPath) => {
+        for await (const [name, entry] of handle.entries()) {
+          if (entry.kind === "file") {
+            files.push(normalizePath(currentPath + name));
+          } else if (entry.kind === "directory") {
+            await walk(entry, currentPath + name + "/");
+          }
+        }
+      };
+      await walk(startHandle, startPath);
+      return files.sort();
+    }
+
+    async readBinary(path) {
+      const handle = await this._getFileHandle(path, false);
+      const file = await handle.getFile();
+      const buffer = await file.arrayBuffer();
+      return new Uint8Array(buffer);
+    }
+
+    async readText(path) {
+      const handle = await this._getFileHandle(path, false);
+      const file = await handle.getFile();
+      return await file.text();
+    }
+
+    async writeText(path, text) {
+      const handle = await this._getFileHandle(path, true);
+      const writable = await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+    }
+
+    async exists(path) {
+      try {
+        await this._getFileHandle(path, false);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+  }
+
+  function shouldExclude(path, includePrefixes, excludePrefixes, excludeNames) {
+    const clean = normalizePath(path);
+    const name = baseName(clean);
+    const includes = (includePrefixes || []).map((p) => ensureTrailingSlash(p));
+    const excludes = (excludePrefixes || []).map((p) => ensureTrailingSlash(p));
+    if (excludeNames && excludeNames.includes(name)) return true;
+    for (const prefix of excludes) {
+      if (prefix && clean.startsWith(prefix)) return true;
+    }
+    if (includes.length > 0) {
+      for (const prefix of includes) {
+        if (prefix && clean.startsWith(prefix)) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function hashTreePayload(hashTree) {
+    const lines = [];
+    lines.push(String(hashTree.algo || "sha256"));
+    lines.push(String(hashTree.root || ""));
+    lines.push(String(hashTree.leaf_count || 0));
+    for (const leaf of hashTree.leaves || []) {
+      lines.push(`${leaf.path}\t${leaf.sha256}`);
+    }
+    return lines.join("\n");
+  }
+
+  function crc32(bytes) {
+    let crc = 0 ^ -1;
+    for (let i = 0; i < bytes.length; i += 1) {
+      crc ^= bytes[i];
+      for (let j = 0; j < 8; j += 1) {
+        const mask = -(crc & 1);
+        crc = (crc >>> 1) ^ (0xedb88320 & mask);
+      }
+    }
+    return (crc ^ -1) >>> 0;
+  }
+
+  function toDosDateTime(date) {
+    const dt = date instanceof Date ? date : new Date(date);
+    const year = Math.max(1980, dt.getFullYear());
+    const month = dt.getMonth() + 1;
+    const day = dt.getDate();
+    const hours = dt.getHours();
+    const minutes = dt.getMinutes();
+    const seconds = Math.floor(dt.getSeconds() / 2);
+    const dosDate = ((year - 1980) << 9) | (month << 5) | day;
+    const dosTime = (hours << 11) | (minutes << 5) | seconds;
+    return { dosDate, dosTime };
+  }
+
+  function u16le(value) {
+    return new Uint8Array([value & 0xff, (value >>> 8) & 0xff]);
+  }
+
+  function u32le(value) {
+    return new Uint8Array([
+      value & 0xff,
+      (value >>> 8) & 0xff,
+      (value >>> 16) & 0xff,
+      (value >>> 24) & 0xff,
+    ]);
+  }
+
+  function concatBytes(chunks) {
+    const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const out = new Uint8Array(length);
+    let offset = 0;
+    for (const chunk of chunks) {
+      out.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return out;
+  }
+
+  function createZip(entries) {
+    const files = [];
+    const central = [];
+    let offset = 0;
+    for (const entry of entries) {
+      const name = normalizePath(entry.path);
+      const data = entry.data instanceof Uint8Array ? entry.data : new Uint8Array(entry.data);
+      const nameBytes = textToBytes(name);
+      const mod = entry.modified ? new Date(entry.modified) : new Date();
+      const { dosDate, dosTime } = toDosDateTime(mod);
+      const crc = crc32(data);
+      const localHeader = concatBytes([
+        u32le(0x04034b50),
+        u16le(20),
+        u16le(0),
+        u16le(0),
+        u16le(dosTime),
+        u16le(dosDate),
+        u32le(crc),
+        u32le(data.length),
+        u32le(data.length),
+        u16le(nameBytes.length),
+        u16le(0),
+        nameBytes,
+      ]);
+      files.push(localHeader, data);
+      const centralHeader = concatBytes([
+        u32le(0x02014b50),
+        u16le(20),
+        u16le(20),
+        u16le(0),
+        u16le(0),
+        u16le(dosTime),
+        u16le(dosDate),
+        u32le(crc),
+        u32le(data.length),
+        u32le(data.length),
+        u16le(nameBytes.length),
+        u16le(0),
+        u16le(0),
+        u16le(0),
+        u16le(0),
+        u32le(0),
+        u32le(offset),
+        nameBytes,
+      ]);
+      central.push(centralHeader);
+      offset += localHeader.length + data.length;
+    }
+    const centralSize = central.reduce((sum, entry) => sum + entry.length, 0);
+    const centralOffset = offset;
+    const endRecord = concatBytes([
+      u32le(0x06054b50),
+      u16le(0),
+      u16le(0),
+      u16le(entries.length),
+      u16le(entries.length),
+      u32le(centralSize),
+      u32le(centralOffset),
+      u16le(0),
+    ]);
+    return concatBytes([...files, ...central, endRecord]);
+  }
+
+  async function generateKeyPair() {
+    return await crypto.subtle.generateKey({ name: "Ed25519" }, true, [
+      "sign",
+      "verify",
+    ]);
+  }
+
+  async function exportPublicKey(publicKey) {
+    const raw = await crypto.subtle.exportKey("raw", publicKey);
+    return bytesToBase64(new Uint8Array(raw));
+  }
+
+  async function exportPrivateKey(privateKey) {
+    const raw = await crypto.subtle.exportKey("pkcs8", privateKey);
+    return bytesToBase64(new Uint8Array(raw));
+  }
+
+  async function importPublicKey(base64) {
+    const bytes = base64ToBytes(base64);
+    return await crypto.subtle.importKey(
+      "raw",
+      bytes,
+      { name: "Ed25519" },
+      true,
+      ["verify"]
+    );
+  }
+
+  async function importPrivateKey(base64) {
+    const bytes = base64ToBytes(base64);
+    return await crypto.subtle.importKey(
+      "pkcs8",
+      bytes,
+      { name: "Ed25519" },
+      true,
+      ["sign"]
+    );
+  }
+
+  async function signBytes(privateKey, bytes) {
+    const signature = await crypto.subtle.sign("Ed25519", privateKey, bytes);
+    return bytesToBase64(new Uint8Array(signature));
+  }
+
+  async function verifyBytes(publicKey, bytes, signatureBase64) {
+    const signature = base64ToBytes(signatureBase64);
+    return await crypto.subtle.verify("Ed25519", publicKey, signature, bytes);
+  }
+
+  async function signHashTree(hashTree, privateKey) {
+    const payload = textToBytes(hashTreePayload(hashTree));
+    return await signBytes(privateKey, payload);
+  }
+
+  async function verifyHashTree(hashTree, publicKey, signatureBase64) {
+    const payload = textToBytes(hashTreePayload(hashTree));
+    return await verifyBytes(publicKey, payload, signatureBase64);
+  }
+
+  class TowerProject {
+    constructor(fs, options) {
+      this.fs = fs;
+      this.basePath = options && options.basePath ? normalizePath(options.basePath) : "";
+      this.controlFiles = (options && options.controlFiles) || DEFAULT_CONTROL_FILES;
+      this.requiredControlFiles =
+        (options && options.requiredControlFiles) || DEFAULT_REQUIRED_CONTROL_FILES;
+    }
+
+    supportsWrite() {
+      return Boolean(this.fs && this.fs.supportsWrite && this.fs.supportsWrite());
+    }
+
+    _resolve(path) {
+      return joinPath(this.basePath, path);
+    }
+
+    async readText(path) {
+      return await this.fs.readText(this._resolve(path));
+    }
+
+    async readBinary(path) {
+      return await this.fs.readBinary(this._resolve(path));
+    }
+
+    async writeText(path, text) {
+      return await this.fs.writeText(this._resolve(path), text);
+    }
+
+    async exists(path) {
+      return await this.fs.exists(this._resolve(path));
+    }
+
+    async listFiles() {
+      return await this.fs.listFiles(this.basePath);
+    }
+
+    async _safeReadJson(path) {
+      const exists = await this.exists(path);
+      if (!exists) return { ok: false, error: "missing" };
+      const text = await this.readText(path);
+      const parsed = parseJsonSafe(text);
+      if (!parsed.ok) return { ok: false, error: parsed.error || "invalid json" };
+      return { ok: true, value: parsed.value };
+    }
+
+    _summarizeStatus(issues) {
+      const summary = { error: 0, warn: 0, info: 0 };
+      for (const issue of issues) {
+        if (issue.level === "error") summary.error += 1;
+        else if (issue.level === "warn") summary.warn += 1;
+        else summary.info += 1;
+      }
+      const status = summary.error > 0 ? "issues" : "ok";
+      return { status, summary };
+    }
+
+    async scan() {
+      const issues = [];
+      for (const path of this.requiredControlFiles) {
+        const schema = CONTROL_SCHEMA_MAP[path];
+        const result = await this._safeReadJson(path);
+        if (!result.ok) {
+          issues.push({
+            level: "error",
+            code: "missing_or_invalid",
+            path,
+            message:
+              result.error === "missing"
+                ? "Missing required control file."
+                : `Invalid JSON (${result.error}).`,
+          });
+          continue;
+        }
+        if (!schema) {
+          issues.push({
+            level: "warn",
+            code: "schema_missing",
+            path,
+            message: "No schema available for this control file.",
+          });
+          continue;
+        }
+        const validation = validateWithSchema(schema, result.value);
+        if (!validation.valid) {
+          issues.push({
+            level: "error",
+            code: "schema_invalid",
+            path,
+            message: validation.errors.join("; ") || "Schema validation failed.",
+          });
+        }
+      }
+      const summary = this._summarizeStatus(issues);
+      return {
+        ok: summary.status === "ok",
+        status: summary.status,
+        summary: summary.summary,
+        issues,
+      };
+    }
+
+    async readTraceDb(path) {
+      const tracePath = path || DEFAULT_TRACE_DB_PATH;
+      const issues = [];
+      const exists = await this.exists(tracePath);
+      if (!exists) {
+        issues.push({
+          level: "warn",
+          code: "trace_missing",
+          path: tracePath,
+          message: "Trace DB not found.",
+        });
+        return { entries: [], issues, missing: true };
+      }
+      const text = await this.readText(tracePath);
+      const parsed = parseNdjson(text);
+      for (const err of parsed.errors) {
+        issues.push({
+          level: "error",
+          code: "trace_parse_error",
+          path: tracePath,
+          message: `Line ${err.line}: ${err.message}`,
+        });
+      }
+      const entries = [];
+      for (let i = 0; i < parsed.entries.length; i += 1) {
+        const entry = parsed.entries[i];
+        const validation = validateWithSchema(SCHEMAS.trace_entry, entry);
+        if (!validation.valid) {
+          issues.push({
+            level: "error",
+            code: "trace_schema_error",
+            path: tracePath,
+            message: `Entry ${i + 1}: ${validation.errors.join("; ")}`,
+          });
+          continue;
+        }
+        entries.push(entry);
+      }
+      return { entries, issues, missing: false };
+    }
+
+    async appendTrace(entry, options) {
+      const tracePath = (options && options.path) || DEFAULT_TRACE_DB_PATH;
+      if (!this.supportsWrite()) {
+        throw new Error("Trace append requires a writable directory handle.");
+      }
+      const validation = validateWithSchema(SCHEMAS.trace_entry, entry);
+      if (!validation.valid) {
+        throw new Error(
+          `Trace entry failed schema validation: ${validation.errors.join("; ")}`
+        );
+      }
+      const exists = await this.exists(tracePath);
+      const existing = exists ? await this.readText(tracePath) : "";
+      const newline = existing && !existing.endsWith("\n") ? "\n" : "";
+      const next = `${existing}${newline}${JSON.stringify(entry)}\n`;
+      await this.writeText(tracePath, next);
+    }
+
+    async buildManifest(options) {
+      const includePrefixes = (options && options.includePrefixes) || [];
+      const excludePrefixes =
+        (options && options.excludePrefixes) || DEFAULT_EXCLUDE_PREFIXES;
+      const excludeNames =
+        (options && options.excludeNames) || DEFAULT_EXCLUDE_NAMES;
+      const files = await this.listFiles();
+      const manifestFiles = [];
+      for (const path of files) {
+        if (shouldExclude(path, includePrefixes, excludePrefixes, excludeNames)) {
+          continue;
+        }
+        const data = await this.readBinary(path);
+        const sha = await sha256Hex(data);
+        manifestFiles.push({
+          path: normalizePath(path),
+          sha256: sha,
+          bytes: data.length,
+        });
+      }
+      manifestFiles.sort((a, b) => a.path.localeCompare(b.path));
+      return {
+        generated_at: new Date().toISOString(),
+        base_path: this.basePath || "",
+        files: manifestFiles,
+      };
+    }
+
+    async buildHashTree(manifest) {
+      const lines = manifest.files.map((file) => `${file.path}\t${file.sha256}`);
+      const digest = await sha256(textToBytes(lines.join("\n")));
+      return {
+        algo: "sha256",
+        leaf_count: manifest.files.length,
+        root: bytesToHex(digest),
+        leaves: manifest.files.map((file) => ({
+          path: file.path,
+          sha256: file.sha256,
+        })),
+      };
+    }
+
+    async buildProofpack(options) {
+      const manifest = await this.buildManifest(options);
+      const hashTree = await this.buildHashTree(manifest);
+      let signature = null;
+      let publicKeyBase64 = null;
+      if (options && options.signingKey) {
+        signature = await signHashTree(hashTree, options.signingKey);
+      }
+      if (options && options.publicKeyBase64) {
+        publicKeyBase64 = options.publicKeyBase64;
+      }
+      const entries = [];
+      entries.push({
+        path: "manifest.json",
+        data: textToBytes(JSON.stringify(manifest, null, 2)),
+      });
+      entries.push({
+        path: "hash_tree.json",
+        data: textToBytes(JSON.stringify(hashTree, null, 2)),
+      });
+      if (signature) {
+        entries.push({
+          path: "signature.txt",
+          data: textToBytes(`${signature}\n`),
+        });
+      }
+      if (publicKeyBase64) {
+        entries.push({
+          path: "public_key.txt",
+          data: textToBytes(`${publicKeyBase64}\n`),
+        });
+      }
+      for (const file of manifest.files) {
+        const data = await this.readBinary(file.path);
+        entries.push({ path: file.path, data });
+      }
+      const zipBytes = createZip(entries);
+      return {
+        manifest,
+        hashTree,
+        signature,
+        zipBytes,
+        zipBlob: new Blob([zipBytes], { type: "application/zip" }),
+      };
+    }
+  }
+
+  return {
+    VERSION,
+    DEFAULT_TRACE_DB_PATH,
+    DEFAULT_CONTROL_FILES,
+    DEFAULT_REQUIRED_CONTROL_FILES,
+    DEFAULT_EXCLUDE_PREFIXES,
+    DEFAULT_EXCLUDE_NAMES,
+    SCHEMAS,
+    CONTROL_SCHEMA_MAP,
+    FileListFS,
+    DirectoryHandleFS,
+    TowerProject,
+    utils: {
+      normalizePath,
+      joinPath,
+      baseName,
+      ensureTrailingSlash,
+      textToBytes,
+      bytesToHex,
+      bytesToBase64,
+      base64ToBytes,
+      sha256,
+      sha256Hex,
+      parseJsonSafe,
+      parseNdjson,
+      validateWithSchema,
+    },
+    zip: {
+      createZip,
+    },
+    signing: {
+      generateKeyPair,
+      exportPublicKey,
+      exportPrivateKey,
+      importPublicKey,
+      importPrivateKey,
+      signBytes,
+      verifyBytes,
+      signHashTree,
+      verifyHashTree,
+    },
+  };
+});
+
+</script>
+
+<script>
+// ui.js
+(() => {
+  "use strict";
+
+  const state = {
+    fs: null,
+    project: null,
+    signing: {
+      publicKey: null,
+      privateKey: null,
+      publicKeyBase64: "",
+      privateKeyBase64: "",
+    },
+    proofUrl: null,
+  };
+
+  const el = {
+    pickFolder: document.getElementById("pick-folder"),
+    folderUpload: document.getElementById("folder-upload"),
+    pickerStatus: document.getElementById("picker-status"),
+    uploadStatus: document.getElementById("upload-status"),
+    connectStatus: document.getElementById("connect-status"),
+    scanBtn: document.getElementById("scan-btn"),
+    scanStatus: document.getElementById("scan-status"),
+    scanIssues: document.getElementById("scan-issues"),
+    fileCount: document.getElementById("file-count"),
+    tracePath: document.getElementById("trace-path"),
+    traceLoad: document.getElementById("trace-load"),
+    traceStatus: document.getElementById("trace-status"),
+    traceOutput: document.getElementById("trace-output"),
+    traceEvent: document.getElementById("trace-event"),
+    traceSource: document.getElementById("trace-source"),
+    traceMessage: document.getElementById("trace-message"),
+    traceLevel: document.getElementById("trace-level"),
+    traceAppend: document.getElementById("trace-append"),
+    includePrefixes: document.getElementById("include-prefixes"),
+    excludePrefixes: document.getElementById("exclude-prefixes"),
+    excludeNames: document.getElementById("exclude-names"),
+    zipName: document.getElementById("zip-name"),
+    publicKey: document.getElementById("public-key"),
+    privateKey: document.getElementById("private-key"),
+    genKeys: document.getElementById("gen-keys"),
+    loadKeys: document.getElementById("load-keys"),
+    buildProofpack: document.getElementById("build-proofpack"),
+    proofStatus: document.getElementById("proof-status"),
+    proofOutput: document.getElementById("proof-output"),
+    proofDownload: document.getElementById("proof-download"),
+  };
+
+  function setStatus(target, text, status) {
+    if (!target) return;
+    target.textContent = text;
+    if (status) {
+      target.dataset.status = status;
+    }
+  }
+
+  function setOutput(target, text) {
+    if (!target) return;
+    target.textContent = text;
+  }
+
+  function clearIssues() {
+    el.scanIssues.innerHTML = "";
+  }
+
+  function renderIssues(issues) {
+    clearIssues();
+    if (!issues || issues.length === 0) {
+      return;
+    }
+    for (const issue of issues) {
+      const li = document.createElement("li");
+      li.dataset.level = issue.level || "info";
+      li.textContent = `[${issue.level || "info"}] ${issue.path || ""} ${issue.message || ""}`.trim();
+      el.scanIssues.appendChild(li);
+    }
+  }
+
+  function parseList(value) {
+    return String(value || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function ensureCore() {
+    if (!window.TowerCore) {
+      setStatus(el.connectStatus, "TowerCore not loaded.", "error");
+      throw new Error("TowerCore not available.");
+    }
+  }
+
+  function ensureProject() {
+    if (!state.project) {
+      setStatus(el.connectStatus, "Connect a Tower folder first.", "error");
+      throw new Error("No project connected.");
+    }
+  }
+
+  async function updateFileCount() {
+    if (!state.project) {
+      el.fileCount.textContent = "Files: 0";
+      return;
+    }
+    const files = await state.project.listFiles();
+    el.fileCount.textContent = `Files: ${files.length}`;
+  }
+
+  async function connectWithFileList(files) {
+    ensureCore();
+    state.fs = new window.TowerCore.FileListFS(files);
+    state.project = new window.TowerCore.TowerProject(state.fs);
+    setStatus(el.uploadStatus, `Loaded ${files.length} files.`, "ok");
+    setStatus(el.connectStatus, "Connected (read-only).", "ok");
+    await updateFileCount();
+  }
+
+  async function connectWithDirectoryHandle(handle) {
+    ensureCore();
+    state.fs = new window.TowerCore.DirectoryHandleFS(handle);
+    state.project = new window.TowerCore.TowerProject(state.fs);
+    setStatus(el.pickerStatus, "Directory handle active.", "ok");
+    setStatus(el.connectStatus, "Connected (read/write).", "ok");
+    await updateFileCount();
+  }
+
+  async function runScan() {
+    ensureProject();
+    setStatus(el.scanStatus, "Scanning...", "warn");
+    const result = await state.project.scan();
+    if (result.ok) {
+      setStatus(el.scanStatus, "All required control files passed.", "ok");
+    } else {
+      setStatus(el.scanStatus, "Control scan found issues.", "error");
+    }
+    renderIssues(result.issues);
+  }
+
+  function summarizeTrace(entries) {
+    if (!entries || entries.length === 0) {
+      return "No entries.";
+    }
+    const recent = entries.slice(-6).map((entry) => JSON.stringify(entry));
+    return recent.join("\n");
+  }
+
+  async function loadTrace() {
+    ensureProject();
+    const path = el.tracePath.value.trim();
+    setStatus(el.traceStatus, "Loading trace DB...", "warn");
+    const result = await state.project.readTraceDb(path);
+    if (result.missing) {
+      setStatus(el.traceStatus, "Trace DB missing.", "warn");
+    } else if (result.issues.length > 0) {
+      setStatus(el.traceStatus, "Trace DB loaded with issues.", "error");
+    } else {
+      setStatus(el.traceStatus, "Trace DB loaded.", "ok");
+    }
+    const output = `Entries: ${result.entries.length}\nIssues: ${result.issues.length}\n\n${summarizeTrace(
+      result.entries
+    )}`;
+    setOutput(el.traceOutput, output);
+  }
+
+  async function appendTrace() {
+    ensureProject();
+    const eventValue = el.traceEvent.value.trim();
+    const sourceValue = el.traceSource.value.trim();
+    if (!eventValue || !sourceValue) {
+      setStatus(el.traceStatus, "Event and source are required.", "error");
+      return;
+    }
+    const entry = {
+      timestamp: new Date().toISOString(),
+      event: eventValue,
+      source: sourceValue,
+    };
+    const messageValue = el.traceMessage.value.trim();
+    if (messageValue) entry.message = messageValue;
+    const levelValue = el.traceLevel.value;
+    if (levelValue) entry.level = levelValue;
+    try {
+      await state.project.appendTrace(entry, { path: el.tracePath.value.trim() });
+      setStatus(el.traceStatus, "Trace entry appended.", "ok");
+      await loadTrace();
+    } catch (error) {
+      setStatus(
+        el.traceStatus,
+        `Append failed: ${error instanceof Error ? error.message : String(error)}`,
+        "error"
+      );
+    }
+  }
+
+  async function generateKeys() {
+    ensureCore();
+    try {
+      const keyPair = await window.TowerCore.signing.generateKeyPair();
+      const publicKeyBase64 = await window.TowerCore.signing.exportPublicKey(
+        keyPair.publicKey
+      );
+      const privateKeyBase64 = await window.TowerCore.signing.exportPrivateKey(
+        keyPair.privateKey
+      );
+      state.signing.publicKey = keyPair.publicKey;
+      state.signing.privateKey = keyPair.privateKey;
+      state.signing.publicKeyBase64 = publicKeyBase64;
+      state.signing.privateKeyBase64 = privateKeyBase64;
+      el.publicKey.value = publicKeyBase64;
+      el.privateKey.value = privateKeyBase64;
+      setStatus(el.proofStatus, "Generated keypair.", "ok");
+    } catch (error) {
+      setStatus(
+        el.proofStatus,
+        `Key generation failed: ${error instanceof Error ? error.message : String(error)}`,
+        "error"
+      );
+    }
+  }
+
+  async function loadKeys() {
+    ensureCore();
+    const publicKeyValue = el.publicKey.value.trim();
+    const privateKeyValue = el.privateKey.value.trim();
+    try {
+      state.signing.publicKey = null;
+      state.signing.privateKey = null;
+      state.signing.publicKeyBase64 = "";
+      state.signing.privateKeyBase64 = "";
+      if (publicKeyValue) {
+        state.signing.publicKey = await window.TowerCore.signing.importPublicKey(
+          publicKeyValue
+        );
+        state.signing.publicKeyBase64 = publicKeyValue;
+      }
+      if (privateKeyValue) {
+        state.signing.privateKey = await window.TowerCore.signing.importPrivateKey(
+          privateKeyValue
+        );
+        state.signing.privateKeyBase64 = privateKeyValue;
+      }
+      if (state.signing.privateKey) {
+        setStatus(el.proofStatus, "Keys loaded.", "ok");
+      } else {
+        setStatus(el.proofStatus, "No private key loaded.", "warn");
+      }
+    } catch (error) {
+      setStatus(
+        el.proofStatus,
+        `Key import failed: ${error instanceof Error ? error.message : String(error)}`,
+        "error"
+      );
+    }
+  }
+
+  async function buildProofpack() {
+    ensureProject();
+    setStatus(el.proofStatus, "Building proofpack...", "warn");
+    const includePrefixes = parseList(el.includePrefixes.value);
+    const excludePrefixes = parseList(el.excludePrefixes.value);
+    const excludeNames = parseList(el.excludeNames.value);
+    try {
+      const result = await state.project.buildProofpack({
+        includePrefixes,
+        excludePrefixes,
+        excludeNames,
+        signingKey: state.signing.privateKey || null,
+        publicKeyBase64: state.signing.publicKeyBase64 || null,
+      });
+      const summary = [
+        `Files: ${result.manifest.files.length}`,
+        `Root: ${result.hashTree.root}`,
+        `Signed: ${result.signature ? "yes" : "no"}`,
+      ].join("\n");
+      setOutput(el.proofOutput, summary);
+      setStatus(el.proofStatus, "Proofpack built.", "ok");
+      if (state.proofUrl) {
+        URL.revokeObjectURL(state.proofUrl);
+      }
+      const blob = result.zipBlob;
+      const url = URL.createObjectURL(blob);
+      state.proofUrl = url;
+      el.proofDownload.href = url;
+      el.proofDownload.download = el.zipName.value.trim() || "proofpack.zip";
+      el.proofDownload.style.display = "inline-flex";
+    } catch (error) {
+      setStatus(
+        el.proofStatus,
+        `Build failed: ${error instanceof Error ? error.message : String(error)}`,
+        "error"
+      );
+    }
+  }
+
+  function init() {
+    if (!("showDirectoryPicker" in window)) {
+      setStatus(el.pickerStatus, "Directory picker not supported.", "warn");
+    }
+    el.proofDownload.style.display = "none";
+    el.pickFolder.addEventListener("click", async () => {
+      try {
+        const handle = await window.showDirectoryPicker();
+        await connectWithDirectoryHandle(handle);
+      } catch (error) {
+        setStatus(
+          el.connectStatus,
+          `Directory access failed: ${error instanceof Error ? error.message : String(error)}`,
+          "error"
+        );
+      }
+    });
+    el.folderUpload.addEventListener("change", async (event) => {
+      const files = event.target.files;
+      if (!files || files.length === 0) {
+        setStatus(el.uploadStatus, "No folder selected.", "warn");
+        return;
+      }
+      await connectWithFileList(files);
+    });
+    el.scanBtn.addEventListener("click", runScan);
+    el.traceLoad.addEventListener("click", loadTrace);
+    el.traceAppend.addEventListener("click", appendTrace);
+    el.genKeys.addEventListener("click", generateKeys);
+    el.loadKeys.addEventListener("click", loadKeys);
+    el.buildProofpack.addEventListener("click", buildProofpack);
+  }
+
+  init();
+})();
+
+</script>
+  </body>
+</html>

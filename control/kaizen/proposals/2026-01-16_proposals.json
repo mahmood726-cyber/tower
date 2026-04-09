@@ -1,0 +1,52 @@
+{
+  "spec_version": "v1.5.5",
+  "generated_at": "2026-01-16T22:31:56.030333",
+  "analysis_period_days": 7,
+  "proposals": [
+    {
+      "proposal_id": "KZN_20260116223156_aezg",
+      "title": "Increase claude_opus utilization",
+      "rationale": "claude_opus is at 0.0% of daily quota (target: 90%)",
+      "status": "proposed",
+      "metrics_before": {
+        "utilization": 0.0,
+        "target": 0.9
+      },
+      "proposed_change": "Assign more work to claude_opus or increase batch sizes",
+      "expected_improvement": "Increase utilization to 90%",
+      "created_at": "2026-01-16T22:31:56.030021",
+      "spec_version": "v1.5.5",
+      "source": "auto"
+    },
+    {
+      "proposal_id": "KZN_20260116223156_cgec",
+      "title": "Increase claude_sonnet utilization",
+      "rationale": "claude_sonnet is at 0.0% of daily quota (target: 90%)",
+      "status": "proposed",
+      "metrics_before": {
+        "utilization": 0.0,
+        "target": 0.9
+      },
+      "proposed_change": "Assign more work to claude_sonnet or increase batch sizes",
+      "expected_improvement": "Increase utilization to 90%",
+      "created_at": "2026-01-16T22:31:56.030089",
+      "spec_version": "v1.5.5",
+      "source": "auto"
+    },
+    {
+      "proposal_id": "KZN_20260116223156_ekus",
+      "title": "Increase gemini utilization",
+      "rationale": "gemini is at 0.0% of daily quota (target: 90%)",
+      "status": "proposed",
+      "metrics_before": {
+        "utilization": 0.0,
+        "target": 0.9
+      },
+      "proposed_change": "Assign more work to gemini or increase batch sizes",
+      "expected_improvement": "Increase utilization to 90%",
+      "created_at": "2026-01-16T22:31:56.030132",
+      "spec_version": "v1.5.5",
+      "source": "auto"
+    }
+  ]
+}

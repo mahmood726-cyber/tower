@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tower://schemas/dashboard.schema.json",
+  "title": "Tower Dashboard",
+  "type": "object",
+  "required": ["spec_version", "generated_at"],
+  "properties": {
+    "spec_version": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string" },
+    "card_counts_by_state": { "type": "object", "additionalProperties": { "type": "integer" } },
+    "cards": { "type": "array" },
+    "quota_summary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model"],
+        "properties": {
+          "model": { "type": "string" },
+          "daily_limit": { "type": "number" },
+          "daily_used": { "type": "number" },
+          "daily_percent": { "type": "number" },
+          "weekly_limit": { "type": "number" },
+          "weekly_used": { "type": "number" },
+          "weekly_percent": { "type": "number" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "pc_summary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pc_id"],
+        "properties": {
+          "pc_id": { "type": "string" },
+          "online": { "type": "boolean" },
+          "last_seen": { "type": ["string", "null"] },
+          "cpu_utilization": { "type": ["number", "null"] },
+          "ram_utilization": { "type": ["number", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "alerts": {
+      "type": "object",
+      "properties": {
+        "total_count": { "type": "integer" },
+        "items": { "type": "array" }
+      }
+    },
+    "papers": {
+      "type": "object",
+      "properties": {
+        "counts_by_status": { "type": "object" },
+        "total": { "type": "integer" }
+      }
+    }
+  },
+  "additionalProperties": true
+}

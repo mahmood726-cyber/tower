@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "truthcert/drift_event.schema.json",
+  "title": "TruthCert DriftEvent Node",
+  "description": "Drift event per Spec v0.8 Section 17 (required drift ledger)",
+  "type": "object",
+  "required": ["drift_id", "drift_type", "severity", "detected_at"],
+  "properties": {
+    "drift_id": {
+      "type": "string",
+      "pattern": "^drift:[a-f0-9]{16,64}$"
+    },
+    "drift_type": {
+      "type": "string",
+      "enum": [
+        "sign_flip",
+        "effect_magnitude_change",
+        "inclusion_change",
+        "n_jump",
+        "outcome_remap",
+        "timepoint_remap",
+        "missingness_change",
+        "registry_retroactive_edit",
+        "lock_snapshot_violation",
+        "state_change",
+        "gate_regression",
+        "assurance_demotion"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["trial", "claim", "result", "meta_analysis", "card", "system"]
+    },
+    "scope_id": {
+      "type": "string"
+    },
+    "field": {
+      "type": "string",
+      "description": "Specific field that changed"
+    },
+    "old_value": {
+      "description": "Previous value (any type)"
+    },
+    "new_value": {
+      "description": "New value (any type)"
+    },
+    "magnitude": {
+      "type": "object",
+      "properties": {
+        "absolute_change": { "type": "number" },
+        "relative_change": { "type": "number" },
+        "threshold_exceeded": { "type": "boolean" }
+      }
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["P0", "P1", "P2"]
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "detected_by": {
+      "type": "string",
+      "description": "Run ID or validator that detected the drift"
+    },
+    "adjudicated": {
+      "type": "boolean",
+      "default": false
+    },
+    "adjudication_id": {
+      "type": "string"
+    },
+    "justification": {
+      "type": "string",
+      "description": "Per Section 17: each drift event must have justification or adjudication"
+    },
+    "related_snapshot_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
