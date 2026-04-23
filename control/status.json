@@ -5,17 +5,23 @@
     {
       "card_id": "CARD-001",
       "title": "Test Feature",
-      "state": "ACTIVE"
+      "state": "ACTIVE",
+      "stream": "apps",
+      "updated_at": "2026-02-06T17:30:07+00:00"
     },
     {
       "card_id": "CARD-002",
       "title": "Bug Fix",
-      "state": "GREEN"
+      "state": "GOLD",
+      "stream": "apps",
+      "updated_at": "2026-02-06T17:30:07+00:00"
     },
     {
       "card_id": "CARD-003",
       "title": "Refactor",
-      "state": "MERGED"
+      "state": "MERGED",
+      "stream": "apps",
+      "updated_at": "2026-02-06T17:30:07+00:00"
     },
     {
       "card_id": "CARD-004",
