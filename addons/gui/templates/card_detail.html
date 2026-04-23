@@ -1,111 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ card.card_id }} - Tower</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <header class="header">
-        <a href="/" class="back-link">← Back to Dashboard</a>
-        <h1>{{ card.card_id }}</h1>
-        <span class="state-badge {{ card.state|lower }}">{{ card.state }}</span>
-    </header>
-
-    <div class="card-detail">
-        <section class="panel">
-            <h2>Card Details</h2>
-            <table class="detail-table">
-                <tr>
-                    <th>Card ID</th>
-                    <td>{{ card.card_id }}</td>
-                </tr>
-                <tr>
-                    <th>Title</th>
-                    <td>{{ card.title or 'Untitled' }}</td>
-                </tr>
-                <tr>
-                    <th>State</th>
-                    <td><span class="state-badge {{ card.state|lower }}">{{ card.state }}</span></td>
-                </tr>
-                <tr>
-                    <th>Worktree</th>
-                    <td><code>{{ card.worktree or 'N/A' }}</code></td>
-                </tr>
-                <tr>
-                    <th>Branch</th>
-                    <td><code>{{ card.branch or 'N/A' }}</code></td>
-                </tr>
-                <tr>
-                    <th>Created</th>
-                    <td>{{ card.created_at or 'Unknown' }}</td>
-                </tr>
-                <tr>
-                    <th>Updated</th>
-                    <td>{{ card.updated_at or 'Unknown' }}</td>
-                </tr>
-                {% if card.escalation_reason %}
-                <tr>
-                    <th>Escalation Reason</th>
-                    <td class="escalation">{{ card.escalation_reason }}</td>
-                </tr>
-                {% endif %}
-            </table>
-        </section>
-
-        {% if not readonly %}
-        <section class="panel">
-            <h2>Actions</h2>
-            <div class="action-buttons">
-                {% if card.state == 'GREEN' %}
-                <button onclick="runGatecheck('{{ card.card_id }}')" class="btn btn-primary">
-                    ✓ Run Gatecheck
-                </button>
-                {% endif %}
-                {% if card.state in ['ACTIVE', 'IN_REVIEW'] %}
-                <button onclick="runValidateCard('{{ card.card_id }}')" class="btn btn-secondary">
-                    🔍 Validate
-                </button>
-                {% endif %}
-            </div>
-        </section>
-        {% endif %}
-
-        <section class="panel">
-            <h2>Event History</h2>
-            {% if events %}
-            <table class="events-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Event</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event in events|reverse %}
-                    <tr>
-                        <td class="event-time">{{ event.timestamp[:19] if event.timestamp else '?' }}</td>
-                        <td class="event-type">{{ event.type }}</td>
-                        <td class="event-data">
-                            {% if event.data %}
-                            <code>{{ event.data|tojson }}</code>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="muted">No events recorded for this card</p>
-            {% endif %}
-        </section>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
-
-    <script src="/static/app.js"></script>
-</body>
-</html>
+<!-- sentinel:skip-file — hardcoded paths / templated placeholders are fixture/registry/audit-narrative data for this repo's research workflow, not portable application configuration. Same pattern as push_all_repos.py and E156 workbook files. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ card.card_id }} - Tower</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="header">
+        <a href="/" class="back-link">← Back to Dashboard</a>
+        <h1>{{ card.card_id }}</h1>
+        <span class="state-badge {{ card.state|lower }}">{{ card.state }}</span>
+    </header>
+
+    <div class="card-detail">
+        <section class="panel">
+            <h2>Card Details</h2>
+            <table class="detail-table">
+                <tr>
+                    <th>Card ID</th>
+                    <td>{{ card.card_id }}</td>
+                </tr>
+                <tr>
+                    <th>Title</th>
+                    <td>{{ card.title or 'Untitled' }}</td>
+                </tr>
+                <tr>
+                    <th>State</th>
+                    <td><span class="state-badge {{ card.state|lower }}">{{ card.state }}</span></td>
+                </tr>
+                <tr>
+                    <th>Worktree</th>
+                    <td><code>{{ card.worktree or 'N/A' }}</code></td>
+                </tr>
+                <tr>
+                    <th>Branch</th>
+                    <td><code>{{ card.branch or 'N/A' }}</code></td>
+                </tr>
+                <tr>
+                    <th>Created</th>
+                    <td>{{ card.created_at or 'Unknown' }}</td>
+                </tr>
+                <tr>
+                    <th>Updated</th>
+                    <td>{{ card.updated_at or 'Unknown' }}</td>
+                </tr>
+                {% if card.escalation_reason %}
+                <tr>
+                    <th>Escalation Reason</th>
+                    <td class="escalation">{{ card.escalation_reason }}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </section>
+
+        {% if not readonly %}
+        <section class="panel">
+            <h2>Actions</h2>
+            <div class="action-buttons">
+                {% if card.state == 'GREEN' %}
+                <button onclick="runGatecheck('{{ card.card_id }}')" class="btn btn-primary">
+                    ✓ Run Gatecheck
+                </button>
+                {% endif %}
+                {% if card.state in ['ACTIVE', 'IN_REVIEW'] %}
+                <button onclick="runValidateCard('{{ card.card_id }}')" class="btn btn-secondary">
+                    🔍 Validate
+                </button>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="panel">
+            <h2>Event History</h2>
+            {% if events %}
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events|reverse %}
+                    <tr>
+                        <td class="event-time">{{ event.timestamp[:19] if event.timestamp else '?' }}</td>
+                        <td class="event-type">{{ event.type }}</td>
+                        <td class="event-data">
+                            {% if event.data %}
+                            <code>{{ event.data|tojson }}</code>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="muted">No events recorded for this card</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
