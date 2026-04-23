@@ -39,7 +39,7 @@ SPEC_VERSION="v1.5.7"
 to_win_path() {
     local path="$1"
     if [[ "$path" == /[a-zA-Z]/* ]]; then
-        # Convert /c/Users/... to C:/Users/... (keep forward slashes for Python)
+        # Convert /<drive>/Users/... to <drive>:/Users/... (keep forward slashes for Python)
         echo "${path:1:1}:${path:2}"
     else
         echo "$path"
