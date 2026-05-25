@@ -506,7 +506,7 @@
           <div class="cta">
             <button id="pickDirectory" class="btn primary">Pick Tower Folder</button>
             <label class="btn ghost">
-              <input id="folderInput" type="file" webkitdirectory directory multiple>
+              <input id="folderInput" type="file" webkitdirectory directory multiple aria-label="Browser-first Tower directory explorer">
               Folder Upload
             </label>
           </div>
@@ -563,10 +563,10 @@
             <div id="traceMeta" class="note">Trace DB path: control/trace_db.jsonl (strict schema)</div>
             <div id="traceList" class="trace-list empty">No traces loaded.</div>
             <div id="traceForm" class="trace-form disabled">
-              <input id="traceEvent" type="text" placeholder="Event (required)">
-              <input id="traceCard" type="text" placeholder="Card ID (optional)">
-              <input id="traceRun" type="text" placeholder="Run ID (optional)">
-              <textarea id="traceMessage" placeholder="Message (optional)"></textarea>
+              <input id="traceEvent" type="text" placeholder="Event (required)" aria-label="Trace Event">
+              <input id="traceCard" type="text" placeholder="Card ID (optional)" aria-label="Trace Card">
+              <input id="traceRun" type="text" placeholder="Run ID (optional)" aria-label="Trace Run">
+              <textarea id="traceMessage" placeholder="Message (optional)" aria-label="Trace Message"></textarea>
               <button id="traceAppend" class="btn">Append Trace</button>
               <div id="traceStatus" class="note"></div>
             </div>

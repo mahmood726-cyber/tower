@@ -307,12 +307,12 @@
 
         cardsTab.innerHTML = `
             <div class="controls">
-                <input type="text" class="search-input" id="card-search" placeholder="Search cards...">
-                <select id="state-filter">
+                <input type="text" class="search-input" id="card-search" placeholder="Search cards..." aria-label="Card search">
+                <select id="state-filter" aria-label="State filter">
                     <option value="">All States</option>
                     ${[...new Set((data.cards || []).map(c => c.state))].map(s => `<option value="${s}">${s}</option>`).join('')}
                 </select>
-                <select id="stream-filter">
+                <select id="stream-filter" aria-label="Stream filter">
                     <option value="">All Streams</option>
                     ${[...new Set((data.cards || []).map(c => c.stream).filter(Boolean))].map(s => `<option value="${s}">${s}</option>`).join('')}
                 </select>

@@ -43,7 +43,7 @@
                 <svg class="command-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" id="command-input" class="command-input" placeholder="Type a command or search..." autocomplete="off">
+                <input type="text" id="command-input" class="command-input" placeholder="Type a command or search..." autocomplete="off" aria-label="Command input">
                 <kbd class="command-shortcut">ESC</kbd>
             </div>
             <div class="command-results" id="command-results">
@@ -260,7 +260,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                         </svg>
-                        <input type="text" placeholder="Search cards, events, logs... (Cmd+K)" id="global-search">
+                        <input type="text" placeholder="Search cards, events, logs... (Cmd+K)" id="global-search" aria-label="Global search">
                         <kbd>⌘K</kbd>
                     </div>
                 </div>
@@ -502,8 +502,8 @@
                 <section class="view" id="view-kanban">
                     <div class="kanban-header">
                         <div class="kanban-filters">
-                            <input type="text" class="kanban-search" placeholder="Filter cards..." id="kanban-filter">
-                            <select class="kanban-sort" id="kanban-sort">
+                            <input type="text" class="kanban-search" placeholder="Filter cards..." id="kanban-filter" aria-label="Kanban filter">
+                            <select class="kanban-sort" id="kanban-sort" aria-label="Kanban sort">
                                 <option value="priority">Sort by Priority</option>
                                 <option value="updated">Sort by Updated</option>
                                 <option value="created">Sort by Created</option>
@@ -662,8 +662,8 @@
                 <section class="view" id="view-events">
                     <div class="events-header">
                         <div class="events-filters">
-                            <input type="text" class="events-search" placeholder="Search events..." id="events-filter">
-                            <select class="events-type-filter" id="events-type">
+                            <input type="text" class="events-search" placeholder="Search events..." id="events-filter" aria-label="Events filter">
+                            <select class="events-type-filter" id="events-type" aria-label="Events type">
                                 <option value="">All Types</option>
                                 <option value="RUN_START">Run Start</option>
                                 <option value="RUN_END">Run End</option>
@@ -832,7 +832,7 @@
                                     <span class="setting-description">Choose your preferred color scheme</span>
                                 </div>
                                 <div class="setting-control">
-                                    <select id="theme-select">
+                                    <select id="theme-select" aria-label="Appearance">
                                         <option value="dark">Dark</option>
                                         <option value="light">Light</option>
                                         <option value="system">System</option>
@@ -846,7 +846,7 @@
                                 </div>
                                 <div class="setting-control">
                                     <label class="toggle">
-                                        <input type="checkbox" id="compact-mode">
+                                        <input type="checkbox" id="compact-mode" aria-label="Compact mode">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </div>
@@ -862,7 +862,7 @@
                                 </div>
                                 <div class="setting-control">
                                     <label class="toggle">
-                                        <input type="checkbox" id="desktop-notifications" checked>
+                                        <input type="checkbox" id="desktop-notifications" checked aria-label="Notifications">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </div>
@@ -874,7 +874,7 @@
                                 </div>
                                 <div class="setting-control">
                                     <label class="toggle">
-                                        <input type="checkbox" id="sound-alerts">
+                                        <input type="checkbox" id="sound-alerts" aria-label="Sound alerts">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </div>
@@ -889,7 +889,7 @@
                                     <span class="setting-description">Automatically refresh data</span>
                                 </div>
                                 <div class="setting-control">
-                                    <select id="auto-refresh">
+                                    <select id="auto-refresh" aria-label="Data">
                                         <option value="0">Disabled</option>
                                         <option value="5">Every 5 seconds</option>
                                         <option value="15" selected>Every 15 seconds</option>
