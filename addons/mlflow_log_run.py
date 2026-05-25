@@ -12,12 +12,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
-def _read_json(p: Path) -> Optional[Dict[str, Any]]:
+def _read_json(p: Path) -> dict[str, Any] | None:
     if not p.exists():
         return None
     try:

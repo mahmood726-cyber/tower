@@ -15,7 +15,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -29,7 +29,7 @@ def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _load_metrics(metrics_path: Path) -> List[Dict]:
+def _load_metrics(metrics_path: Path) -> list[dict]:
     """Load metrics from CSV."""
     if not metrics_path.exists():
         return []
@@ -47,9 +47,9 @@ def _load_metrics(metrics_path: Path) -> List[Dict]:
 
 
 def _calculate_control_limits(
-    values: List[float],
+    values: list[float],
     baseline_n: int = 30
-) -> Tuple[float, float, float, float]:
+) -> tuple[float, float, float, float]:
     """
     Calculate control limits using individuals/moving range method.
 
@@ -88,12 +88,12 @@ def _calculate_control_limits(
 
 
 def _detect_anomalies(
-    values: List[float],
+    values: list[float],
     centerline: float,
     lcl: float,
     ucl: float,
     sigma: float
-) -> List[Dict]:
+) -> list[dict]:
     """
     Detect SPC rule violations.
 
@@ -133,7 +133,7 @@ def _detect_anomalies(
                     "rule": "2_of_3_beyond_2sigma",
                     "value": value,
                     "severity": "medium",
-                    "description": f"2 of last 3 points beyond 2-sigma"
+                    "description": "2 of last 3 points beyond 2-sigma"
                 })
 
         # Rule 3: 4 of last 5 beyond 1-sigma
@@ -151,13 +151,13 @@ def _detect_anomalies(
                     "rule": "4_of_5_beyond_1sigma",
                     "value": value,
                     "severity": "low",
-                    "description": f"4 of last 5 points beyond 1-sigma"
+                    "description": "4 of last 5 points beyond 1-sigma"
                 })
 
     return alerts
 
 
-def analyze_spc(metrics_path: Optional[Path] = None) -> Dict[str, Any]:
+def analyze_spc(metrics_path: Path | None = None) -> dict[str, Any]:
     """
     Perform SPC analysis on Tower metrics.
 
@@ -225,7 +225,7 @@ def analyze_spc(metrics_path: Optional[Path] = None) -> Dict[str, Any]:
     return result
 
 
-def write_outputs(result: Dict[str, Any]):
+def write_outputs(result: dict[str, Any]):
     """Write SPC outputs."""
     # Ensure directories
     SPC_DIR.mkdir(parents=True, exist_ok=True)
@@ -256,7 +256,7 @@ def write_outputs(result: Dict[str, Any]):
     print(f"Wrote: {alerts_file}")
 
 
-def _generate_report(result: Dict[str, Any]) -> str:
+def _generate_report(result: dict[str, Any]) -> str:
     """Generate markdown SPC report."""
     lines = [
         "# SPC Analysis Report",

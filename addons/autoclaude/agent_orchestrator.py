@@ -15,16 +15,14 @@ Features:
 - Result aggregation
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-from enum import Enum
-from datetime import datetime, timezone
-from abc import ABC, abstractmethod
-import asyncio
-import threading
 import hashlib
-import json
-from concurrent.futures import ThreadPoolExecutor, Future, as_completed
+import threading
+from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any
 
 # Optional: integrate with ledger if available
 try:
@@ -73,8 +71,8 @@ class AgentCapability:
     """Describes what an agent can do."""
     name: str
     description: str
-    input_types: List[str]
-    output_types: List[str]
+    input_types: list[str]
+    output_types: list[str]
     quality_score: float = 1.0  # 0.0 to 1.0
     cost_per_call: float = 0.0
     avg_latency_ms: float = 1000.0
@@ -86,14 +84,14 @@ class Agent:
     id: str
     name: str
     description: str
-    capabilities: List[AgentCapability]
-    model: Optional[str] = None  # LLM model if applicable
+    capabilities: list[AgentCapability]
+    model: str | None = None  # LLM model if applicable
     status: AgentStatus = AgentStatus.IDLE
-    current_task: Optional[str] = None
+    current_task: str | None = None
     completed_tasks: int = 0
     failed_tasks: int = 0
     total_cost: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def can_handle(self, task_type: str) -> bool:
         """Check if agent can handle a task type."""
@@ -102,7 +100,7 @@ class Agent:
                 return True
         return False
 
-    def get_capability(self, name: str) -> Optional[AgentCapability]:
+    def get_capability(self, name: str) -> AgentCapability | None:
         """Get a specific capability."""
         for cap in self.capabilities:
             if cap.name == name:
@@ -117,17 +115,17 @@ class Task:
     task_type: str
     input_data: Any
     priority: int = 5  # 1-10, higher = more important
-    parent_task_id: Optional[str] = None
+    parent_task_id: str | None = None
     status: TaskStatus = TaskStatus.PENDING
-    assigned_agent: Optional[str] = None
-    result: Optional[Any] = None
-    error: Optional[str] = None
+    assigned_agent: str | None = None
+    result: Any | None = None
+    error: str | None = None
     created_at: datetime = field(default_factory=_now_utc)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -150,7 +148,7 @@ class BlackboardEntry:
     source_agent: str
     timestamp: datetime = field(default_factory=_now_utc)
     version: int = 1
-    subscribers: Set[str] = field(default_factory=set)
+    subscribers: set[str] = field(default_factory=set)
 
 
 @dataclass
@@ -159,28 +157,28 @@ class OrchestrationResult:
     success: bool
     tasks_completed: int
     tasks_failed: int
-    results: Dict[str, Any]
+    results: dict[str, Any]
     total_duration_ms: float
     total_cost: float
-    agent_stats: Dict[str, Dict[str, Any]]
-    errors: List[str] = field(default_factory=list)
+    agent_stats: dict[str, dict[str, Any]]
+    errors: list[str] = field(default_factory=list)
 
 
 class TaskDecomposer:
     """Decomposes complex tasks into subtasks."""
 
     def __init__(self):
-        self._decomposition_rules: Dict[str, Callable] = {}
+        self._decomposition_rules: dict[str, Callable] = {}
 
     def register_rule(
         self,
         task_type: str,
-        decomposer: Callable[[Task], List[Task]]
+        decomposer: Callable[[Task], list[Task]]
     ) -> None:
         """Register a decomposition rule for a task type."""
         self._decomposition_rules[task_type] = decomposer
 
-    def decompose(self, task: Task) -> List[Task]:
+    def decompose(self, task: Task) -> list[Task]:
         """Decompose a task into subtasks."""
         if task.task_type in self._decomposition_rules:
             subtasks = self._decomposition_rules[task.task_type](task)
@@ -200,9 +198,9 @@ class AgentRouter:
     def route(
         self,
         task: Task,
-        agents: List[Agent],
-        blackboard: Optional[Dict[str, BlackboardEntry]] = None
-    ) -> Optional[Agent]:
+        agents: list[Agent],
+        blackboard: dict[str, BlackboardEntry] | None = None
+    ) -> Agent | None:
         """Select the best agent for a task."""
         candidates = [a for a in agents if a.can_handle(task.task_type) and a.status == AgentStatus.IDLE]
 
@@ -220,12 +218,12 @@ class AgentRouter:
             candidates.sort(key=score_agent, reverse=True)
             return candidates[0]
 
-        elif self._strategy == "round_robin":
+        if self._strategy == "round_robin":
             # Pick least recently used
             candidates.sort(key=lambda a: a.completed_tasks)
             return candidates[0]
 
-        elif self._strategy == "cost_optimized":
+        if self._strategy == "cost_optimized":
             # Pick cheapest
             def get_cost(agent: Agent) -> float:
                 cap = agent.get_capability(task.task_type)
@@ -234,8 +232,7 @@ class AgentRouter:
             candidates.sort(key=get_cost)
             return candidates[0]
 
-        else:
-            return candidates[0] if candidates else None
+        return candidates[0] if candidates else None
 
 
 class ResultAggregator:
@@ -246,7 +243,7 @@ class ResultAggregator:
 
     def aggregate(
         self,
-        results: List[Tuple[Task, Any]],
+        results: list[tuple[Task, Any]],
         original_task: Task
     ) -> Any:
         """Aggregate results from subtasks."""
@@ -263,7 +260,7 @@ class ResultAggregator:
                     merged[task.id] = result
             return merged
 
-        elif self._strategy == "concat":
+        if self._strategy == "concat":
             # Concatenate string/list results
             parts = []
             for _, result in results:
@@ -275,16 +272,16 @@ class ResultAggregator:
                     parts.append(str(result))
             return parts
 
-        elif self._strategy == "first_success":
+        if self._strategy == "first_success":
             # Return first successful result
             for task, result in results:
                 if task.status == TaskStatus.COMPLETED:
                     return result
             return None
 
-        elif self._strategy == "vote":
+        if self._strategy == "vote":
             # Majority vote (for classification tasks)
-            votes: Dict[Any, int] = {}
+            votes: dict[Any, int] = {}
             for _, result in results:
                 key = str(result)
                 votes[key] = votes.get(key, 0) + 1
@@ -293,8 +290,7 @@ class ResultAggregator:
                 return winner[0]
             return None
 
-        else:
-            return [r for _, r in results]
+        return [r for _, r in results]
 
 
 class AgentOrchestrator:
@@ -311,21 +307,21 @@ class AgentOrchestrator:
         self,
         pattern: OrchestrationPattern = OrchestrationPattern.SUPERVISOR,
         max_workers: int = 4,
-        ledger_path: Optional[str] = None
+        ledger_path: str | None = None
     ):
         self._pattern = pattern
-        self._agents: Dict[str, Agent] = {}
-        self._tasks: Dict[str, Task] = {}
-        self._blackboard: Dict[str, BlackboardEntry] = {}
+        self._agents: dict[str, Agent] = {}
+        self._tasks: dict[str, Task] = {}
+        self._blackboard: dict[str, BlackboardEntry] = {}
         self._decomposer = TaskDecomposer()
         self._router = AgentRouter()
         self._aggregator = ResultAggregator()
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
         self._lock = threading.Lock()
-        self._task_handlers: Dict[str, Callable] = {}
+        self._task_handlers: dict[str, Callable] = {}
 
         # Ledger integration
-        self._logger: Optional[EventLogger] = None
+        self._logger: EventLogger | None = None
         if HAS_LEDGER and ledger_path:
             self._logger = EventLogger(ledger_path)
 
@@ -338,9 +334,9 @@ class AgentOrchestrator:
         self,
         name: str,
         description: str,
-        capabilities: List[AgentCapability],
-        model: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        capabilities: list[AgentCapability],
+        model: str | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> Agent:
         """Register an agent with the orchestrator."""
         agent_id = self._generate_id("agent")
@@ -380,7 +376,7 @@ class AgentOrchestrator:
     def register_decomposition_rule(
         self,
         task_type: str,
-        decomposer: Callable[[Task], List[Task]]
+        decomposer: Callable[[Task], list[Task]]
     ) -> None:
         """Register a task decomposition rule."""
         self._decomposer.register_rule(task_type, decomposer)
@@ -390,7 +386,7 @@ class AgentOrchestrator:
         task_type: str,
         input_data: Any,
         priority: int = 5,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None
     ) -> Task:
         """Create a new task."""
         task_id = self._generate_id("task")
@@ -448,8 +444,8 @@ class AgentOrchestrator:
         Central coordinator decomposes, assigns, and aggregates.
         """
         start_time = _now_utc()
-        results: Dict[str, Any] = {}
-        errors: List[str] = []
+        results: dict[str, Any] = {}
+        errors: list[str] = []
         completed = 0
         failed = 0
         total_cost = 0.0
@@ -482,7 +478,7 @@ class AgentOrchestrator:
                     total_cost += cap.cost_per_call
             except Exception as e:
                 failed += 1
-                errors.append(f"Task {subtask.id}: {str(e)}")
+                errors.append(f"Task {subtask.id}: {e!s}")
 
         # Aggregate results
         task_results = [(self._tasks[tid], results.get(tid)) for tid in results]
@@ -524,8 +520,8 @@ class AgentOrchestrator:
         Parallel execution of subtasks.
         """
         start_time = _now_utc()
-        results: Dict[str, Any] = {}
-        errors: List[str] = []
+        results: dict[str, Any] = {}
+        errors: list[str] = []
         total_cost = 0.0
 
         # Decompose task
@@ -537,7 +533,7 @@ class AgentOrchestrator:
 
         if parallel:
             # Submit all tasks for parallel execution
-            futures: Dict[Future, Task] = {}
+            futures: dict[Future, Task] = {}
 
             for subtask in subtasks:
                 agent = self._router.route(subtask, list(self._agents.values()))
@@ -556,7 +552,7 @@ class AgentOrchestrator:
                     result = future.result()
                     results[subtask.id] = result
                 except Exception as e:
-                    errors.append(f"Task {subtask.id}: {str(e)}")
+                    errors.append(f"Task {subtask.id}: {e!s}")
 
         else:
             # Sequential execution
@@ -568,7 +564,7 @@ class AgentOrchestrator:
                         result = self._execute_task(subtask, agent)
                         results[subtask.id] = result
                     except Exception as e:
-                        errors.append(f"Task {subtask.id}: {str(e)}")
+                        errors.append(f"Task {subtask.id}: {e!s}")
 
         completed = len(results)
         failed = len(subtasks) - completed
@@ -600,7 +596,7 @@ class AgentOrchestrator:
         Agents collaborate via shared state.
         """
         start_time = _now_utc()
-        errors: List[str] = []
+        errors: list[str] = []
         completed = 0
         total_cost = 0.0
 
@@ -638,7 +634,7 @@ class AgentOrchestrator:
                             completed += 1
                             progress_made = True
                         except Exception as e:
-                            errors.append(f"Agent {agent.name}: {str(e)}")
+                            errors.append(f"Agent {agent.name}: {e!s}")
 
             # Check termination condition
             status = self.read_from_blackboard("status")
@@ -695,7 +691,7 @@ class AgentOrchestrator:
                     source_agent=source_agent
                 )
 
-    def read_from_blackboard(self, key: str) -> Optional[Any]:
+    def read_from_blackboard(self, key: str) -> Any | None:
         """Read from shared blackboard."""
         with self._lock:
             entry = self._blackboard.get(key)
@@ -711,16 +707,15 @@ class AgentOrchestrator:
         """Execute task using configured pattern."""
         if self._pattern == OrchestrationPattern.SUPERVISOR:
             return self.execute_supervisor(task)
-        elif self._pattern == OrchestrationPattern.COORDINATOR_WORKER:
+        if self._pattern == OrchestrationPattern.COORDINATOR_WORKER:
             return self.execute_coordinator_worker(task)
-        elif self._pattern == OrchestrationPattern.BLACKBOARD:
+        if self._pattern == OrchestrationPattern.BLACKBOARD:
             return self.execute_blackboard(task)
-        elif self._pattern == OrchestrationPattern.PIPELINE:
+        if self._pattern == OrchestrationPattern.PIPELINE:
             return self.execute_supervisor(task)  # Pipeline is sequential supervisor
-        else:
-            return self.execute_supervisor(task)
+        return self.execute_supervisor(task)
 
-    def _get_agent_stats(self) -> Dict[str, Dict[str, Any]]:
+    def _get_agent_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics for all agents."""
         stats = {}
         for agent_id, agent in self._agents.items():
@@ -733,19 +728,19 @@ class AgentOrchestrator:
             }
         return stats
 
-    def get_agent(self, agent_id: str) -> Optional[Agent]:
+    def get_agent(self, agent_id: str) -> Agent | None:
         """Get an agent by ID."""
         return self._agents.get(agent_id)
 
-    def get_task(self, task_id: str) -> Optional[Task]:
+    def get_task(self, task_id: str) -> Task | None:
         """Get a task by ID."""
         return self._tasks.get(task_id)
 
-    def get_all_agents(self) -> List[Agent]:
+    def get_all_agents(self) -> list[Agent]:
         """Get all registered agents."""
         return list(self._agents.values())
 
-    def get_pending_tasks(self) -> List[Task]:
+    def get_pending_tasks(self) -> list[Task]:
         """Get all pending tasks."""
         return [t for t in self._tasks.values() if t.status == TaskStatus.PENDING]
 
@@ -761,7 +756,7 @@ class AgentOrchestrator:
         """Shutdown the orchestrator."""
         self._executor.shutdown(wait=True)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get orchestrator statistics."""
         with self._lock:
             task_stats = {
@@ -783,16 +778,16 @@ class AgentOrchestrator:
 
 # Convenience exports
 __all__ = [
-    "AgentOrchestrator",
     "Agent",
     "AgentCapability",
+    "AgentOrchestrator",
+    "AgentRouter",
     "AgentStatus",
-    "Task",
-    "TaskStatus",
+    "BlackboardEntry",
     "OrchestrationPattern",
     "OrchestrationResult",
-    "TaskDecomposer",
-    "AgentRouter",
     "ResultAggregator",
-    "BlackboardEntry"
+    "Task",
+    "TaskDecomposer",
+    "TaskStatus"
 ]

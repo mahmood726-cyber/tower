@@ -16,21 +16,14 @@ import functools
 import random
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
     TypeVar,
-    Union,
 )
 
 # Paths
@@ -70,7 +63,7 @@ class RetryExhaustedError(Exception):
         message: str,
         attempts: int,
         total_delay: float,
-        last_exception: Optional[Exception] = None,
+        last_exception: Exception | None = None,
     ):
         self.attempts = attempts
         self.total_delay = total_delay
@@ -89,10 +82,10 @@ class RetryConfig:
     exponential_base: float = 2.0
     jitter: bool = True
     jitter_factor: float = 0.1
-    retryable_exceptions: Tuple[Type[Exception], ...] = (Exception,)
-    non_retryable_exceptions: Tuple[Type[Exception], ...] = ()
+    retryable_exceptions: tuple[type[Exception], ...] = (Exception,)
+    non_retryable_exceptions: tuple[type[Exception], ...] = ()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["strategy"] = self.strategy.value
         d["retryable_exceptions"] = [e.__name__ for e in self.retryable_exceptions]
@@ -109,10 +102,10 @@ class RetryAttempt:
     success: bool
     delay_before: float
     duration_ms: float
-    error: Optional[str] = None
-    error_type: Optional[str] = None
+    error: str | None = None
+    error_type: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -122,13 +115,13 @@ class RetryResult:
 
     success: bool
     result: Any
-    attempts: List[RetryAttempt]
+    attempts: list[RetryAttempt]
     total_attempts: int
     total_delay: float
     total_duration_ms: float
-    final_error: Optional[str] = None
+    final_error: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = {
             "success": self.success,
             "total_attempts": self.total_attempts,
@@ -157,8 +150,8 @@ class RetryPolicy:
 
     def __init__(
         self,
-        config: Optional[RetryConfig] = None,
-        ledger: Optional[EventLogger] = None,
+        config: RetryConfig | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize retry policy.
@@ -218,8 +211,8 @@ class RetryPolicy:
     def _log_event(
         self,
         event_type: str,
-        card_id: Optional[str],
-        data: Dict[str, Any],
+        card_id: str | None,
+        data: dict[str, Any],
     ) -> None:
         """Log retry event to ledger."""
         if self.ledger:
@@ -234,7 +227,7 @@ class RetryPolicy:
         self,
         func: Callable[..., T],
         *args: Any,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
         **kwargs: Any,
     ) -> RetryResult:
         """
@@ -252,10 +245,10 @@ class RetryPolicy:
         Raises:
             RetryExhaustedError: If all attempts fail
         """
-        attempts: List[RetryAttempt] = []
+        attempts: list[RetryAttempt] = []
         total_delay = 0.0
         start_time = time.monotonic()
-        last_exception: Optional[Exception] = None
+        last_exception: Exception | None = None
 
         for attempt_num in range(1, self.config.max_attempts + 1):
             # Calculate delay (no delay for first attempt)
@@ -350,7 +343,7 @@ class RetryPolicy:
         self,
         func: Callable[..., T],
         *args: Any,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
         **kwargs: Any,
     ) -> RetryResult:
         """
@@ -368,10 +361,10 @@ class RetryPolicy:
         Raises:
             RetryExhaustedError: If all attempts fail
         """
-        attempts: List[RetryAttempt] = []
+        attempts: list[RetryAttempt] = []
         total_delay = 0.0
         start_time = time.monotonic()
-        last_exception: Optional[Exception] = None
+        last_exception: Exception | None = None
 
         for attempt_num in range(1, self.config.max_attempts + 1):
             # Calculate delay (no delay for first attempt)
@@ -437,7 +430,7 @@ class RetryPolicy:
 
     def decorator(
         self,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> Callable[[Callable[..., T]], Callable[..., T]]:
         """
         Create a decorator that applies retry logic.
@@ -458,7 +451,7 @@ class RetryPolicy:
 
     def async_decorator(
         self,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> Callable[[Callable[..., T]], Callable[..., T]]:
         """
         Create a decorator that applies async retry logic.
@@ -482,7 +475,7 @@ class RetryPolicy:
 def llm_retry_policy(
     max_attempts: int = 3,
     base_delay: float = 1.0,
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> RetryPolicy:
     """
     Create a retry policy optimized for LLM API calls.

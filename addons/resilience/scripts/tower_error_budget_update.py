@@ -8,13 +8,12 @@ Updates error budget status based on SLO configuration.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import os
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -27,7 +26,7 @@ def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _load_json(path: Path) -> Optional[Dict]:
+def _load_json(path: Path) -> dict | None:
     if not path.exists():
         return None
     try:
@@ -37,7 +36,7 @@ def _load_json(path: Path) -> Optional[Dict]:
         return None
 
 
-def _write_json_atomic(path: Path, data: Dict):
+def _write_json_atomic(path: Path, data: dict):
     """Write JSON atomically with fsync."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_file = path.with_suffix(".tmp")
@@ -48,7 +47,7 @@ def _write_json_atomic(path: Path, data: Dict):
     os.replace(tmp_file, path)
 
 
-def _get_default_slo_config() -> Dict:
+def _get_default_slo_config() -> dict:
     """Default SLO configuration."""
     return {
         "spec_version": "v1.5.5",
@@ -78,7 +77,7 @@ def _get_default_slo_config() -> Dict:
     }
 
 
-def compute_error_budget() -> Dict[str, Any]:
+def compute_error_budget() -> dict[str, Any]:
     """
     Compute error budget status.
 
@@ -175,7 +174,7 @@ def compute_error_budget() -> Dict[str, Any]:
     return result
 
 
-def _evaluate_slo(value: Optional[float], slo_def: Dict) -> Dict:
+def _evaluate_slo(value: float | None, slo_def: dict) -> dict:
     """Evaluate single SLO."""
     target = slo_def.get("target", 0)
     freeze = slo_def.get("freeze", 0)

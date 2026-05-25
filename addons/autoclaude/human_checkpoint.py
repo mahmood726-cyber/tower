@@ -16,11 +16,12 @@ import os
 import sys
 import time
 import uuid
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -77,24 +78,24 @@ class CheckpointRequest:
     action_type: str              # Type of action (e.g., "code_change", "deploy")
     description: str              # Human-readable description
     risk_level: RiskLevel
-    context: Dict[str, Any]       # Action context/details
+    context: dict[str, Any]       # Action context/details
     created_at: str
     created_by: str               # Agent/system that created checkpoint
     status: CheckpointStatus = CheckpointStatus.PENDING
     timeout_seconds: int = 3600   # 1 hour default
-    expires_at: Optional[str] = None
-    reviewed_at: Optional[str] = None
-    reviewed_by: Optional[str] = None
-    decision: Optional[CheckpointDecision] = None
-    decision_reason: Optional[str] = None
-    modifications: Optional[Dict[str, Any]] = None
+    expires_at: str | None = None
+    reviewed_at: str | None = None
+    reviewed_by: str | None = None
+    decision: CheckpointDecision | None = None
+    decision_reason: str | None = None
+    modifications: dict[str, Any] | None = None
 
     def __post_init__(self):
         if self.expires_at is None:
             expires = datetime.fromisoformat(self.created_at) + timedelta(seconds=self.timeout_seconds)
             self.expires_at = expires.isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["risk_level"] = self.risk_level.value
         d["status"] = self.status.value
@@ -119,9 +120,9 @@ class CheckpointConfig:
     require_reason_on_reject: bool = True
     enable_escalation: bool = True
     escalation_timeout_seconds: int = 7200
-    notify_channels: List[str] = field(default_factory=list)
+    notify_channels: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -137,7 +138,7 @@ class CheckpointTimeoutError(Exception):
 class CheckpointRejectedError(Exception):
     """Raised when checkpoint is rejected."""
 
-    def __init__(self, checkpoint_id: str, reason: Optional[str] = None):
+    def __init__(self, checkpoint_id: str, reason: str | None = None):
         self.checkpoint_id = checkpoint_id
         self.reason = reason
         super().__init__(f"Checkpoint {checkpoint_id} rejected: {reason or 'No reason provided'}")
@@ -158,12 +159,12 @@ class HumanCheckpoint:
 
     def __init__(
         self,
-        config: Optional[CheckpointConfig] = None,
-        checkpoint_path: Optional[str] = None,
-        on_checkpoint_created: Optional[Callable[[CheckpointRequest], None]] = None,
-        on_checkpoint_resolved: Optional[Callable[[CheckpointRequest], None]] = None,
-        on_timeout: Optional[Callable[[CheckpointRequest], None]] = None,
-        ledger: Optional[EventLogger] = None,
+        config: CheckpointConfig | None = None,
+        checkpoint_path: str | None = None,
+        on_checkpoint_created: Callable[[CheckpointRequest], None] | None = None,
+        on_checkpoint_resolved: Callable[[CheckpointRequest], None] | None = None,
+        on_timeout: Callable[[CheckpointRequest], None] | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize checkpoint system.
@@ -190,7 +191,7 @@ class HumanCheckpoint:
         self.on_timeout = on_timeout
         self.ledger = ledger
 
-        self._checkpoints: Dict[str, CheckpointRequest] = {}
+        self._checkpoints: dict[str, CheckpointRequest] = {}
         self._load()
 
     def _generate_checkpoint_id(self) -> str:
@@ -205,7 +206,7 @@ class HumanCheckpoint:
             return
 
         try:
-            with open(self.checkpoint_path, "r", encoding="utf-8") as f:
+            with open(self.checkpoint_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             for ckpt_data in data.get("checkpoints", []):
@@ -242,7 +243,7 @@ class HumanCheckpoint:
         event_type: str,
         checkpoint_id: str,
         card_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ) -> None:
         """Log checkpoint event to ledger."""
         if self.ledger:
@@ -259,9 +260,9 @@ class HumanCheckpoint:
         action_type: str,
         description: str,
         risk_level: RiskLevel,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
         created_by: str = "agent",
-        timeout_seconds: Optional[int] = None,
+        timeout_seconds: int | None = None,
     ) -> CheckpointRequest:
         """
         Create a checkpoint for human review.
@@ -326,8 +327,8 @@ class HumanCheckpoint:
         checkpoint_id: str,
         decision: CheckpointDecision,
         reviewed_by: str,
-        reason: Optional[str] = None,
-        modifications: Optional[Dict[str, Any]] = None,
+        reason: str | None = None,
+        modifications: dict[str, Any] | None = None,
     ) -> CheckpointRequest:
         """
         Resolve a checkpoint with a human decision.
@@ -357,7 +358,7 @@ class HumanCheckpoint:
         if checkpoint.is_expired():
             checkpoint.status = CheckpointStatus.TIMEOUT
             self._save()
-            raise ValueError(f"Checkpoint has expired")
+            raise ValueError("Checkpoint has expired")
 
         # Validate rejection reason if required
         if (
@@ -407,7 +408,7 @@ class HumanCheckpoint:
         self,
         checkpoint_id: str,
         poll_interval: float = 5.0,
-        timeout_override: Optional[int] = None,
+        timeout_override: int | None = None,
     ) -> CheckpointRequest:
         """
         Block until checkpoint is resolved.
@@ -466,11 +467,11 @@ class HumanCheckpoint:
 
             time.sleep(poll_interval)
 
-    def get(self, checkpoint_id: str) -> Optional[CheckpointRequest]:
+    def get(self, checkpoint_id: str) -> CheckpointRequest | None:
         """Get checkpoint by ID."""
         return self._checkpoints.get(checkpoint_id)
 
-    def get_pending(self, card_id: Optional[str] = None) -> List[CheckpointRequest]:
+    def get_pending(self, card_id: str | None = None) -> list[CheckpointRequest]:
         """
         Get all pending checkpoints.
 
@@ -496,7 +497,7 @@ class HumanCheckpoint:
 
         return sorted(result, key=lambda c: c.created_at)
 
-    def get_by_card(self, card_id: str) -> List[CheckpointRequest]:
+    def get_by_card(self, card_id: str) -> list[CheckpointRequest]:
         """Get all checkpoints for a card."""
         return [
             c for c in self._checkpoints.values()
@@ -530,7 +531,7 @@ class HumanCheckpoint:
             "reason": reason,
         })
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of all checkpoints."""
         by_status = {status.value: 0 for status in CheckpointStatus}
         by_risk = {risk.value: 0 for risk in RiskLevel}

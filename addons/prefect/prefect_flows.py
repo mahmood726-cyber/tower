@@ -10,13 +10,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -49,7 +48,7 @@ def _generate_run_id() -> str:
     return f"{ts}_{suffix}"
 
 
-def _run_script(script_name: str, flow_name: str) -> Dict[str, Any]:
+def _run_script(script_name: str, flow_name: str) -> dict[str, Any]:
     """
     Run a Tower script and capture output.
 
@@ -145,21 +144,21 @@ def _create_flows():
     from prefect import flow, task
 
     @task(name="run_tower_script")
-    def run_script_task(script_name: str, flow_name: str) -> Dict[str, Any]:
+    def run_script_task(script_name: str, flow_name: str) -> dict[str, Any]:
         return _run_script(script_name, flow_name)
 
     @flow(name="tower_night_runner")
-    def tower_night_runner_flow() -> Dict[str, Any]:
+    def tower_night_runner_flow() -> dict[str, Any]:
         """Run Tower night runner."""
         return run_script_task("night_runner.sh", "tower_night_runner")
 
     @flow(name="tower_watchdog")
-    def tower_watchdog_flow() -> Dict[str, Any]:
+    def tower_watchdog_flow() -> dict[str, Any]:
         """Run Tower watchdog."""
         return run_script_task("tower_watchdog.sh", "tower_watchdog")
 
     @flow(name="tower_pc_router")
-    def tower_pc_router_flow() -> Dict[str, Any]:
+    def tower_pc_router_flow() -> dict[str, Any]:
         """Run Tower PC job router."""
         return run_script_task("pc_job_router.sh", "tower_pc_router")
 

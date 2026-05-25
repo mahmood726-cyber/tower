@@ -11,19 +11,7 @@ Provides version-controlled prompt management with:
 - Audit trail for prompt changes
 """
 
-from __future__ import annotations
-
-import hashlib
-import json
-import os
-import re
-import sys
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
-
-# Paths
+from __future__ import annotationsimport hashlibimport jsonimport osimport reimport sysfrom dataclasses import asdict, dataclass, fieldfrom datetime import datetime, timezonefrom pathlib import Pathfrom typing import Any# Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
 TOWER_ROOT = SCRIPT_DIR.parent.parent
 CONTROL_DIR = TOWER_ROOT / "control"
@@ -50,15 +38,15 @@ class PromptVersion:
     name: str                           # Human-readable name
     version: int                        # Sequential version number
     template: str                       # Prompt template with {variables}
-    variables: List[str]                # Required template variables
+    variables: list[str]                # Required template variables
     created_at: str                     # ISO timestamp
     created_by: str                     # Author/system identifier
-    description: Optional[str] = None   # Description of changes
-    tags: List[str] = field(default_factory=list)
-    parent_id: Optional[str] = None     # Previous version's prompt_id
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    description: str | None = None   # Description of changes
+    tags: list[str] = field(default_factory=list)
+    parent_id: str | None = None     # Previous version's prompt_id
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     def render(self, **kwargs: Any) -> str:
@@ -91,12 +79,12 @@ class PromptUsage:
 
     prompt_id: str
     timestamp: str
-    card_id: Optional[str]
-    session_id: Optional[str]
-    variables: Dict[str, Any]
-    outcome: Optional[str] = None  # success, failure, etc.
+    card_id: str | None
+    session_id: str | None
+    variables: dict[str, Any]
+    outcome: str | None = None  # success, failure, etc.
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -117,8 +105,8 @@ class PromptRegistry:
 
     def __init__(
         self,
-        registry_path: Optional[str] = None,
-        ledger: Optional[EventLogger] = None,
+        registry_path: str | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize prompt registry.
@@ -135,9 +123,9 @@ class PromptRegistry:
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.ledger = ledger
-        self._prompts: Dict[str, PromptVersion] = {}  # prompt_id -> PromptVersion
-        self._by_name: Dict[str, List[str]] = {}      # name -> [prompt_ids by version]
-        self._usage: List[PromptUsage] = []
+        self._prompts: dict[str, PromptVersion] = {}  # prompt_id -> PromptVersion
+        self._by_name: dict[str, list[str]] = {}      # name -> [prompt_ids by version]
+        self._usage: list[PromptUsage] = []
 
         self._load()
 
@@ -147,7 +135,7 @@ class PromptRegistry:
         full_hash = hashlib.sha256(normalized.encode()).hexdigest()
         return full_hash[:12]  # First 12 chars for readability
 
-    def _extract_variables(self, template: str) -> List[str]:
+    def _extract_variables(self, template: str) -> list[str]:
         """Extract variable names from template."""
         return sorted(set(self._VAR_PATTERN.findall(template)))
 
@@ -157,7 +145,7 @@ class PromptRegistry:
             return
 
         try:
-            with open(self.registry_path, "r", encoding="utf-8") as f:
+            with open(self.registry_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             for prompt_data in data.get("prompts", []):
@@ -174,7 +162,7 @@ class PromptRegistry:
                     key=lambda pid: self._prompts[pid].version
                 )
 
-        except (json.JSONDecodeError, KeyError, TypeError) as e:
+        except (json.JSONDecodeError, KeyError, TypeError):
             # Start fresh on corrupt file
             self._prompts = {}
             self._by_name = {}
@@ -198,7 +186,7 @@ class PromptRegistry:
         self,
         event_type: str,
         prompt_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ) -> None:
         """Log prompt event to ledger."""
         if self.ledger:
@@ -213,9 +201,9 @@ class PromptRegistry:
         name: str,
         template: str,
         created_by: str = "system",
-        description: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> PromptVersion:
         """
         Register a new prompt or new version of existing prompt.
@@ -280,7 +268,7 @@ class PromptRegistry:
 
         return prompt
 
-    def get(self, prompt_id: str) -> Optional[PromptVersion]:
+    def get(self, prompt_id: str) -> PromptVersion | None:
         """
         Get prompt by ID.
 
@@ -295,8 +283,8 @@ class PromptRegistry:
     def get_by_name(
         self,
         name: str,
-        version: Optional[int] = None,
-    ) -> Optional[PromptVersion]:
+        version: int | None = None,
+    ) -> PromptVersion | None:
         """
         Get prompt by name and optional version.
 
@@ -326,11 +314,11 @@ class PromptRegistry:
 
         return None
 
-    def get_latest(self, name: str) -> Optional[PromptVersion]:
+    def get_latest(self, name: str) -> PromptVersion | None:
         """Get latest version of a prompt by name."""
         return self.get_by_name(name, version=None)
 
-    def get_versions(self, name: str) -> List[PromptVersion]:
+    def get_versions(self, name: str) -> list[PromptVersion]:
         """
         Get all versions of a prompt.
 
@@ -351,8 +339,8 @@ class PromptRegistry:
     def render(
         self,
         prompt_id: str,
-        card_id: Optional[str] = None,
-        session_id: Optional[str] = None,
+        card_id: str | None = None,
+        session_id: str | None = None,
         track_usage: bool = True,
         **variables: Any,
     ) -> str:
@@ -401,9 +389,9 @@ class PromptRegistry:
     def render_by_name(
         self,
         name: str,
-        version: Optional[int] = None,
-        card_id: Optional[str] = None,
-        session_id: Optional[str] = None,
+        version: int | None = None,
+        card_id: str | None = None,
+        session_id: str | None = None,
         **variables: Any,
     ) -> str:
         """
@@ -438,7 +426,7 @@ class PromptRegistry:
         self,
         prompt_id: str,
         outcome: str,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> None:
         """
         Record outcome for a prompt usage (for A/B testing).
@@ -455,8 +443,8 @@ class PromptRegistry:
 
     def list_prompts(
         self,
-        tag: Optional[str] = None,
-    ) -> List[PromptVersion]:
+        tag: str | None = None,
+    ) -> list[PromptVersion]:
         """
         List all prompts (latest versions only).
 
@@ -474,7 +462,7 @@ class PromptRegistry:
                     result.append(prompt)
         return result
 
-    def get_history(self, prompt_id: str) -> List[PromptVersion]:
+    def get_history(self, prompt_id: str) -> list[PromptVersion]:
         """
         Get version history for a prompt.
 
@@ -494,7 +482,7 @@ class PromptRegistry:
         self,
         prompt_id_a: str,
         prompt_id_b: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Compare two prompt versions.
 
@@ -527,9 +515,9 @@ class PromptRegistry:
 
     def get_usage_stats(
         self,
-        prompt_id: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        prompt_id: str | None = None,
+        name: str | None = None,
+    ) -> dict[str, Any]:
         """
         Get usage statistics for prompts.
 
@@ -549,8 +537,8 @@ class PromptRegistry:
             name_ids = set(self._by_name.get(name, []))
             filtered = [u for u in filtered if u.prompt_id in name_ids]
 
-        by_prompt: Dict[str, int] = {}
-        by_card: Dict[str, int] = {}
+        by_prompt: dict[str, int] = {}
+        by_card: dict[str, int] = {}
 
         for usage in filtered:
             by_prompt[usage.prompt_id] = by_prompt.get(usage.prompt_id, 0) + 1

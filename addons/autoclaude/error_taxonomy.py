@@ -14,11 +14,11 @@ from __future__ import annotations
 
 import re
 import sys
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -81,20 +81,20 @@ class ErrorPattern:
     category: ErrorCategory
     severity: ErrorSeverity
     pattern: str                    # Regex pattern
-    subcategory: Optional[str] = None
-    root_cause_hints: List[str] = field(default_factory=list)
+    subcategory: str | None = None
+    root_cause_hints: list[str] = field(default_factory=list)
     remediation_type: RemediationType = RemediationType.INVESTIGATE
-    remediation_hints: List[str] = field(default_factory=list)
+    remediation_hints: list[str] = field(default_factory=list)
     auto_fixable: bool = False
 
     def __post_init__(self):
         self._compiled = re.compile(self.pattern, re.IGNORECASE | re.MULTILINE)
 
-    def matches(self, error_text: str) -> Optional[re.Match]:
+    def matches(self, error_text: str) -> re.Match | None:
         """Check if pattern matches error text."""
         return self._compiled.search(error_text)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["category"] = self.category.value
         d["severity"] = self.severity.value
@@ -110,21 +110,21 @@ class ClassifiedError:
     error_id: str
     original_text: str
     category: ErrorCategory
-    subcategory: Optional[str]
+    subcategory: str | None
     severity: ErrorSeverity
-    pattern_name: Optional[str]
-    root_cause_hints: List[str]
+    pattern_name: str | None
+    root_cause_hints: list[str]
     remediation_type: RemediationType
-    remediation_hints: List[str]
+    remediation_hints: list[str]
     auto_fixable: bool
     confidence: float               # Classification confidence 0-1
     timestamp: str
-    card_id: Optional[str] = None
-    file_path: Optional[str] = None
-    line_number: Optional[int] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    card_id: str | None = None
+    file_path: str | None = None
+    line_number: int | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["category"] = self.category.value
         d["severity"] = self.severity.value
@@ -133,7 +133,7 @@ class ClassifiedError:
 
 
 # Default error patterns
-DEFAULT_PATTERNS: List[ErrorPattern] = [
+DEFAULT_PATTERNS: list[ErrorPattern] = [
     # Syntax errors
     ErrorPattern(
         name="python_syntax_error",
@@ -378,8 +378,8 @@ class ErrorTaxonomy:
 
     def __init__(
         self,
-        patterns: Optional[List[ErrorPattern]] = None,
-        ledger: Optional[EventLogger] = None,
+        patterns: list[ErrorPattern] | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize error taxonomy.
@@ -408,10 +408,10 @@ class ErrorTaxonomy:
     def classify(
         self,
         error_text: str,
-        card_id: Optional[str] = None,
-        file_path: Optional[str] = None,
-        line_number: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        card_id: str | None = None,
+        file_path: str | None = None,
+        line_number: int | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ClassifiedError:
         """
         Classify an error based on its text.
@@ -426,7 +426,7 @@ class ErrorTaxonomy:
         Returns:
             ClassifiedError with full classification
         """
-        best_match: Optional[Tuple[ErrorPattern, re.Match]] = None
+        best_match: tuple[ErrorPattern, re.Match] | None = None
         best_confidence = 0.0
 
         # Try all patterns
@@ -503,24 +503,24 @@ class ErrorTaxonomy:
 
     def classify_batch(
         self,
-        errors: List[str],
-        card_id: Optional[str] = None,
-    ) -> List[ClassifiedError]:
+        errors: list[str],
+        card_id: str | None = None,
+    ) -> list[ClassifiedError]:
         """Classify multiple errors."""
         return [self.classify(e, card_id=card_id) for e in errors]
 
     def get_auto_fixable(
         self,
-        classified_errors: List[ClassifiedError],
-    ) -> List[ClassifiedError]:
+        classified_errors: list[ClassifiedError],
+    ) -> list[ClassifiedError]:
         """Filter to only auto-fixable errors."""
         return [e for e in classified_errors if e.auto_fixable]
 
     def get_by_severity(
         self,
-        classified_errors: List[ClassifiedError],
+        classified_errors: list[ClassifiedError],
         min_severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-    ) -> List[ClassifiedError]:
+    ) -> list[ClassifiedError]:
         """Filter errors by minimum severity."""
         severity_order = {
             ErrorSeverity.INFO: 0,
@@ -538,11 +538,11 @@ class ErrorTaxonomy:
 
     def get_summary(
         self,
-        classified_errors: List[ClassifiedError],
-    ) -> Dict[str, Any]:
+        classified_errors: list[ClassifiedError],
+    ) -> dict[str, Any]:
         """Get summary statistics for classified errors."""
-        by_category: Dict[str, int] = {}
-        by_severity: Dict[str, int] = {}
+        by_category: dict[str, int] = {}
+        by_severity: dict[str, int] = {}
         auto_fixable_count = 0
 
         for error in classified_errors:

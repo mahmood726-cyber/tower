@@ -11,15 +11,14 @@ Tracks token usage and costs across LLM API calls with:
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import sys
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta, timezone
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Callable
-from enum import Enum
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -73,14 +72,14 @@ class LLMCall:
     total_tokens: int
     cost_usd: float
     latency_ms: float
-    card_id: Optional[str] = None
-    session_id: Optional[str] = None
-    prompt_hash: Optional[str] = None
+    card_id: str | None = None
+    session_id: str | None = None
+    prompt_hash: str | None = None
     success: bool = True
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -95,20 +94,19 @@ class CostReport:
     total_prompt_tokens: int
     total_completion_tokens: int
     total_cost_usd: float
-    by_model: Dict[str, Dict[str, Any]]
-    by_card: Dict[str, Dict[str, Any]]
-    by_session: Dict[str, Dict[str, Any]]
-    budget_usd: Optional[float] = None
-    budget_remaining_usd: Optional[float] = None
-    budget_utilization_pct: Optional[float] = None
+    by_model: dict[str, dict[str, Any]]
+    by_card: dict[str, dict[str, Any]]
+    by_session: dict[str, dict[str, Any]]
+    budget_usd: float | None = None
+    budget_remaining_usd: float | None = None
+    budget_utilization_pct: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
 class BudgetExceededError(Exception):
     """Raised when LLM budget is exceeded."""
-    pass
 
 
 class LLMTracker:
@@ -125,13 +123,13 @@ class LLMTracker:
 
     def __init__(
         self,
-        tracker_path: Optional[str] = None,
-        budget_daily_usd: Optional[float] = None,
-        budget_monthly_usd: Optional[float] = None,
-        budget_per_card_usd: Optional[float] = None,
-        on_budget_warning: Optional[Callable[[float, float], None]] = None,
+        tracker_path: str | None = None,
+        budget_daily_usd: float | None = None,
+        budget_monthly_usd: float | None = None,
+        budget_per_card_usd: float | None = None,
+        on_budget_warning: Callable[[float, float], None] | None = None,
         warning_threshold_pct: float = 80.0,
-        ledger: Optional[EventLogger] = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize LLM tracker.
@@ -167,7 +165,7 @@ class LLMTracker:
         self._call_counter += 1
         return f"llm_{ts}_{self._call_counter:04d}"
 
-    def _get_pricing(self, model: str) -> Dict[str, float]:
+    def _get_pricing(self, model: str) -> dict[str, float]:
         """Get pricing for model."""
         # Try exact match
         if model in MODEL_PRICING:
@@ -195,7 +193,7 @@ class LLMTracker:
 
     def _check_budget(
         self,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
         additional_cost: float = 0.0,
     ) -> None:
         """Check if budget allows the call."""
@@ -244,12 +242,12 @@ class LLMTracker:
         prompt_tokens: int,
         completion_tokens: int,
         latency_ms: float,
-        card_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        prompt_hash: Optional[str] = None,
+        card_id: str | None = None,
+        session_id: str | None = None,
+        prompt_hash: str | None = None,
         success: bool = True,
-        error: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        error: str | None = None,
+        metadata: dict[str, Any] | None = None,
         check_budget: bool = True,
     ) -> LLMCall:
         """
@@ -323,18 +321,18 @@ class LLMTracker:
 
     def _read_calls(
         self,
-        since: Optional[str] = None,
-        until: Optional[str] = None,
-        card_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        model: Optional[str] = None,
-    ) -> List[LLMCall]:
+        since: str | None = None,
+        until: str | None = None,
+        card_id: str | None = None,
+        session_id: str | None = None,
+        model: str | None = None,
+    ) -> list[LLMCall]:
         """Read calls matching filters."""
         if not self.tracker_path.exists():
             return []
 
         calls = []
-        with open(self.tracker_path, "r", encoding="utf-8") as f:
+        with open(self.tracker_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -363,10 +361,10 @@ class LLMTracker:
 
     def get_report(
         self,
-        since: Optional[str] = None,
-        until: Optional[str] = None,
-        card_id: Optional[str] = None,
-        session_id: Optional[str] = None,
+        since: str | None = None,
+        until: str | None = None,
+        card_id: str | None = None,
+        session_id: str | None = None,
     ) -> CostReport:
         """
         Generate aggregated cost report.
@@ -388,9 +386,9 @@ class LLMTracker:
         )
 
         # Aggregate
-        by_model: Dict[str, Dict[str, Any]] = {}
-        by_card: Dict[str, Dict[str, Any]] = {}
-        by_session: Dict[str, Dict[str, Any]] = {}
+        by_model: dict[str, dict[str, Any]] = {}
+        by_card: dict[str, dict[str, Any]] = {}
+        by_session: dict[str, dict[str, Any]] = {}
 
         total_tokens = 0
         total_prompt = 0

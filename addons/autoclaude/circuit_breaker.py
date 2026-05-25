@@ -14,11 +14,12 @@ from __future__ import annotations
 import json
 import os
 import sys
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -62,13 +63,13 @@ class CircuitStatus:
     state: CircuitState
     failure_count: int
     success_count: int
-    last_failure_time: Optional[str]
-    last_success_time: Optional[str]
-    opened_at: Optional[str]
-    half_open_at: Optional[str]
+    last_failure_time: str | None
+    last_success_time: str | None
+    opened_at: str | None
+    half_open_at: str | None
     total_rejections: int
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["state"] = self.state.value
         return d
@@ -82,7 +83,7 @@ class CircuitConfig:
     reset_timeout_seconds: int = 300    # Time before attempting half-open (5 min)
     half_open_max_calls: int = 3        # Max calls allowed in half-open state
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -100,12 +101,12 @@ class CircuitBreaker:
 
     def __init__(
         self,
-        config: Optional[CircuitConfig] = None,
-        state_path: Optional[str] = None,
-        on_open: Optional[Callable[[str, int], None]] = None,
-        on_close: Optional[Callable[[str], None]] = None,
-        on_escalate: Optional[Callable[[str, int], None]] = None,
-        ledger: Optional[EventLogger] = None,
+        config: CircuitConfig | None = None,
+        state_path: str | None = None,
+        on_open: Callable[[str, int], None] | None = None,
+        on_close: Callable[[str], None] | None = None,
+        on_escalate: Callable[[str, int], None] | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize circuit breaker.
@@ -133,7 +134,7 @@ class CircuitBreaker:
         self.ledger = ledger
 
         # Load persisted state
-        self._circuits: Dict[str, CircuitStatus] = {}
+        self._circuits: dict[str, CircuitStatus] = {}
         self._load_state()
 
     def _load_state(self) -> None:
@@ -142,7 +143,7 @@ class CircuitBreaker:
             return
 
         try:
-            with open(self.state_path, "r", encoding="utf-8") as f:
+            with open(self.state_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             for card_id, status_data in data.get("circuits", {}).items():
@@ -197,7 +198,7 @@ class CircuitBreaker:
         timeout = timedelta(seconds=self.config.reset_timeout_seconds)
         return _now_utc() >= opened_time + timeout
 
-    def _log_event(self, event_type: str, card_id: str, data: Dict[str, Any]) -> None:
+    def _log_event(self, event_type: str, card_id: str, data: dict[str, Any]) -> None:
         """Log circuit event to ledger."""
         if self.ledger:
             self.ledger.log(
@@ -282,7 +283,7 @@ class CircuitBreaker:
 
         self._save_state()
 
-    def record_failure(self, card_id: str, error: Optional[str] = None) -> None:
+    def record_failure(self, card_id: str, error: str | None = None) -> None:
         """
         Record a failed execution.
 
@@ -355,14 +356,14 @@ class CircuitBreaker:
         """Get current circuit status."""
         return self._get_or_create_circuit(card_id)
 
-    def get_all_open(self) -> List[CircuitStatus]:
+    def get_all_open(self) -> list[CircuitStatus]:
         """Get all cards with open circuits."""
         return [
             status for status in self._circuits.values()
             if status.state == CircuitState.OPEN
         ]
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of all circuits."""
         by_state = {state.value: 0 for state in CircuitState}
         total_rejections = 0

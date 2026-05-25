@@ -14,15 +14,16 @@ Features:
 - Quality metrics and trending
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-from enum import Enum
-from datetime import datetime, timezone
-from pathlib import Path
-import json
 import hashlib
-import threading
+import json
 import statistics
+import threading
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
 # Optional: integrate with ledger if available
 try:
@@ -71,8 +72,8 @@ class EvalCriteria:
     score_type: ScoreType
     weight: float = 1.0
     passing_threshold: float = 0.7
-    categories: Optional[List[str]] = None  # For categorical scoring
-    rubric: Optional[Dict[str, str]] = None  # For rubric scoring
+    categories: list[str] | None = None  # For categorical scoring
+    rubric: dict[str, str] | None = None  # For rubric scoring
 
 
 @dataclass
@@ -83,41 +84,41 @@ class TestCase:
     description: str
     input_data: Any
     expected_output: Any
-    criteria: List[str]  # Names of EvalCriteria to use
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    criteria: list[str]  # Names of EvalCriteria to use
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class EvalScore:
     """Score from an evaluation."""
     criteria_name: str
-    score: Union[bool, float, str]
+    score: bool | float | str
     score_type: ScoreType
     passed: bool
-    reasoning: Optional[str] = None
+    reasoning: str | None = None
     confidence: float = 1.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class EvalResult:
     """Complete result of an evaluation."""
     id: str
-    test_case_id: Optional[str]
+    test_case_id: str | None
     eval_type: EvalType
     input_data: Any
     actual_output: Any
-    expected_output: Optional[Any]
-    scores: List[EvalScore]
+    expected_output: Any | None
+    scores: list[EvalScore]
     passed: bool
     overall_score: float
     duration_ms: float
     evaluated_at: datetime = field(default_factory=_now_utc)
     evaluator: str = "system"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -145,14 +146,14 @@ class ReviewItem:
     """Item pending human review."""
     id: str
     content: Any
-    context: Dict[str, Any]
+    context: dict[str, Any]
     status: ReviewStatus
     priority: int = 5
-    assigned_to: Optional[str] = None
+    assigned_to: str | None = None
     created_at: datetime = field(default_factory=_now_utc)
-    reviewed_at: Optional[datetime] = None
-    reviewer_notes: Optional[str] = None
-    decision: Optional[str] = None
+    reviewed_at: datetime | None = None
+    reviewer_notes: str | None = None
+    decision: str | None = None
 
 
 @dataclass
@@ -163,8 +164,8 @@ class QualityMetrics:
     pass_rate: float
     average_score: float
     score_std_dev: float
-    by_criteria: Dict[str, Dict[str, float]]
-    by_eval_type: Dict[str, int]
+    by_criteria: dict[str, dict[str, float]]
+    by_eval_type: dict[str, int]
     trend: str  # "improving", "stable", "declining"
 
 
@@ -177,9 +178,9 @@ class EvalReport:
     failed_cases: int
     pass_rate: float
     average_score: float
-    results: List[EvalResult]
-    metrics_by_criteria: Dict[str, Dict[str, float]]
-    failures: List[Dict[str, Any]]
+    results: list[EvalResult]
+    metrics_by_criteria: dict[str, dict[str, float]]
+    failures: list[dict[str, Any]]
 
 
 class AgentEvaluator:
@@ -194,20 +195,20 @@ class AgentEvaluator:
 
     def __init__(
         self,
-        storage_path: Optional[Path] = None,
-        ledger_path: Optional[str] = None
+        storage_path: Path | None = None,
+        ledger_path: str | None = None
     ):
-        self._criteria: Dict[str, EvalCriteria] = {}
-        self._test_cases: Dict[str, TestCase] = {}
-        self._results: List[EvalResult] = []
-        self._review_queue: Dict[str, ReviewItem] = {}
-        self._custom_scorers: Dict[str, Callable] = {}
-        self._llm_judge_fn: Optional[Callable] = None
+        self._criteria: dict[str, EvalCriteria] = {}
+        self._test_cases: dict[str, TestCase] = {}
+        self._results: list[EvalResult] = []
+        self._review_queue: dict[str, ReviewItem] = {}
+        self._custom_scorers: dict[str, Callable] = {}
+        self._llm_judge_fn: Callable | None = None
         self._storage_path = storage_path
         self._lock = threading.Lock()
 
         # Ledger integration
-        self._logger: Optional[EventLogger] = None
+        self._logger: EventLogger | None = None
         if HAS_LEDGER and ledger_path:
             self._logger = EventLogger(ledger_path)
 
@@ -271,7 +272,7 @@ class AgentEvaluator:
     def register_custom_scorer(
         self,
         criteria_name: str,
-        scorer: Callable[[Any, Any, Optional[Any]], EvalScore]
+        scorer: Callable[[Any, Any, Any | None], EvalScore]
     ) -> None:
         """Register custom scoring function for a criteria."""
         self._custom_scorers[criteria_name] = scorer
@@ -289,9 +290,9 @@ class AgentEvaluator:
         description: str,
         input_data: Any,
         expected_output: Any,
-        criteria: List[str],
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        criteria: list[str],
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> TestCase:
         """Add a test case for offline evaluation."""
         case_id = self._generate_id("case")
@@ -314,8 +315,8 @@ class AgentEvaluator:
     def run_offline_eval(
         self,
         agent_fn: Callable[[Any], Any],
-        test_case_ids: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None
+        test_case_ids: list[str] | None = None,
+        tags: list[str] | None = None
     ) -> EvalReport:
         """
         Run offline evaluation against test cases.
@@ -335,7 +336,7 @@ class AgentEvaluator:
             tag_set = set(tags)
             cases = [c for c in cases if tag_set & set(c.tags)]
 
-        results: List[EvalResult] = []
+        results: list[EvalResult] = []
         passed = 0
         failed = 0
 
@@ -402,7 +403,7 @@ class AgentEvaluator:
         avg_score = statistics.mean(r.overall_score for r in results) if results else 0.0
 
         # Aggregate by criteria
-        metrics_by_criteria: Dict[str, Dict[str, float]] = {}
+        metrics_by_criteria: dict[str, dict[str, float]] = {}
         for result in results:
             for score in result.scores:
                 if score.criteria_name not in metrics_by_criteria:
@@ -454,11 +455,11 @@ class AgentEvaluator:
     def _evaluate_output(
         self,
         actual: Any,
-        expected: Optional[Any],
-        criteria_names: List[str]
-    ) -> List[EvalScore]:
+        expected: Any | None,
+        criteria_names: list[str]
+    ) -> list[EvalScore]:
         """Evaluate output against specified criteria."""
-        scores: List[EvalScore] = []
+        scores: list[EvalScore] = []
 
         for name in criteria_names:
             criteria = self._criteria.get(name)
@@ -478,7 +479,7 @@ class AgentEvaluator:
     def _default_score(
         self,
         actual: Any,
-        expected: Optional[Any],
+        expected: Any | None,
         criteria: EvalCriteria
     ) -> EvalScore:
         """Default scoring logic."""
@@ -493,17 +494,16 @@ class AgentEvaluator:
                     passed=passed,
                     reasoning="Exact match comparison"
                 )
-            else:
-                # Default binary pass
-                return EvalScore(
-                    criteria_name=criteria.name,
-                    score=True,
-                    score_type=ScoreType.BINARY,
-                    passed=True,
-                    reasoning="Default pass"
-                )
+            # Default binary pass
+            return EvalScore(
+                criteria_name=criteria.name,
+                score=True,
+                score_type=ScoreType.BINARY,
+                passed=True,
+                reasoning="Default pass"
+            )
 
-        elif criteria.score_type == ScoreType.NUMERIC:
+        if criteria.score_type == ScoreType.NUMERIC:
             # Calculate similarity score
             if expected is not None:
                 score = self._calculate_similarity(actual, expected)
@@ -519,15 +519,14 @@ class AgentEvaluator:
                 reasoning=f"Similarity: {score:.2f}, threshold: {criteria.passing_threshold}"
             )
 
-        else:
-            # Default neutral score
-            return EvalScore(
-                criteria_name=criteria.name,
-                score=0.5,
-                score_type=ScoreType.NUMERIC,
-                passed=True,
-                reasoning="Default score"
-            )
+        # Default neutral score
+        return EvalScore(
+            criteria_name=criteria.name,
+            score=0.5,
+            score_type=ScoreType.NUMERIC,
+            passed=True,
+            reasoning="Default score"
+        )
 
     def _compare_outputs(self, actual: Any, expected: Any) -> bool:
         """Compare two outputs for equality."""
@@ -588,7 +587,7 @@ class AgentEvaluator:
         # Fallback
         return 1.0 if actual == expected else 0.0
 
-    def _calculate_overall_score(self, scores: List[EvalScore]) -> float:
+    def _calculate_overall_score(self, scores: list[EvalScore]) -> float:
         """Calculate weighted overall score."""
         if not scores:
             return 0.0
@@ -614,8 +613,8 @@ class AgentEvaluator:
 
     def run_online_eval(
         self,
-        traces: List[Dict[str, Any]],
-        criteria: List[str]
+        traces: list[dict[str, Any]],
+        criteria: list[str]
     ) -> QualityMetrics:
         """
         Evaluate production traces for quality monitoring.
@@ -636,8 +635,8 @@ class AgentEvaluator:
                 trend="stable"
             )
 
-        all_scores: List[float] = []
-        by_criteria: Dict[str, List[float]] = {c: [] for c in criteria}
+        all_scores: list[float] = []
+        by_criteria: dict[str, list[float]] = {c: [] for c in criteria}
         passed_count = 0
 
         for trace in traces:
@@ -701,7 +700,7 @@ class AgentEvaluator:
             trend=trend
         )
 
-    def _calculate_trend(self, recent_scores: List[float]) -> str:
+    def _calculate_trend(self, recent_scores: list[float]) -> str:
         """Calculate trend based on recent scores."""
         if len(recent_scores) < 5:
             return "stable"
@@ -714,7 +713,7 @@ class AgentEvaluator:
         diff = second_half - first_half
         if diff > 0.05:
             return "improving"
-        elif diff < -0.05:
+        if diff < -0.05:
             return "declining"
         return "stable"
 
@@ -737,7 +736,7 @@ class AgentEvaluator:
     def add_to_review_queue(
         self,
         content: Any,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         priority: int = 5
     ) -> ReviewItem:
         """Add item to human review queue."""
@@ -764,9 +763,9 @@ class AgentEvaluator:
 
     def get_review_queue(
         self,
-        status: Optional[ReviewStatus] = None,
+        status: ReviewStatus | None = None,
         limit: int = 20
-    ) -> List[ReviewItem]:
+    ) -> list[ReviewItem]:
         """Get items from review queue."""
         with self._lock:
             items = list(self._review_queue.values())
@@ -783,7 +782,7 @@ class AgentEvaluator:
         self,
         item_id: str,
         decision: str,
-        notes: Optional[str] = None,
+        notes: str | None = None,
         reviewer: str = "human"
     ) -> bool:
         """Submit human review decision."""
@@ -819,8 +818,8 @@ class AgentEvaluator:
     def get_historical_metrics(
         self,
         period: str = "day",
-        eval_type: Optional[EvalType] = None
-    ) -> Dict[str, Any]:
+        eval_type: EvalType | None = None
+    ) -> dict[str, Any]:
         """Get historical quality metrics."""
         with self._lock:
             results = list(self._results)
@@ -844,7 +843,7 @@ class AgentEvaluator:
             "score_std_dev": statistics.stdev(scores) if len(scores) > 1 else 0.0
         }
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get evaluator statistics."""
         with self._lock:
             return {
@@ -863,13 +862,13 @@ class AgentEvaluator:
 __all__ = [
     "AgentEvaluator",
     "EvalCriteria",
-    "TestCase",
-    "EvalScore",
-    "EvalResult",
     "EvalReport",
+    "EvalResult",
+    "EvalScore",
+    "EvalType",
     "QualityMetrics",
     "ReviewItem",
-    "EvalType",
+    "ReviewStatus",
     "ScoreType",
-    "ReviewStatus"
+    "TestCase"
 ]

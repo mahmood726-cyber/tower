@@ -10,13 +10,12 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import os
 import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -36,7 +35,7 @@ def _generate_run_id() -> str:
     return f"{ts}_{suffix}"
 
 
-def _load_cases() -> List[Dict[str, Any]]:
+def _load_cases() -> list[dict[str, Any]]:
     """Load all test cases from cases directory."""
     cases = []
 
@@ -55,7 +54,7 @@ def _load_cases() -> List[Dict[str, Any]]:
     return cases
 
 
-def _validate_schema(data: Dict, schema_name: str) -> bool:
+def _validate_schema(data: dict, schema_name: str) -> bool:
     """Validate data against schema (if jsonschema available)."""
     try:
         import jsonschema
@@ -76,10 +75,10 @@ def _validate_schema(data: Dict, schema_name: str) -> bool:
 
 
 def _run_case(
-    case: Dict[str, Any],
+    case: dict[str, Any],
     run_dir: Path,
     fail_fast: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run a single test case.
 
@@ -189,10 +188,10 @@ def _run_case(
 
 
 def run_evals(
-    cases: Optional[List[str]] = None,
-    outdir: Optional[Path] = None,
+    cases: list[str] | None = None,
+    outdir: Path | None = None,
     fail_fast: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run evaluation cases and return results.
 

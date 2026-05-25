@@ -13,10 +13,9 @@ This is a STUB implementation. When real validators are added,
 they should be registered and executed here.
 """
 
-import sys
-import os
-import json
 import argparse
+import json
+import sys
 from datetime import datetime
 from pathlib import Path
 

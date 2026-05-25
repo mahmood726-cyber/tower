@@ -16,7 +16,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     from flask import Flask, jsonify, render_template, request, send_from_directory
@@ -63,23 +63,23 @@ app = Flask(
 READONLY_MODE = os.environ.get("TOWER_GUI_READONLY", "").lower() in ("true", "1", "yes")
 
 
-def read_json_file(path: Path) -> Optional[Dict[str, Any]]:
+def read_json_file(path: Path) -> dict[str, Any] | None:
     """Safely read a JSON file."""
     try:
         if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return json.load(f)
-    except (json.JSONDecodeError, IOError):
+    except (OSError, json.JSONDecodeError):
         pass
     return None
 
 
-def read_jsonl_file(path: Path, limit: int = 50) -> List[Dict[str, Any]]:
+def read_jsonl_file(path: Path, limit: int = 50) -> list[dict[str, Any]]:
     """Read last N lines from a JSONL file."""
     events = []
     try:
         if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if line:
@@ -89,12 +89,12 @@ def read_jsonl_file(path: Path, limit: int = 50) -> List[Dict[str, Any]]:
                                 events.pop(0)
                         except json.JSONDecodeError:
                             pass
-    except IOError:
+    except OSError:
         pass
     return events
 
 
-def run_script(script_path: str, args: List[str] = None) -> Dict[str, Any]:
+def run_script(script_path: str, args: list[str] = None) -> dict[str, Any]:
     """Run a Tower script and return result."""
     if READONLY_MODE:
         return {"success": False, "error": "Server is in read-only mode"}
@@ -379,7 +379,7 @@ def main():
     global READONLY_MODE
     READONLY_MODE = args.readonly or READONLY_MODE
 
-    print(f"Tower GUI Server")
+    print("Tower GUI Server")
     print(f"  Tower root: {TOWER_ROOT}")
     print(f"  Control dir: {CONTROL_DIR}")
     print(f"  Read-only: {READONLY_MODE}")

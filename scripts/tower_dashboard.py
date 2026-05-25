@@ -6,12 +6,7 @@ Generates both dashboard.json and dashboard.html
 HTML is file:// safe with embedded JSON (no fetch required)
 """
 
-import json
-import os
-from pathlib import Path
-from datetime import datetime
-
-TOWER_ROOT = Path(__file__).parent.parent
+import jsonfrom datetime import datetimefrom pathlib import PathTOWER_ROOT = Path(__file__).parent.parent
 CONTROL_DIR = TOWER_ROOT / "control"
 PAPERS_DIR = TOWER_ROOT / "papers"
 
@@ -19,7 +14,7 @@ def load_json_safe(path: Path) -> dict:
     """Load JSON file, return empty dict if missing or invalid."""
     try:
         if path.exists():
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding='utf-8') as f:
                 return json.load(f)
     except:
         pass
@@ -120,7 +115,7 @@ def get_alerts(control_dir: Path) -> list:
     if alerts_dir.exists():
         for f in sorted(alerts_dir.glob("*.json"), reverse=True)[:20]:
             try:
-                with open(f, 'r', encoding='utf-8') as fp:
+                with open(f, encoding='utf-8') as fp:
                     alert = json.load(fp)
                     alert["_file"] = f.name
                     alerts.append(alert)
@@ -133,7 +128,7 @@ def get_papers_summary(papers_dir: Path) -> list:
     registry_path = papers_dir / "paper_registry.json"
     if registry_path.exists():
         try:
-            with open(registry_path, 'r', encoding='utf-8') as f:
+            with open(registry_path, encoding='utf-8') as f:
                 registry = json.load(f)
                 return registry.get("papers", [])
         except:

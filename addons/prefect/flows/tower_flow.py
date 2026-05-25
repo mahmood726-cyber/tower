@@ -16,8 +16,8 @@ If prefect is not installed, prints installation guidance.
 """
 
 import os
-import sys
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -32,7 +32,7 @@ def get_tower_root():
 
 # Check if Prefect is installed
 try:
-    from prefect import flow, task, get_run_logger
+    from prefect import flow, get_run_logger, task
     HAS_PREFECT = True
 except ImportError:
     HAS_PREFECT = False

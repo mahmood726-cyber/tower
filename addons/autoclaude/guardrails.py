@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import re
 import sys
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Pattern, Set, Tuple
+from re import Pattern
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -88,12 +90,12 @@ class Violation:
     severity: Severity
     message: str
     action: ViolationAction
-    matched_content: Optional[str] = None
-    redacted_content: Optional[str] = None
-    rule_name: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    matched_content: str | None = None
+    redacted_content: str | None = None
+    rule_name: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["violation_type"] = self.violation_type.value
         d["severity"] = self.severity.value
@@ -106,12 +108,12 @@ class GuardrailResult:
     """Result of guardrail check."""
 
     passed: bool
-    violations: List[Violation] = field(default_factory=list)
+    violations: list[Violation] = field(default_factory=list)
     original_content: str = ""
     filtered_content: str = ""
     blocked: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "passed": self.passed,
             "violations": [v.to_dict() for v in self.violations],
@@ -144,20 +146,20 @@ class GuardrailConfig:
     injection_action: ViolationAction = ViolationAction.BLOCK
 
     # Tool safety
-    blocked_tools: Set[str] = field(default_factory=set)
-    allowed_tools: Optional[Set[str]] = None  # If set, only these allowed
+    blocked_tools: set[str] = field(default_factory=set)
+    allowed_tools: set[str] | None = None  # If set, only these allowed
 
     # Path safety
-    blocked_paths: List[str] = field(default_factory=list)
-    allowed_paths: Optional[List[str]] = None
+    blocked_paths: list[str] = field(default_factory=list)
+    allowed_paths: list[str] | None = None
 
     # Domain safety
-    blocked_domains: Set[str] = field(default_factory=set)
-    allowed_domains: Optional[Set[str]] = None
+    blocked_domains: set[str] = field(default_factory=set)
+    allowed_domains: set[str] | None = None
 
     # Content filtering
-    blocked_phrases: Set[str] = field(default_factory=set)
-    blocked_patterns: List[Pattern] = field(default_factory=list)
+    blocked_phrases: set[str] = field(default_factory=set)
+    blocked_patterns: list[Pattern] = field(default_factory=list)
 
     # Severity threshold
     min_severity_to_block: Severity = Severity.HIGH
@@ -268,10 +270,10 @@ class Guardrails:
 
     def __init__(
         self,
-        config: Optional[GuardrailConfig] = None,
-        custom_pii_patterns: Optional[List[PIIPattern]] = None,
-        custom_rules: Optional[List[Callable[[str], Optional[Violation]]]] = None,
-        ledger: Optional[EventLogger] = None,
+        config: GuardrailConfig | None = None,
+        custom_pii_patterns: list[PIIPattern] | None = None,
+        custom_rules: list[Callable[[str], Violation | None]] | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize guardrails.
@@ -298,8 +300,8 @@ class Guardrails:
     def _log_event(
         self,
         event_type: str,
-        card_id: Optional[str],
-        data: Dict[str, Any],
+        card_id: str | None,
+        data: dict[str, Any],
     ) -> None:
         """Log guardrail event."""
         if self.ledger:
@@ -310,7 +312,7 @@ class Guardrails:
                 data=data,
             )
 
-    def _detect_pii(self, content: str) -> Tuple[List[Violation], str]:
+    def _detect_pii(self, content: str) -> tuple[list[Violation], str]:
         """Detect and optionally redact PII."""
         violations = []
         filtered = content
@@ -333,7 +335,7 @@ class Guardrails:
 
         return violations, filtered
 
-    def _detect_injection(self, content: str) -> List[Violation]:
+    def _detect_injection(self, content: str) -> list[Violation]:
         """Detect injection attacks."""
         violations = []
 
@@ -349,7 +351,7 @@ class Guardrails:
 
         return violations
 
-    def _check_blocked_content(self, content: str) -> List[Violation]:
+    def _check_blocked_content(self, content: str) -> list[Violation]:
         """Check for blocked phrases and patterns."""
         violations = []
         lower_content = content.lower()
@@ -360,7 +362,7 @@ class Guardrails:
                 violations.append(Violation(
                     violation_type=ViolationType.HARMFUL_CONTENT,
                     severity=Severity.MEDIUM,
-                    message=f"Blocked phrase detected",
+                    message="Blocked phrase detected",
                     action=ViolationAction.BLOCK,
                     matched_content=phrase,
                 ))
@@ -371,7 +373,7 @@ class Guardrails:
                 violations.append(Violation(
                     violation_type=ViolationType.HARMFUL_CONTENT,
                     severity=Severity.MEDIUM,
-                    message=f"Blocked pattern matched",
+                    message="Blocked pattern matched",
                     action=ViolationAction.BLOCK,
                     rule_name=pattern.pattern,
                 ))
@@ -381,7 +383,7 @@ class Guardrails:
     def check_input(
         self,
         content: str,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> GuardrailResult:
         """
         Check input content for violations.
@@ -440,7 +442,7 @@ class Guardrails:
     def check_output(
         self,
         content: str,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> GuardrailResult:
         """
         Check output content for violations.
@@ -488,8 +490,8 @@ class Guardrails:
     def check_tool_call(
         self,
         tool_name: str,
-        arguments: Dict[str, Any],
-        card_id: Optional[str] = None,
+        arguments: dict[str, Any],
+        card_id: str | None = None,
     ) -> GuardrailResult:
         """
         Check if a tool call is safe.
@@ -616,7 +618,7 @@ class Guardrails:
     def check_url(
         self,
         url: str,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> GuardrailResult:
         """Check if a URL is safe to access."""
         result = GuardrailResult(passed=True)
@@ -682,7 +684,7 @@ class Guardrails:
 
 # Convenience functions
 def create_guardrails(
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
     strict: bool = False,
 ) -> Guardrails:
     """Create guardrails with default or strict configuration."""

@@ -18,13 +18,13 @@ import os
 import re
 import shutil
 import sys
-import uuid
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
 
 # Cross-platform file locking with timeout
 import time
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 LOCK_TIMEOUT_DEFAULT = 30  # seconds
 LOCK_RETRY_INTERVAL = 0.1  # seconds
@@ -58,14 +58,14 @@ else:
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 return True
-            except (OSError, IOError):
+            except OSError:
                 time.sleep(LOCK_RETRY_INTERVAL)
         return False
 
     def _unlock_file(fd):
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
-        except (OSError, IOError):
+        except OSError:
             pass
 
 
@@ -76,7 +76,7 @@ class EventLogger:
     LOCK_TIMEOUT_SECONDS = 30
     MAX_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
 
-    def __init__(self, ledger_path: Optional[str] = None, enable_hash_chain: bool = True):
+    def __init__(self, ledger_path: str | None = None, enable_hash_chain: bool = True):
         """Initialize the event logger.
 
         Args:
@@ -96,7 +96,7 @@ class EventLogger:
         short_uuid = uuid.uuid4().hex[:8]
         return f"evt_{now.strftime('%Y%m%d_%H%M%S')}_{short_uuid}"
 
-    def _compute_hash(self, event: Dict[str, Any], prev_hash: Optional[str] = None) -> str:
+    def _compute_hash(self, event: dict[str, Any], prev_hash: str | None = None) -> str:
         """Compute SHA256 hash of an event."""
         # Create a canonical representation
         hash_input = {
@@ -111,13 +111,13 @@ class EventLogger:
         canonical = json.dumps(hash_input, sort_keys=True, separators=(",", ":"))
         return f"sha256:{hashlib.sha256(canonical.encode()).hexdigest()}"
 
-    def _get_last_hash(self) -> Optional[str]:
+    def _get_last_hash(self) -> str | None:
         """Get the hash of the last event in the ledger."""
         if not self.ledger_path.exists():
             return None
 
         last_line = None
-        with open(self.ledger_path, "r", encoding="utf-8") as f:
+        with open(self.ledger_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -161,17 +161,17 @@ class EventLogger:
         """
         try:
             _unlock_file(lock_fd)
-        except (OSError, IOError):
+        except OSError:
             pass
         os.close(lock_fd)
 
     def log(
         self,
         event_type: str,
-        card_id: Optional[str] = None,
-        actor: Optional[str] = None,
-        data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        card_id: str | None = None,
+        actor: str | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Log an event to the ledger.
 
         Args:
@@ -232,7 +232,7 @@ class EventLogger:
         shutil.move(str(self.ledger_path), str(backup_path))
         return str(backup_path)
 
-    def rotate(self, force: bool = False) -> Optional[str]:
+    def rotate(self, force: bool = False) -> str | None:
         """Rotate the ledger file.
 
         Args:
@@ -255,12 +255,12 @@ class EventLogger:
 
     def query(
         self,
-        event_type: Optional[str] = None,
-        card_id: Optional[str] = None,
-        since: Optional[str] = None,
-        until: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+        event_type: str | None = None,
+        card_id: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Query events from the ledger.
 
         Args:
@@ -291,7 +291,7 @@ class EventLogger:
             until_dt = datetime.fromisoformat(until.replace("Z", "+00:00"))
 
         results = []
-        with open(self.ledger_path, "r", encoding="utf-8") as f:
+        with open(self.ledger_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -328,7 +328,7 @@ class EventLogger:
 
         return results
 
-    def tail(self, n: int = 10) -> List[Dict[str, Any]]:
+    def tail(self, n: int = 10) -> list[dict[str, Any]]:
         """Get the last N events.
 
         Args:
@@ -341,7 +341,7 @@ class EventLogger:
             return []
 
         events = []
-        with open(self.ledger_path, "r", encoding="utf-8") as f:
+        with open(self.ledger_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -354,7 +354,7 @@ class EventLogger:
 
         return events
 
-    def verify(self) -> Tuple[bool, List[str]]:
+    def verify(self) -> tuple[bool, list[str]]:
         """Verify the integrity of the ledger hash chain.
 
         Returns:
@@ -367,7 +367,7 @@ class EventLogger:
         prev_hash = None
         line_num = 0
 
-        with open(self.ledger_path, "r", encoding="utf-8") as f:
+        with open(self.ledger_path, encoding="utf-8") as f:
             for line in f:
                 line_num += 1
                 line = line.strip()
@@ -411,10 +411,10 @@ class EventLogger:
 
     def get_state_transitions(
         self,
-        card_id: Optional[str] = None,
-        since: Optional[str] = None,
-        until: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        card_id: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+    ) -> list[dict[str, Any]]:
         """Get state transition history for cards.
 
         This method queries the ledger for card state change events,
@@ -452,8 +452,8 @@ class EventLogger:
     def count_by_type(
         self,
         event_type: str,
-        since: Optional[str] = None,
-        until: Optional[str] = None,
+        since: str | None = None,
+        until: str | None = None,
     ) -> int:
         """Count events of a specific type within a time window.
 
@@ -474,8 +474,8 @@ class EventLogger:
 
     def get_active_hours(
         self,
-        since: Optional[str] = None,
-        until: Optional[str] = None,
+        since: str | None = None,
+        until: str | None = None,
     ) -> float:
         """Calculate active hours based on event activity.
 
@@ -509,7 +509,7 @@ class EventLogger:
         except (ValueError, TypeError):
             return 0.0
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get statistics about the ledger.
 
         Returns:
@@ -523,11 +523,11 @@ class EventLogger:
             }
 
         event_count = 0
-        type_counts: Dict[str, int] = {}
+        type_counts: dict[str, int] = {}
         first_timestamp = None
         last_timestamp = None
 
-        with open(self.ledger_path, "r", encoding="utf-8") as f:
+        with open(self.ledger_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -711,10 +711,10 @@ def main():
 # Module-level convenience functions for integration with other addons
 # ============================================================================
 
-_default_logger: Optional[EventLogger] = None
+_default_logger: EventLogger | None = None
 
 
-def _get_default_logger(ledger_path: Optional[str] = None) -> EventLogger:
+def _get_default_logger(ledger_path: str | None = None) -> EventLogger:
     """Get or create the default logger instance."""
     global _default_logger
     if ledger_path:
@@ -725,8 +725,8 @@ def _get_default_logger(ledger_path: Optional[str] = None) -> EventLogger:
 
 
 def log_event(
-    event: Dict[str, Any],
-    ledger_path: Optional[str] = None
+    event: dict[str, Any],
+    ledger_path: str | None = None
 ) -> bool:
     """Log an event to the ledger.
 
@@ -752,9 +752,9 @@ def log_event(
 
 
 def read_events(
-    ledger_path: Optional[str] = None,
-    limit: Optional[int] = None
-) -> List[Dict[str, Any]]:
+    ledger_path: str | None = None,
+    limit: int | None = None
+) -> list[dict[str, Any]]:
     """Read events from the ledger.
 
     Args:
@@ -768,7 +768,7 @@ def read_events(
     return logger.query(limit=limit)
 
 
-def verify_chain(ledger_path: Optional[str] = None) -> Tuple[bool, List[str]]:
+def verify_chain(ledger_path: str | None = None) -> tuple[bool, list[str]]:
     """Verify the integrity of the ledger hash chain.
 
     Args:
@@ -782,11 +782,11 @@ def verify_chain(ledger_path: Optional[str] = None) -> Tuple[bool, List[str]]:
 
 
 def get_state_transitions(
-    card_id: Optional[str] = None,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
-    ledger_path: Optional[str] = None,
-) -> List[Dict[str, Any]]:
+    card_id: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    ledger_path: str | None = None,
+) -> list[dict[str, Any]]:
     """Get state transition history for cards.
 
     Args:
@@ -804,9 +804,9 @@ def get_state_transitions(
 
 def count_events_by_type(
     event_type: str,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
-    ledger_path: Optional[str] = None,
+    since: str | None = None,
+    until: str | None = None,
+    ledger_path: str | None = None,
 ) -> int:
     """Count events of a specific type within a time window.
 
@@ -824,9 +824,9 @@ def count_events_by_type(
 
 
 def get_active_hours(
-    since: Optional[str] = None,
-    until: Optional[str] = None,
-    ledger_path: Optional[str] = None,
+    since: str | None = None,
+    until: str | None = None,
+    ledger_path: str | None = None,
 ) -> float:
     """Calculate active hours based on event activity.
 

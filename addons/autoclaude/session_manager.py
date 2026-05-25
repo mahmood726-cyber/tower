@@ -16,11 +16,12 @@ import hashlib
 import json
 import sys
 import threading
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -55,13 +56,13 @@ class Message:
 
     role: MessageRole
     content: str
-    name: Optional[str] = None           # For tool/function messages
-    tool_call_id: Optional[str] = None   # For tool responses
+    name: str | None = None           # For tool/function messages
+    tool_call_id: str | None = None   # For tool responses
     timestamp: str = field(default_factory=lambda: _now_utc().isoformat())
-    token_count: Optional[int] = None    # Cached token count
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    token_count: int | None = None    # Cached token count
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to API-compatible format."""
         d = {"role": self.role.value, "content": self.content}
         if self.name:
@@ -70,14 +71,14 @@ class Message:
             d["tool_call_id"] = self.tool_call_id
         return d
 
-    def to_full_dict(self) -> Dict[str, Any]:
+    def to_full_dict(self) -> dict[str, Any]:
         """Convert to full format with metadata."""
         d = asdict(self)
         d["role"] = self.role.value
         return d
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "Message":
+    def from_dict(cls, d: dict[str, Any]) -> Message:
         """Create from dictionary."""
         role = MessageRole(d["role"]) if isinstance(d["role"], str) else d["role"]
         return cls(
@@ -117,16 +118,16 @@ class Session:
     """A conversation session."""
 
     session_id: str
-    card_id: Optional[str] = None
-    messages: List[Message] = field(default_factory=list)
+    card_id: str | None = None
+    messages: list[Message] = field(default_factory=list)
     config: SessionConfig = field(default_factory=SessionConfig)
     created_at: str = field(default_factory=lambda: _now_utc().isoformat())
     updated_at: str = field(default_factory=lambda: _now_utc().isoformat())
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     total_tokens_used: int = 0
     turn_count: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for persistence."""
         return {
             "session_id": self.session_id,
@@ -149,7 +150,7 @@ class Session:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "Session":
+    def from_dict(cls, d: dict[str, Any]) -> Session:
         """Create from dictionary."""
         config_d = d.get("config", {})
         config = SessionConfig(
@@ -215,11 +216,11 @@ class SessionManager:
 
     def __init__(
         self,
-        storage_path: Optional[Path] = None,
-        token_counter: Optional[Callable[[str], int]] = None,
-        summarizer: Optional[Callable[[List[Message]], str]] = None,
-        ledger: Optional[EventLogger] = None,
-        default_config: Optional[SessionConfig] = None,
+        storage_path: Path | None = None,
+        token_counter: Callable[[str], int] | None = None,
+        summarizer: Callable[[list[Message]], str] | None = None,
+        ledger: EventLogger | None = None,
+        default_config: SessionConfig | None = None,
     ):
         """
         Initialize session manager.
@@ -239,7 +240,7 @@ class SessionManager:
         self.ledger = ledger
         self.default_config = default_config or SessionConfig()
 
-        self._sessions: Dict[str, Session] = {}
+        self._sessions: dict[str, Session] = {}
         self._lock = threading.Lock()
 
     def _estimate_tokens(self, text: str) -> int:
@@ -268,7 +269,7 @@ class SessionManager:
         """Count total tokens in session."""
         return sum(self._count_message_tokens(m) for m in session.messages)
 
-    def _generate_session_id(self, card_id: Optional[str] = None) -> str:
+    def _generate_session_id(self, card_id: str | None = None) -> str:
         """Generate unique session ID."""
         timestamp = _now_utc().isoformat()
         seed = f"{card_id or 'global'}:{timestamp}"
@@ -279,7 +280,7 @@ class SessionManager:
         self,
         event_type: str,
         session: Session,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ) -> None:
         """Log session event."""
         if self.ledger:
@@ -307,10 +308,10 @@ class SessionManager:
 
     def create_session(
         self,
-        card_id: Optional[str] = None,
-        system_prompt: Optional[str] = None,
-        config: Optional[SessionConfig] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        card_id: str | None = None,
+        system_prompt: str | None = None,
+        config: SessionConfig | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Session:
         """
         Create a new session.
@@ -346,7 +347,7 @@ class SessionManager:
 
         return session
 
-    def get_session(self, session_id: str) -> Optional[Session]:
+    def get_session(self, session_id: str) -> Session | None:
         """Get session by ID."""
         with self._lock:
             if session_id in self._sessions:
@@ -355,7 +356,7 @@ class SessionManager:
         # Try loading from storage
         return self.load_session(session_id)
 
-    def load_session(self, session_id: str) -> Optional[Session]:
+    def load_session(self, session_id: str) -> Session | None:
         """Load session from storage."""
         file_path = self.storage_path / f"{session_id}.json"
 
@@ -381,9 +382,9 @@ class SessionManager:
         session: Session,
         role: MessageRole,
         content: str,
-        name: Optional[str] = None,
-        tool_call_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        name: str | None = None,
+        tool_call_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Message:
         """
         Add a message to the session.
@@ -546,7 +547,7 @@ class SessionManager:
         self,
         session: Session,
         include_metadata: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get messages in API-compatible format.
 
@@ -561,7 +562,7 @@ class SessionManager:
             return [m.to_full_dict() for m in session.messages]
         return [m.to_dict() for m in session.messages]
 
-    def get_context_usage(self, session: Session) -> Dict[str, Any]:
+    def get_context_usage(self, session: Session) -> dict[str, Any]:
         """Get context window usage statistics."""
         current = self._count_session_tokens(session)
         max_tokens = session.config.max_tokens
@@ -609,8 +610,8 @@ class SessionManager:
 
     def list_sessions(
         self,
-        card_id: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        card_id: str | None = None,
+    ) -> list[dict[str, Any]]:
         """List all sessions, optionally filtered by card."""
         sessions = []
 
@@ -636,7 +637,7 @@ class SessionManager:
 
 # Convenience functions
 def create_session_manager(
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
     max_tokens: int = 128000,
 ) -> SessionManager:
     """Create a session manager with default configuration."""
@@ -646,7 +647,7 @@ def create_session_manager(
 
 def create_session_for_model(
     model: str,
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> SessionManager:
     """Create a session manager configured for a specific model."""
     max_tokens = SessionManager.MODEL_LIMITS.get(model, 128000)

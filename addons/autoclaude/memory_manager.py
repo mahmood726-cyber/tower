@@ -14,15 +14,15 @@ Features:
 - Memory consolidation
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
-from enum import Enum
-from datetime import datetime, timezone
-from pathlib import Path
-import json
 import hashlib
-import threading
+import json
 import re
+import threading
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
 # Optional: integrate with ledger if available
 try:
@@ -73,14 +73,14 @@ class Memory:
     content: str
     memory_type: MemoryType
     priority: MemoryPriority
-    keywords: List[str]
+    keywords: list[str]
     source: str  # Where this memory came from
     created_at: datetime = field(default_factory=_now_utc)
     accessed_at: datetime = field(default_factory=_now_utc)
     access_count: int = 0
-    ttl_hours: Optional[int] = None  # Time to live
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    embedding: Optional[List[float]] = None  # For semantic search
+    ttl_hours: int | None = None  # Time to live
+    metadata: dict[str, Any] = field(default_factory=dict)
+    embedding: list[float] | None = None  # For semantic search
 
     def is_expired(self) -> bool:
         """Check if memory has expired."""
@@ -89,7 +89,7 @@ class Memory:
         age_hours = (_now_utc() - self.created_at).total_seconds() / 3600
         return age_hours > self.ttl_hours
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -106,7 +106,7 @@ class Memory:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Memory":
+    def from_dict(cls, data: dict[str, Any]) -> "Memory":
         """Deserialize from dictionary."""
         return cls(
             id=data["id"],
@@ -138,19 +138,19 @@ class CompactionResult:
     compacted_tokens: int
     compression_ratio: float
     summary: str
-    extracted_facts: List[str]
+    extracted_facts: list[str]
     discarded_count: int
 
 
 @dataclass
 class MemoryConfig:
     """Configuration for memory manager."""
-    storage_path: Optional[Path] = None
+    storage_path: Path | None = None
     max_working_memory: int = 100
     max_long_term_memory: int = 10000
     auto_consolidate: bool = True
     consolidation_threshold: int = 50
-    default_ttl_hours: Optional[int] = None
+    default_ttl_hours: int | None = None
     enable_semantic_search: bool = False
 
 
@@ -164,12 +164,12 @@ class MemoryManager:
     - Reliable retrieval
     """
 
-    def __init__(self, config: Optional[MemoryConfig] = None, ledger_path: Optional[str] = None):
+    def __init__(self, config: MemoryConfig | None = None, ledger_path: str | None = None):
         self._config = config or MemoryConfig()
-        self._working_memory: Dict[str, Memory] = {}
-        self._long_term: Dict[str, Memory] = {}
-        self._keyword_index: Dict[str, Set[str]] = {}  # keyword -> memory IDs
-        self._type_index: Dict[MemoryType, Set[str]] = {}
+        self._working_memory: dict[str, Memory] = {}
+        self._long_term: dict[str, Memory] = {}
+        self._keyword_index: dict[str, set[str]] = {}  # keyword -> memory IDs
+        self._type_index: dict[MemoryType, set[str]] = {}
         self._lock = threading.Lock()
 
         # Load from storage if configured
@@ -177,7 +177,7 @@ class MemoryManager:
             self._load_from_storage()
 
         # Ledger integration
-        self._logger: Optional[EventLogger] = None
+        self._logger: EventLogger | None = None
         if HAS_LEDGER and ledger_path:
             self._logger = EventLogger(ledger_path)
 
@@ -186,7 +186,7 @@ class MemoryManager:
         timestamp = _now_utc().isoformat()
         return hashlib.sha256(f"{content}:{timestamp}".encode()).hexdigest()[:16]
 
-    def _extract_keywords(self, text: str) -> List[str]:
+    def _extract_keywords(self, text: str) -> list[str]:
         """Extract keywords from text."""
         # Simple keyword extraction
         words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
@@ -214,9 +214,9 @@ class MemoryManager:
         memory_type: MemoryType,
         source: str,
         priority: MemoryPriority = MemoryPriority.MEDIUM,
-        keywords: Optional[List[str]] = None,
-        ttl_hours: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        keywords: list[str] | None = None,
+        ttl_hours: int | None = None,
+        metadata: dict[str, Any] | None = None,
         to_long_term: bool = False
     ) -> Memory:
         """Store a new memory."""
@@ -312,22 +312,22 @@ class MemoryManager:
         self,
         query: str,
         top_k: int = 5,
-        memory_types: Optional[List[MemoryType]] = None,
+        memory_types: list[MemoryType] | None = None,
         min_priority: MemoryPriority = MemoryPriority.LOW,
         include_working: bool = True,
         include_long_term: bool = True
-    ) -> List[RetrievalResult]:
+    ) -> list[RetrievalResult]:
         """
         Retrieve relevant memories using keyword matching.
 
         Returns memories sorted by relevance score.
         """
         query_keywords = set(self._extract_keywords(query))
-        results: List[RetrievalResult] = []
+        results: list[RetrievalResult] = []
 
         with self._lock:
             # Collect candidate memories
-            candidates: Dict[str, Memory] = {}
+            candidates: dict[str, Memory] = {}
             if include_working:
                 candidates.update(self._working_memory)
             if include_long_term:
@@ -388,7 +388,7 @@ class MemoryManager:
 
         return results[:top_k]
 
-    def get_memory(self, memory_id: str) -> Optional[Memory]:
+    def get_memory(self, memory_id: str) -> Memory | None:
         """Get a specific memory by ID."""
         with self._lock:
             if memory_id in self._working_memory:
@@ -449,7 +449,7 @@ class MemoryManager:
 
         return moved
 
-    def get_working_memory(self) -> List[Memory]:
+    def get_working_memory(self) -> list[Memory]:
         """Get all working memories sorted by recency."""
         with self._lock:
             memories = list(self._working_memory.values())
@@ -459,7 +459,7 @@ class MemoryManager:
         self,
         query: str,
         max_tokens: int = 2000,
-        include_types: Optional[List[MemoryType]] = None
+        include_types: list[MemoryType] | None = None
     ) -> str:
         """Get relevant context formatted for inclusion in a prompt."""
         # Retrieve relevant memories
@@ -495,7 +495,7 @@ class MemoryManager:
 
     def compact_context(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         strategy: CompactionStrategy = CompactionStrategy.EXTRACT_FACTS,
         target_reduction: float = 0.5
     ) -> CompactionResult:
@@ -508,7 +508,7 @@ class MemoryManager:
         original_text = "\n".join(m.get("content", "") for m in messages)
         original_tokens = len(original_text) // 4  # Rough estimate
 
-        extracted_facts: List[str] = []
+        extracted_facts: list[str] = []
         discarded = 0
 
         if strategy == CompactionStrategy.EXTRACT_FACTS:
@@ -553,7 +553,7 @@ class MemoryManager:
             discarded_count=discarded
         )
 
-    def _extract_facts_from_text(self, text: str) -> List[str]:
+    def _extract_facts_from_text(self, text: str) -> list[str]:
         """Extract fact-like statements from text."""
         facts = []
         sentences = re.split(r'[.!?]\s+', text)
@@ -597,7 +597,7 @@ class MemoryManager:
             return True
 
         # URLs and paths
-        if 'http' in text or '/' in text and '.' in text:
+        if 'http' in text or ('/' in text and '.' in text):
             return True
 
         return False
@@ -672,7 +672,7 @@ class MemoryManager:
         except (json.JSONDecodeError, KeyError):
             return False
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get memory statistics."""
         with self._lock:
             working_by_type = {}
@@ -696,12 +696,12 @@ class MemoryManager:
 
 # Convenience exports
 __all__ = [
-    "MemoryManager",
-    "Memory",
-    "MemoryType",
-    "MemoryPriority",
-    "MemoryConfig",
-    "RetrievalResult",
     "CompactionResult",
-    "CompactionStrategy"
+    "CompactionStrategy",
+    "Memory",
+    "MemoryConfig",
+    "MemoryManager",
+    "MemoryPriority",
+    "MemoryType",
+    "RetrievalResult"
 ]

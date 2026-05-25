@@ -11,16 +11,14 @@ Provides confidence assessment for LLM outputs with:
 
 from __future__ import annotations
 
-import json
-import math
-import os
 import re
 import sys
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -55,13 +53,13 @@ class ConfidenceResult:
 
     score: float                        # 0.0 to 1.0
     level: ConfidenceLevel
-    components: Dict[str, float]        # Individual scorer contributions
-    reasoning: List[str]                # Human-readable explanations
+    components: dict[str, float]        # Individual scorer contributions
+    reasoning: list[str]                # Human-readable explanations
     should_proceed: bool                # Recommended action
     requires_review: bool               # Whether human review needed
     timestamp: str = field(default_factory=lambda: _now_utc().isoformat())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["level"] = self.level.value
         return d
@@ -77,7 +75,7 @@ class ConfidenceConfig:
     low_threshold: float = 0.3
 
     # Weights for component scores
-    weights: Dict[str, float] = field(default_factory=lambda: {
+    weights: dict[str, float] = field(default_factory=lambda: {
         "completion_quality": 0.3,
         "response_structure": 0.2,
         "uncertainty_markers": 0.2,
@@ -91,7 +89,7 @@ class ConfidenceConfig:
     # Force review threshold
     force_review_threshold: float = 0.4
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -132,9 +130,9 @@ class ConfidenceScorer:
 
     def __init__(
         self,
-        config: Optional[ConfidenceConfig] = None,
-        custom_scorers: Optional[Dict[str, Callable[[str, Dict], float]]] = None,
-        ledger: Optional[EventLogger] = None,
+        config: ConfidenceConfig | None = None,
+        custom_scorers: dict[str, Callable[[str, dict], float]] | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize confidence scorer.
@@ -163,13 +161,13 @@ class ConfidenceScorer:
         ]
 
         # Calibration history
-        self._calibration_data: List[Tuple[float, bool]] = []
+        self._calibration_data: list[tuple[float, bool]] = []
 
     def _score_completion_quality(
         self,
         output: str,
-        context: Dict[str, Any],
-    ) -> Tuple[float, str]:
+        context: dict[str, Any],
+    ) -> tuple[float, str]:
         """
         Score based on completion quality indicators.
 
@@ -231,8 +229,8 @@ class ConfidenceScorer:
     def _score_response_structure(
         self,
         output: str,
-        context: Dict[str, Any],
-    ) -> Tuple[float, str]:
+        context: dict[str, Any],
+    ) -> tuple[float, str]:
         """
         Score based on response structure.
 
@@ -275,8 +273,8 @@ class ConfidenceScorer:
     def _score_uncertainty_markers(
         self,
         output: str,
-        context: Dict[str, Any],
-    ) -> Tuple[float, str]:
+        context: dict[str, Any],
+    ) -> tuple[float, str]:
         """
         Score based on uncertainty language.
 
@@ -327,8 +325,8 @@ class ConfidenceScorer:
     def _score_consistency(
         self,
         output: str,
-        context: Dict[str, Any],
-    ) -> Tuple[float, str]:
+        context: dict[str, Any],
+    ) -> tuple[float, str]:
         """
         Score based on internal consistency.
 
@@ -368,8 +366,8 @@ class ConfidenceScorer:
     def _score_length_appropriateness(
         self,
         output: str,
-        context: Dict[str, Any],
-    ) -> Tuple[float, str]:
+        context: dict[str, Any],
+    ) -> tuple[float, str]:
         """
         Score based on response length appropriateness.
 
@@ -399,18 +397,17 @@ class ConfidenceScorer:
         """Map score to confidence level."""
         if score >= self.config.high_threshold:
             return ConfidenceLevel.HIGH
-        elif score >= self.config.medium_threshold:
+        if score >= self.config.medium_threshold:
             return ConfidenceLevel.MEDIUM
-        elif score >= self.config.low_threshold:
+        if score >= self.config.low_threshold:
             return ConfidenceLevel.LOW
-        else:
-            return ConfidenceLevel.VERY_LOW
+        return ConfidenceLevel.VERY_LOW
 
     def score(
         self,
         output: str,
-        context: Optional[Dict[str, Any]] = None,
-        card_id: Optional[str] = None,
+        context: dict[str, Any] | None = None,
+        card_id: str | None = None,
     ) -> ConfidenceResult:
         """
         Score confidence in an LLM output.
@@ -424,8 +421,8 @@ class ConfidenceScorer:
             ConfidenceResult with score and recommendations
         """
         context = context or {}
-        components: Dict[str, float] = {}
-        reasoning: List[str] = []
+        components: dict[str, float] = {}
+        reasoning: list[str] = []
 
         # Run built-in scorers
         scorers = {
@@ -510,7 +507,7 @@ class ConfidenceScorer:
         if len(self._calibration_data) > 1000:
             self._calibration_data = self._calibration_data[-1000:]
 
-    def get_calibration_stats(self) -> Dict[str, Any]:
+    def get_calibration_stats(self) -> dict[str, Any]:
         """
         Get calibration statistics.
 
@@ -568,7 +565,7 @@ class ConfidenceScorer:
             "calibration_quality": "good" if brier_score < 0.1 else "needs_adjustment",
         }
 
-    def suggest_threshold_adjustment(self) -> Dict[str, float]:
+    def suggest_threshold_adjustment(self) -> dict[str, float]:
         """
         Suggest threshold adjustments based on calibration data.
 

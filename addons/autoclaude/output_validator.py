@@ -15,11 +15,12 @@ from __future__ import annotations
 import json
 import re
 import sys
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, TypeVar
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -59,11 +60,11 @@ class ValidationError:
 
     error_type: ValidationErrorType
     message: str
-    path: Optional[str] = None    # JSON path to error
-    value: Optional[Any] = None   # The invalid value
-    expected: Optional[str] = None
+    path: str | None = None    # JSON path to error
+    value: Any | None = None   # The invalid value
+    expected: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["error_type"] = self.error_type.value
         return d
@@ -74,13 +75,13 @@ class ValidationResult:
     """Result of validation attempt."""
 
     success: bool
-    data: Optional[Any] = None           # Parsed/validated data
+    data: Any | None = None           # Parsed/validated data
     raw_output: str = ""                  # Original output
-    errors: List[ValidationError] = field(default_factory=list)
-    extraction_method: Optional[str] = None  # How data was extracted
-    coercions_applied: List[str] = field(default_factory=list)
+    errors: list[ValidationError] = field(default_factory=list)
+    extraction_method: str | None = None  # How data was extracted
+    coercions_applied: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "success": self.success,
             "data": self.data,
@@ -96,11 +97,11 @@ class ToolCallSchema:
     """Schema for validating tool calls."""
 
     name: str
-    description: Optional[str] = None
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    required: List[str] = field(default_factory=list)
+    description: str | None = None
+    parameters: dict[str, Any] = field(default_factory=dict)
+    required: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -109,10 +110,10 @@ class ToolCall:
     """A parsed tool call."""
 
     name: str
-    arguments: Dict[str, Any]
-    id: Optional[str] = None
+    arguments: dict[str, Any]
+    id: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -135,11 +136,11 @@ class OutputValidator:
 
     def __init__(
         self,
-        schemas: Optional[Dict[str, Dict[str, Any]]] = None,
-        tool_schemas: Optional[Dict[str, ToolCallSchema]] = None,
+        schemas: dict[str, dict[str, Any]] | None = None,
+        tool_schemas: dict[str, ToolCallSchema] | None = None,
         strict_mode: bool = False,
         coerce_types: bool = True,
-        ledger: Optional[EventLogger] = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize validator.
@@ -160,8 +161,8 @@ class OutputValidator:
     def _log_event(
         self,
         event_type: str,
-        card_id: Optional[str],
-        data: Dict[str, Any],
+        card_id: str | None,
+        data: dict[str, Any],
     ) -> None:
         """Log validation event."""
         if self.ledger:
@@ -172,7 +173,7 @@ class OutputValidator:
                 data=data,
             )
 
-    def extract_json(self, text: str) -> Optional[Any]:
+    def extract_json(self, text: str) -> Any | None:
         """
         Extract JSON from text.
 
@@ -217,7 +218,7 @@ class OutputValidator:
         self,
         value: Any,
         expected_type: str,
-        coercions: List[str],
+        coercions: list[str],
     ) -> Any:
         """Attempt to coerce value to expected type."""
         if not self.coerce_types:
@@ -246,7 +247,7 @@ class OutputValidator:
                 if lower in ("true", "yes", "1"):
                     coercions.append(f"Coerced string '{value}' to boolean true")
                     return True
-                elif lower in ("false", "no", "0"):
+                if lower in ("false", "no", "0"):
                     coercions.append(f"Coerced string '{value}' to boolean false")
                     return False
 
@@ -265,10 +266,10 @@ class OutputValidator:
     def _validate_schema(
         self,
         data: Any,
-        schema: Dict[str, Any],
+        schema: dict[str, Any],
         path: str = "",
-        coercions: List[str] = None,
-    ) -> List[ValidationError]:
+        coercions: list[str] = None,
+    ) -> list[ValidationError]:
         """Validate data against a schema."""
         if coercions is None:
             coercions = []
@@ -282,19 +283,7 @@ class OutputValidator:
 
             type_valid = False
             for expected in expected_types:
-                if expected == "string" and isinstance(data, str):
-                    type_valid = True
-                elif expected == "number" and isinstance(data, (int, float)):
-                    type_valid = True
-                elif expected == "integer" and isinstance(data, int):
-                    type_valid = True
-                elif expected == "boolean" and isinstance(data, bool):
-                    type_valid = True
-                elif expected == "array" and isinstance(data, list):
-                    type_valid = True
-                elif expected == "object" and isinstance(data, dict):
-                    type_valid = True
-                elif expected == "null" and data is None:
+                if (expected == "string" and isinstance(data, str)) or (expected == "number" and isinstance(data, (int, float))) or (expected == "integer" and isinstance(data, int)) or (expected == "boolean" and isinstance(data, bool)) or (expected == "array" and isinstance(data, list)) or (expected == "object" and isinstance(data, dict)) or (expected == "null" and data is None):
                     type_valid = True
 
             if not type_valid and self.coerce_types:
@@ -434,9 +423,9 @@ class OutputValidator:
     def validate(
         self,
         output: str,
-        schema_name: Optional[str] = None,
-        schema: Optional[Dict[str, Any]] = None,
-        card_id: Optional[str] = None,
+        schema_name: str | None = None,
+        schema: dict[str, Any] | None = None,
+        card_id: str | None = None,
     ) -> ValidationResult:
         """
         Validate LLM output against a schema.
@@ -495,7 +484,7 @@ class OutputValidator:
     def validate_tool_call(
         self,
         output: str,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> ValidationResult:
         """
         Parse and validate a tool call from output.
@@ -601,10 +590,10 @@ class OutputValidator:
     def validate_with_retry(
         self,
         generate_fn: Callable[[], str],
-        schema_name: Optional[str] = None,
-        schema: Optional[Dict[str, Any]] = None,
+        schema_name: str | None = None,
+        schema: dict[str, Any] | None = None,
         max_retries: int = 3,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> ValidationResult:
         """
         Validate output with retry on failure.
@@ -638,7 +627,7 @@ class OutputValidator:
 
         return last_result or ValidationResult(success=False)
 
-    def register_schema(self, name: str, schema: Dict[str, Any]) -> None:
+    def register_schema(self, name: str, schema: dict[str, Any]) -> None:
         """Register a named schema."""
         self.schemas[name] = schema
 
@@ -667,19 +656,19 @@ class OutputValidator:
 # Convenience functions
 def create_validator(
     strict: bool = False,
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> OutputValidator:
     """Create a validator with default settings."""
     return OutputValidator(strict_mode=strict, ledger=ledger)
 
 
-def validate_json(output: str, schema: Dict[str, Any]) -> ValidationResult:
+def validate_json(output: str, schema: dict[str, Any]) -> ValidationResult:
     """Quick validation of JSON output."""
     validator = OutputValidator()
     return validator.validate(output, schema=schema)
 
 
-def extract_json_safe(text: str) -> Optional[Any]:
+def extract_json_safe(text: str) -> Any | None:
     """Safely extract JSON from text."""
     validator = OutputValidator()
     return validator.extract_json(text)

@@ -18,14 +18,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import subprocess
 import sys
 import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # Find paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -48,7 +46,7 @@ class TestResult:
         self.duration = duration
         self.message = message
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "passed": self.passed,
@@ -63,7 +61,7 @@ class IntegrationTestSuite:
     def __init__(self, verbose: bool = False, quick: bool = False):
         self.verbose = verbose
         self.quick = quick
-        self.results: List[TestResult] = []
+        self.results: list[TestResult] = []
 
     def log(self, message: str) -> None:
         if self.verbose:
@@ -100,7 +98,7 @@ class IntegrationTestSuite:
     # Schema Validation Tests
     # =========================================================================
 
-    def test_schemas_valid_json(self) -> Tuple[bool, str]:
+    def test_schemas_valid_json(self) -> tuple[bool, str]:
         """Test that all JSON schemas are valid JSON."""
         schemas_dir = ADDONS_DIR / "qa" / "schemas"
         if not schemas_dir.exists():
@@ -119,7 +117,7 @@ class IntegrationTestSuite:
             return False, "; ".join(errors)
         return True, ""
 
-    def test_schemas_have_required_fields(self) -> Tuple[bool, str]:
+    def test_schemas_have_required_fields(self) -> tuple[bool, str]:
         """Test that schemas have $schema and $id fields."""
         schemas_dir = ADDONS_DIR / "qa" / "schemas"
         if not schemas_dir.exists():
@@ -143,7 +141,7 @@ class IntegrationTestSuite:
     # Manifest Tests
     # =========================================================================
 
-    def test_manifest_exists(self) -> Tuple[bool, str]:
+    def test_manifest_exists(self) -> tuple[bool, str]:
         """Test that MANIFEST.json exists and is valid."""
         manifest_path = ADDONS_DIR / "MANIFEST.json"
         if not manifest_path.exists():
@@ -163,7 +161,7 @@ class IntegrationTestSuite:
 
         return True, ""
 
-    def test_manifest_addon_paths_exist(self) -> Tuple[bool, str]:
+    def test_manifest_addon_paths_exist(self) -> tuple[bool, str]:
         """Test that all addon paths in manifest exist."""
         manifest_path = ADDONS_DIR / "MANIFEST.json"
         with open(manifest_path) as f:
@@ -186,7 +184,7 @@ class IntegrationTestSuite:
     # Event Ledger Tests
     # =========================================================================
 
-    def test_ledger_module_imports(self) -> Tuple[bool, str]:
+    def test_ledger_module_imports(self) -> tuple[bool, str]:
         """Test that event_logger module can be imported."""
         sys.path.insert(0, str(ADDONS_DIR / "ledger"))
         try:
@@ -205,7 +203,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_ledger_log_and_verify(self) -> Tuple[bool, str]:
+    def test_ledger_log_and_verify(self) -> tuple[bool, str]:
         """Test logging an event and verifying the chain."""
         sys.path.insert(0, str(ADDONS_DIR / "ledger"))
         try:
@@ -250,7 +248,7 @@ class IntegrationTestSuite:
     # Bridge Tests
     # =========================================================================
 
-    def test_bridge_module_imports(self) -> Tuple[bool, str]:
+    def test_bridge_module_imports(self) -> tuple[bool, str]:
         """Test that bridge module can be imported."""
         sys.path.insert(0, str(ADDONS_DIR / "bridge"))
         try:
@@ -262,14 +260,14 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_bridge_input_validation(self) -> Tuple[bool, str]:
+    def test_bridge_input_validation(self) -> tuple[bool, str]:
         """Test that bridge validates inputs correctly."""
         sys.path.insert(0, str(ADDONS_DIR / "bridge"))
         try:
             from tower_run_with_addons import (
                 _validate_card_id,
+                _validate_model,
                 _validate_session,
-                _validate_model
             )
 
             # Valid inputs
@@ -310,7 +308,7 @@ class IntegrationTestSuite:
     # GUI Tests
     # =========================================================================
 
-    def test_gui_module_imports(self) -> Tuple[bool, str]:
+    def test_gui_module_imports(self) -> tuple[bool, str]:
         """Test that GUI module can be imported (without starting server)."""
         sys.path.insert(0, str(ADDONS_DIR / "gui"))
         try:
@@ -331,7 +329,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_gui_card_validation(self) -> Tuple[bool, str]:
+    def test_gui_card_validation(self) -> tuple[bool, str]:
         """Test GUI card_id validation."""
         sys.path.insert(0, str(ADDONS_DIR / "gui"))
         try:
@@ -357,7 +355,7 @@ class IntegrationTestSuite:
     # Evals Tests
     # =========================================================================
 
-    def test_evals_module_imports(self) -> Tuple[bool, str]:
+    def test_evals_module_imports(self) -> tuple[bool, str]:
         """Test that evals module can be imported."""
         sys.path.insert(0, str(ADDONS_DIR / "evals"))
         try:
@@ -369,11 +367,11 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_evals_path_traversal_protection(self) -> Tuple[bool, str]:
+    def test_evals_path_traversal_protection(self) -> tuple[bool, str]:
         """Test that evals rejects path traversal in cwd."""
         sys.path.insert(0, str(ADDONS_DIR / "evals"))
         try:
-            from run_evals import _run_case, REPO_ROOT
+            from run_evals import _run_case
 
             # Create a test case with path traversal
             malicious_case = {
@@ -406,7 +404,7 @@ class IntegrationTestSuite:
     # SLO Tests
     # =========================================================================
 
-    def test_slo_config_exists(self) -> Tuple[bool, str]:
+    def test_slo_config_exists(self) -> tuple[bool, str]:
         """Test that SLO config exists and is valid."""
         slo_config = ADDONS_DIR / "slo" / "slo_config.json"
         if not slo_config.exists():
@@ -429,7 +427,7 @@ class IntegrationTestSuite:
     # Cross-Addon Workflow Tests
     # =========================================================================
 
-    def test_workflow_ledger_to_slo(self) -> Tuple[bool, str]:
+    def test_workflow_ledger_to_slo(self) -> tuple[bool, str]:
         """Test workflow: Event ledger -> SLO computation."""
         if self.quick:
             return True, "Skipped (quick mode)"
@@ -476,7 +474,7 @@ class IntegrationTestSuite:
             if str(ADDONS_DIR / "ledger") in sys.path:
                 sys.path.remove(str(ADDONS_DIR / "ledger"))
 
-    def test_workflow_bridge_dry_run(self) -> Tuple[bool, str]:
+    def test_workflow_bridge_dry_run(self) -> tuple[bool, str]:
         """Test workflow: Bridge dry run mode."""
         sys.path.insert(0, str(ADDONS_DIR / "bridge"))
         try:
@@ -504,7 +502,7 @@ class IntegrationTestSuite:
     # E2E Self-Correcting Workflow Tests
     # =========================================================================
 
-    def test_e2e_state_transition_history(self) -> Tuple[bool, str]:
+    def test_e2e_state_transition_history(self) -> tuple[bool, str]:
         """E2E Test: State transition history tracking via ledger."""
         sys.path.insert(0, str(ADDONS_DIR / "ledger"))
         try:
@@ -564,12 +562,13 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_e2e_active_hours_computation(self) -> Tuple[bool, str]:
+    def test_e2e_active_hours_computation(self) -> tuple[bool, str]:
         """E2E Test: Active hours computation from event timestamps."""
         sys.path.insert(0, str(ADDONS_DIR / "ledger"))
         try:
-            from event_logger import EventLogger
             import time
+
+            from event_logger import EventLogger
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 ledger_path = Path(tmpdir) / "hours_ledger.jsonl"
@@ -602,7 +601,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_e2e_count_events_by_type(self) -> Tuple[bool, str]:
+    def test_e2e_count_events_by_type(self) -> tuple[bool, str]:
         """E2E Test: Count events by type pattern."""
         sys.path.insert(0, str(ADDONS_DIR / "ledger"))
         try:
@@ -648,7 +647,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_e2e_selfcorrect_workflow_stages(self) -> Tuple[bool, str]:
+    def test_e2e_selfcorrect_workflow_stages(self) -> tuple[bool, str]:
         """E2E Test: Complete self-correcting workflow through all stages."""
         if self.quick:
             return True, "Skipped (quick mode)"
@@ -786,7 +785,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_e2e_slo_with_historical_data(self) -> Tuple[bool, str]:
+    def test_e2e_slo_with_historical_data(self) -> tuple[bool, str]:
         """E2E Test: SLO computation using historical ledger data."""
         if self.quick:
             return True, "Skipped (quick mode)"
@@ -794,13 +793,9 @@ class IntegrationTestSuite:
         sys.path.insert(0, str(ADDONS_DIR / "ledger"))
         sys.path.insert(0, str(ADDONS_DIR / "slo"))
         try:
+            from datetime import datetime, timedelta, timezone
+
             from event_logger import EventLogger
-            from compute_slo import (
-                _compute_rollback_rate_from_ledger,
-                _compute_validator_fail_rate_from_ledger,
-                _compute_drift_rate_from_ledger,
-            )
-            from datetime import datetime, timezone, timedelta
 
             # Calculate time window
             now = datetime.now(timezone.utc)
@@ -872,16 +867,16 @@ class IntegrationTestSuite:
     # Autoclaude Tests
     # =========================================================================
 
-    def test_autoclaude_module_imports(self) -> Tuple[bool, str]:
+    def test_autoclaude_module_imports(self) -> tuple[bool, str]:
         """Test: Autoclaude addon modules import correctly."""
         sys.path.insert(0, str(ADDONS_DIR / "autoclaude"))
         try:
-            from llm_tracker import LLMTracker, LLMCall, CostReport
-            from circuit_breaker import CircuitBreaker, CircuitState, CircuitOpenError
-            from retry_policy import RetryPolicy, RetryConfig, RetryExhaustedError
+            from circuit_breaker import CircuitBreaker, CircuitOpenError, CircuitState
+            from confidence_scorer import ConfidenceResult, ConfidenceScorer
+            from human_checkpoint import CheckpointStatus, HumanCheckpoint
+            from llm_tracker import CostReport, LLMCall, LLMTracker
             from prompt_registry import PromptRegistry, PromptVersion
-            from human_checkpoint import HumanCheckpoint, CheckpointStatus
-            from confidence_scorer import ConfidenceScorer, ConfidenceResult
+            from retry_policy import RetryConfig, RetryExhaustedError, RetryPolicy
 
             return True, ""
         except ImportError as e:
@@ -889,7 +884,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_llm_tracker(self) -> Tuple[bool, str]:
+    def test_autoclaude_llm_tracker(self) -> tuple[bool, str]:
         """Test: LLM tracker logs calls and calculates costs."""
         if self.quick:
             return True, "Skipped (quick mode)"
@@ -930,14 +925,14 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_circuit_breaker(self) -> Tuple[bool, str]:
+    def test_autoclaude_circuit_breaker(self) -> tuple[bool, str]:
         """Test: Circuit breaker opens after failures."""
         if self.quick:
             return True, "Skipped (quick mode)"
 
         sys.path.insert(0, str(ADDONS_DIR / "autoclaude"))
         try:
-            from circuit_breaker import CircuitBreaker, CircuitState, CircuitConfig
+            from circuit_breaker import CircuitBreaker, CircuitConfig, CircuitState
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 state_path = Path(tmpdir) / "circuit_states.json"
@@ -971,14 +966,14 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_retry_policy(self) -> Tuple[bool, str]:
+    def test_autoclaude_retry_policy(self) -> tuple[bool, str]:
         """Test: Retry policy retries on failure and succeeds."""
         if self.quick:
             return True, "Skipped (quick mode)"
 
         sys.path.insert(0, str(ADDONS_DIR / "autoclaude"))
         try:
-            from retry_policy import RetryPolicy, RetryConfig, BackoffStrategy
+            from retry_policy import BackoffStrategy, RetryConfig, RetryPolicy
 
             config = RetryConfig(
                 max_attempts=3,
@@ -1014,7 +1009,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_prompt_registry(self) -> Tuple[bool, str]:
+    def test_autoclaude_prompt_registry(self) -> tuple[bool, str]:
         """Test: Prompt registry registers and versions prompts."""
         if self.quick:
             return True, "Skipped (quick mode)"
@@ -1071,7 +1066,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_human_checkpoint(self) -> Tuple[bool, str]:
+    def test_autoclaude_human_checkpoint(self) -> tuple[bool, str]:
         """Test: Human checkpoint creates and resolves checkpoints."""
         if self.quick:
             return True, "Skipped (quick mode)"
@@ -1079,11 +1074,11 @@ class IntegrationTestSuite:
         sys.path.insert(0, str(ADDONS_DIR / "autoclaude"))
         try:
             from human_checkpoint import (
-                HumanCheckpoint,
-                CheckpointStatus,
-                CheckpointDecision,
-                RiskLevel,
                 CheckpointConfig,
+                CheckpointDecision,
+                CheckpointStatus,
+                HumanCheckpoint,
+                RiskLevel,
             )
 
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -1134,14 +1129,14 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_confidence_scorer(self) -> Tuple[bool, str]:
+    def test_autoclaude_confidence_scorer(self) -> tuple[bool, str]:
         """Test: Confidence scorer scores LLM outputs."""
         if self.quick:
             return True, "Skipped (quick mode)"
 
         sys.path.insert(0, str(ADDONS_DIR / "autoclaude"))
         try:
-            from confidence_scorer import ConfidenceScorer, ConfidenceLevel
+            from confidence_scorer import ConfidenceScorer
 
             scorer = ConfidenceScorer()
 
@@ -1174,7 +1169,7 @@ class IntegrationTestSuite:
             result_low = scorer.score(low_conf_output)
 
             if result_low.score >= result.score:
-                return False, f"Expected lower score for uncertain output"
+                return False, "Expected lower score for uncertain output"
 
             return True, ""
 
@@ -1183,17 +1178,15 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_error_taxonomy(self) -> Tuple[bool, str]:
+    def test_autoclaude_error_taxonomy(self) -> tuple[bool, str]:
         """Test Autoclaude error taxonomy for error classification."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from error_taxonomy import (
-                ErrorTaxonomy,
-                ClassifiedError,
                 ErrorCategory,
-                ErrorSeverity,
+                ErrorTaxonomy,
             )
 
             taxonomy = ErrorTaxonomy()
@@ -1235,7 +1228,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_fallback_chain(self) -> Tuple[bool, str]:
+    def test_autoclaude_fallback_chain(self) -> tuple[bool, str]:
         """Test Autoclaude fallback chain for model degradation."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
@@ -1243,10 +1236,7 @@ class IntegrationTestSuite:
         try:
             from fallback_chain import (
                 FallbackChain,
-                FallbackResult,
                 ModelConfig,
-                FallbackReason,
-                AllModelsFailedError,
             )
 
             # Create a simple chain
@@ -1305,18 +1295,16 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_rate_limiter(self) -> Tuple[bool, str]:
+    def test_autoclaude_rate_limiter(self) -> tuple[bool, str]:
         """Test Autoclaude rate limiter with token bucket."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from rate_limiter import (
-                RateLimiter,
-                RateLimitConfig,
-                TokenBucket,
-                RateLimitExceededError,
                 LimitScope,
+                RateLimitConfig,
+                RateLimiter,
             )
 
             # Create a rate limiter with custom config
@@ -1367,22 +1355,18 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_session_manager(self) -> Tuple[bool, str]:
+    def test_autoclaude_session_manager(self) -> tuple[bool, str]:
         """Test Autoclaude session manager for conversation context."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
-            from session_manager import (
-                SessionManager,
-                Session,
-                Message,
-                MessageRole,
-                SessionConfig,
-            )
-
             # Create session manager with temp storage
             import tempfile
+
+            from session_manager import (
+                SessionManager,
+            )
             with tempfile.TemporaryDirectory() as tmpdir:
                 manager = SessionManager(storage_path=Path(tmpdir))
 
@@ -1421,7 +1405,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_output_validator(self) -> Tuple[bool, str]:
+    def test_autoclaude_output_validator(self) -> tuple[bool, str]:
         """Test Autoclaude output validator for structured outputs."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
@@ -1429,8 +1413,6 @@ class IntegrationTestSuite:
         try:
             from output_validator import (
                 OutputValidator,
-                ValidationResult,
-                ToolCallSchema,
             )
 
             validator = OutputValidator()
@@ -1480,18 +1462,18 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_state_manager(self) -> Tuple[bool, str]:
+    def test_autoclaude_state_manager(self) -> tuple[bool, str]:
         """Test Autoclaude state manager for crash recovery."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
-            from state_manager import (
-                StateManager,
-                StateConfig,
-            )
-
             import tempfile
+
+            from state_manager import (
+                StateConfig,
+                StateManager,
+            )
             with tempfile.TemporaryDirectory() as tmpdir:
                 config = StateConfig(wal_enabled=True)
                 manager = StateManager(storage_path=Path(tmpdir), config=config)
@@ -1542,18 +1524,18 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_guardrails(self) -> Tuple[bool, str]:
+    def test_autoclaude_guardrails(self) -> tuple[bool, str]:
         """Test Autoclaude guardrails for safety filtering."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from guardrails import (
-                Guardrails,
                 GuardrailConfig,
+                Guardrails,
                 Severity,
-                ViolationType,
                 ViolationAction,
+                ViolationType,
             )
 
             guardrails = Guardrails()
@@ -1630,7 +1612,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_metrics_exporter(self) -> Tuple[bool, str]:
+    def test_autoclaude_metrics_exporter(self) -> tuple[bool, str]:
         """Test Autoclaude metrics exporter for observability."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
@@ -1638,7 +1620,6 @@ class IntegrationTestSuite:
         try:
             from metrics_exporter import (
                 MetricsExporter,
-                MetricType,
             )
 
             exporter = MetricsExporter(namespace="test")
@@ -1681,17 +1662,17 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_tool_registry(self) -> Tuple[bool, str]:
+    def test_autoclaude_tool_registry(self) -> tuple[bool, str]:
         """Test tool registry functionality."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from tool_registry import (
-                ToolRegistry,
-                ToolParameter,
-                ToolExample,
                 ToolCategory,
+                ToolExample,
+                ToolParameter,
+                ToolRegistry,
             )
 
             registry = ToolRegistry()
@@ -1746,17 +1727,17 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_memory_manager(self) -> Tuple[bool, str]:
+    def test_autoclaude_memory_manager(self) -> tuple[bool, str]:
         """Test memory manager functionality."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from memory_manager import (
-                MemoryManager,
-                MemoryType,
-                MemoryPriority,
                 MemoryConfig,
+                MemoryManager,
+                MemoryPriority,
+                MemoryType,
             )
 
             manager = MemoryManager(config=MemoryConfig(max_working_memory=50))
@@ -1791,7 +1772,7 @@ class IntegrationTestSuite:
             # Get stats
             stats = manager.get_stats()
             if stats["working_memory_count"] != 2:
-                return False, f"Stats mismatch"
+                return False, "Stats mismatch"
 
             return True, ""
 
@@ -1800,15 +1781,15 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_agent_orchestrator(self) -> Tuple[bool, str]:
+    def test_autoclaude_agent_orchestrator(self) -> tuple[bool, str]:
         """Test agent orchestrator functionality."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from agent_orchestrator import (
-                AgentOrchestrator,
                 AgentCapability,
+                AgentOrchestrator,
                 OrchestrationPattern,
             )
 
@@ -1859,7 +1840,7 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_agent_evaluator(self) -> Tuple[bool, str]:
+    def test_autoclaude_agent_evaluator(self) -> tuple[bool, str]:
         """Test agent evaluator functionality."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
@@ -1867,8 +1848,6 @@ class IntegrationTestSuite:
         try:
             from agent_evaluator import (
                 AgentEvaluator,
-                EvalCriteria,
-                ScoreType,
             )
 
             evaluator = AgentEvaluator()
@@ -1909,7 +1888,7 @@ class IntegrationTestSuite:
             # Get stats
             stats = evaluator.get_stats()
             if stats["pending_reviews"] != 1:
-                return False, f"Expected 1 pending review"
+                return False, "Expected 1 pending review"
 
             return True, ""
 
@@ -1918,17 +1897,16 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_otel_exporter(self) -> Tuple[bool, str]:
+    def test_autoclaude_otel_exporter(self) -> tuple[bool, str]:
         """Test OpenTelemetry exporter functionality."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from otel_exporter import (
-                OTelExporter,
-                OTelConfig,
                 GenAIOperationType,
-                SpanKind,
+                OTelConfig,
+                OTelExporter,
             )
 
             exporter = OTelExporter(config=OTelConfig(service_name="test_service"))
@@ -1958,7 +1936,7 @@ class IntegrationTestSuite:
             # Get stats
             stats = exporter.get_stats()
             if stats["service_name"] != "test_service":
-                return False, f"Service name mismatch"
+                return False, "Service name mismatch"
 
             return True, ""
 
@@ -1967,17 +1945,17 @@ class IntegrationTestSuite:
         finally:
             sys.path.pop(0)
 
-    def test_autoclaude_decision_explainer(self) -> Tuple[bool, str]:
+    def test_autoclaude_decision_explainer(self) -> tuple[bool, str]:
         """Test decision explainer functionality."""
         autoclaude_dir = TOWER_ROOT / "addons" / "autoclaude"
         sys.path.insert(0, str(autoclaude_dir))
 
         try:
             from decision_explainer import (
+                Alternative,
                 DecisionExplainer,
                 DecisionType,
                 Factor,
-                Alternative,
             )
 
             explainer = DecisionExplainer()
@@ -2048,7 +2026,7 @@ class IntegrationTestSuite:
     # Run All Tests
     # =========================================================================
 
-    def run_all(self) -> Dict[str, Any]:
+    def run_all(self) -> dict[str, Any]:
         """Run all integration tests."""
         print("=" * 60)
         print("Tower Addons Integration Tests")

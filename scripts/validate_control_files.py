@@ -12,11 +12,10 @@ Exit codes:
     2 - Schema loading error
 """
 
-import sys
-import os
 import json
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Try to import jsonschema, provide fallback if not available
 try:
@@ -58,7 +57,7 @@ FILE_SCHEMA_MAP = {
 
 def load_json(path: Path) -> dict:
     """Load and parse a JSON file."""
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, encoding='utf-8') as f:
         return json.load(f)
 
 
@@ -107,19 +106,7 @@ def basic_validate(data, schema: dict, file_path: str) -> list:
                     # Handle nullable types like ["string", "null"]
                     valid = False
                     for t in expected_type:
-                        if t == "string" and isinstance(value, str):
-                            valid = True
-                        elif t == "integer" and isinstance(value, int) and not isinstance(value, bool):
-                            valid = True
-                        elif t == "number" and isinstance(value, (int, float)) and not isinstance(value, bool):
-                            valid = True
-                        elif t == "boolean" and isinstance(value, bool):
-                            valid = True
-                        elif t == "object" and isinstance(value, dict):
-                            valid = True
-                        elif t == "array" and isinstance(value, list):
-                            valid = True
-                        elif t == "null" and value is None:
+                        if (t == "string" and isinstance(value, str)) or (t == "integer" and isinstance(value, int) and not isinstance(value, bool)) or (t == "number" and isinstance(value, (int, float)) and not isinstance(value, bool)) or (t == "boolean" and isinstance(value, bool)) or (t == "object" and isinstance(value, dict)) or (t == "array" and isinstance(value, list)) or (t == "null" and value is None):
                             valid = True
                     if not valid:
                         errors.append(f"  Field '{field}' has wrong type, expected one of {expected_type}")
@@ -135,9 +122,7 @@ def basic_validate(data, schema: dict, file_path: str) -> list:
                     expected = type_map.get(expected_type)
                     if expected:
                         # bool is subclass of int in Python; exclude for integer/number
-                        if expected_type in ("integer", "number") and isinstance(value, bool):
-                            errors.append(f"  Field '{field}' has wrong type, expected {expected_type}")
-                        elif not isinstance(value, expected):
+                        if (expected_type in ("integer", "number") and isinstance(value, bool)) or not isinstance(value, expected):
                             errors.append(f"  Field '{field}' has wrong type, expected {expected_type}")
 
     return errors
@@ -155,7 +140,7 @@ def validate_file(file_rel_path: str, schema_name: str, strict: bool = False) ->
 
     # Check if file exists
     if not file_path.exists():
-        return ("MISSING", [f"File not found (ok if not initialized yet)"])
+        return ("MISSING", ["File not found (ok if not initialized yet)"])
 
     # Check if schema exists
     if not schema_path.exists():

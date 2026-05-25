@@ -12,7 +12,7 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 # Determine paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -31,14 +31,14 @@ def _get_today_file() -> Path:
     return _ensure_traces_dir() / f"{today}.jsonl"
 
 
-def _normalize_event(event: Dict[str, Any]) -> Dict[str, Any]:
+def _normalize_event(event: dict[str, Any]) -> dict[str, Any]:
     """Add timestamp if missing."""
     if "timestamp" not in event:
         event["timestamp"] = datetime.now(timezone.utc).isoformat()
     return event
 
 
-def emit_trace(event: Dict[str, Any]) -> bool:
+def emit_trace(event: dict[str, Any]) -> bool:
     """
     Emit a trace event to local JSONL file.
 
@@ -66,7 +66,7 @@ def emit_trace(event: Dict[str, Any]) -> bool:
         return False
 
 
-def emit_trace_remote(event: Dict[str, Any]) -> bool:
+def emit_trace_remote(event: dict[str, Any]) -> bool:
     """
     Emit a trace event to remote LangSmith (if configured).
 
@@ -126,7 +126,7 @@ def emit_trace_remote(event: Dict[str, Any]) -> bool:
         return False
 
 
-def get_local_traces(date: Optional[str] = None, limit: int = 100) -> list:
+def get_local_traces(date: str | None = None, limit: int = 100) -> list:
     """
     Read local traces for a given date.
 
@@ -147,7 +147,7 @@ def get_local_traces(date: Optional[str] = None, limit: int = 100) -> list:
 
     traces = []
     try:
-        with open(trace_file, "r", encoding="utf-8") as f:
+        with open(trace_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:

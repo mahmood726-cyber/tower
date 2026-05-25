@@ -17,7 +17,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -66,7 +66,7 @@ def _validate_model(model: str) -> bool:
     return bool(_MODEL_PATTERN.match(model))
 
 
-def _emit_langsmith_local(event: Dict[str, Any]) -> bool:
+def _emit_langsmith_local(event: dict[str, Any]) -> bool:
     """Emit trace to local LangSmith JSONL."""
     try:
         # Try using the adapter
@@ -95,7 +95,7 @@ def _emit_langsmith_local(event: Dict[str, Any]) -> bool:
         return False
 
 
-def _emit_langsmith_remote(event: Dict[str, Any]) -> tuple[bool, bool]:
+def _emit_langsmith_remote(event: dict[str, Any]) -> tuple[bool, bool]:
     """Emit trace to remote LangSmith (if configured)."""
     attempted = False
     ok = True
@@ -127,9 +127,9 @@ def _emit_langsmith_remote(event: Dict[str, Any]) -> tuple[bool, bool]:
 
 
 def _log_mlflow(
-    run_context: Dict[str, Any],
-    run_summary: Optional[Dict[str, Any]],
-    artifacts_dir: Optional[Path]
+    run_context: dict[str, Any],
+    run_summary: dict[str, Any] | None,
+    artifacts_dir: Path | None
 ) -> tuple[bool, bool]:
     """Log to MLflow (if installed and configured)."""
     attempted = False
@@ -205,7 +205,7 @@ def _find_run_directory(
     card_id: str,
     start_time: datetime,
     artifacts_root: Path
-) -> Optional[Path]:
+) -> Path | None:
     """
     Find the newest run directory for the card created after start_time.
 
@@ -251,8 +251,8 @@ def run_with_addons(
     session: str,
     model: str,
     cmd: str,
-    tags: Optional[List[str]] = None,
-    note: Optional[str] = None,
+    tags: list[str] | None = None,
+    note: str | None = None,
     dry_run: bool = False
 ) -> int:
     """
@@ -335,8 +335,8 @@ def run_with_addons(
     run_dir = _find_run_directory(card_id, start_time, artifacts_root)
 
     # Load run context and summary
-    run_context: Dict[str, Any] = {}
-    run_summary: Optional[Dict[str, Any]] = None
+    run_context: dict[str, Any] = {}
+    run_summary: dict[str, Any] | None = None
 
     if run_dir:
         context_file = run_dir / "run_context.json"

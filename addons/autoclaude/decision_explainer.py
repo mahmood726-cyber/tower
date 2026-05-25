@@ -14,14 +14,14 @@ Features:
 - Human-readable explanations
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-from enum import Enum
-from datetime import datetime, timezone
-from pathlib import Path
-import json
 import hashlib
+import json
 import threading
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
 # Optional: integrate with ledger if available
 try:
@@ -61,14 +61,13 @@ class ConfidenceLevel(Enum):
         """Get confidence level from numeric score."""
         if score > 0.9:
             return cls.VERY_HIGH
-        elif score > 0.7:
+        if score > 0.7:
             return cls.HIGH
-        elif score > 0.5:
+        if score > 0.5:
             return cls.MEDIUM
-        elif score > 0.3:
+        if score > 0.3:
             return cls.LOW
-        else:
-            return cls.VERY_LOW
+        return cls.VERY_LOW
 
 
 @dataclass
@@ -80,7 +79,7 @@ class Factor:
     direction: str  # "positive", "negative", "neutral"
     description: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "name": self.name,
@@ -97,7 +96,7 @@ class Alternative:
     name: str
     score: float
     rejected_reason: str
-    factors: List[Factor] = field(default_factory=list)
+    factors: list[Factor] = field(default_factory=list)
 
 
 @dataclass
@@ -106,19 +105,19 @@ class DecisionNode:
     id: str
     decision_type: DecisionType
     question: str  # The question being answered
-    context: Dict[str, Any]  # Input context
-    options: List[str]  # Available options
+    context: dict[str, Any]  # Input context
+    options: list[str]  # Available options
     chosen: str  # The chosen option
     confidence: float  # 0.0 to 1.0
-    factors: List[Factor]
-    alternatives: List[Alternative]
+    factors: list[Factor]
+    alternatives: list[Alternative]
     reasoning: str  # Natural language explanation
     timestamp: datetime = field(default_factory=_now_utc)
-    parent_id: Optional[str] = None
-    children: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    parent_id: str | None = None
+    children: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -149,14 +148,14 @@ class ExplanationChain:
     """A chain of reasoning steps."""
     id: str
     task: str
-    nodes: List[DecisionNode]
+    nodes: list[DecisionNode]
     final_outcome: str
     total_confidence: float
     started_at: datetime
-    completed_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    completed_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -223,17 +222,17 @@ class DecisionExplainer:
 
     def __init__(
         self,
-        storage_path: Optional[Path] = None,
-        ledger_path: Optional[str] = None
+        storage_path: Path | None = None,
+        ledger_path: str | None = None
     ):
-        self._chains: Dict[str, ExplanationChain] = {}
-        self._active_chain: Optional[ExplanationChain] = None
-        self._all_nodes: Dict[str, DecisionNode] = {}
+        self._chains: dict[str, ExplanationChain] = {}
+        self._active_chain: ExplanationChain | None = None
+        self._all_nodes: dict[str, DecisionNode] = {}
         self._storage_path = storage_path
         self._lock = threading.Lock()
 
         # Ledger integration
-        self._logger: Optional[EventLogger] = None
+        self._logger: EventLogger | None = None
         if HAS_LEDGER and ledger_path:
             self._logger = EventLogger(ledger_path)
 
@@ -245,7 +244,7 @@ class DecisionExplainer:
     def start_chain(
         self,
         task: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None
     ) -> ExplanationChain:
         """Start a new explanation chain."""
         chain_id = self._generate_id("chain")
@@ -276,15 +275,15 @@ class DecisionExplainer:
         self,
         decision_type: DecisionType,
         question: str,
-        options: List[str],
+        options: list[str],
         chosen: str,
         confidence: float,
         reasoning: str,
-        factors: Optional[List[Factor]] = None,
-        alternatives: Optional[List[Alternative]] = None,
-        context: Optional[Dict[str, Any]] = None,
-        parent_id: Optional[str] = None,
-        chain: Optional[ExplanationChain] = None
+        factors: list[Factor] | None = None,
+        alternatives: list[Alternative] | None = None,
+        context: dict[str, Any] | None = None,
+        parent_id: str | None = None,
+        chain: ExplanationChain | None = None
     ) -> DecisionNode:
         """Record a decision with full context."""
         node_id = self._generate_id("decision")
@@ -335,7 +334,7 @@ class DecisionExplainer:
     def end_chain(
         self,
         outcome: str,
-        chain: Optional[ExplanationChain] = None
+        chain: ExplanationChain | None = None
     ) -> ExplanationChain:
         """Complete an explanation chain."""
         target_chain = chain or self._active_chain
@@ -473,7 +472,7 @@ class DecisionExplainer:
             explanation=explanation
         )
 
-    def get_decision_path(self, node_id: str) -> List[DecisionNode]:
+    def get_decision_path(self, node_id: str) -> list[DecisionNode]:
         """Get the path of decisions leading to a node."""
         path = []
         current_id = node_id
@@ -490,7 +489,7 @@ class DecisionExplainer:
     def get_all_chains(
         self,
         completed_only: bool = False
-    ) -> List[ExplanationChain]:
+    ) -> list[ExplanationChain]:
         """Get all explanation chains."""
         with self._lock:
             chains = list(self._chains.values())
@@ -500,7 +499,7 @@ class DecisionExplainer:
 
         return sorted(chains, key=lambda c: c.started_at, reverse=True)
 
-    def export_chain(self, chain_id: str) -> Dict[str, Any]:
+    def export_chain(self, chain_id: str) -> dict[str, Any]:
         """Export chain as structured data."""
         chain = self._chains.get(chain_id)
         if not chain:
@@ -509,8 +508,8 @@ class DecisionExplainer:
 
     def generate_audit_report(
         self,
-        chain_ids: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        chain_ids: list[str] | None = None
+    ) -> dict[str, Any]:
         """Generate audit report for specified chains or all."""
         if chain_ids:
             chains = [self._chains[cid] for cid in chain_ids if cid in self._chains]
@@ -525,7 +524,7 @@ class DecisionExplainer:
         avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
 
         # Decision type distribution
-        type_counts: Dict[str, int] = {}
+        type_counts: dict[str, int] = {}
         for chain in chains:
             for node in chain.nodes:
                 t = node.decision_type.value
@@ -574,7 +573,7 @@ class DecisionExplainer:
         path.write_text(json.dumps(data, indent=2))
         return True
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get explainer statistics."""
         with self._lock:
             return {
@@ -587,12 +586,12 @@ class DecisionExplainer:
 
 # Convenience exports
 __all__ = [
+    "Alternative",
+    "ConfidenceLevel",
+    "CounterfactualExplanation",
     "DecisionExplainer",
     "DecisionNode",
-    "ExplanationChain",
-    "Factor",
-    "Alternative",
-    "CounterfactualExplanation",
     "DecisionType",
-    "ConfidenceLevel"
+    "ExplanationChain",
+    "Factor"
 ]

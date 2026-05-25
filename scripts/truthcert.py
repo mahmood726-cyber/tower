@@ -17,14 +17,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import sys
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
-
+from typing import Any
 
 # ============================================================
 # Severity Classes (Validators as Law)
@@ -61,9 +59,9 @@ class ValidationResult:
     severity: Severity
     status: ValidationStatus
     message: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "severity": self.severity.value,
@@ -78,7 +76,7 @@ class ValidationReport:
     """Complete validation report for a card."""
     card_id: str
     timestamp: str
-    results: List[ValidationResult] = field(default_factory=list)
+    results: list[ValidationResult] = field(default_factory=list)
 
     @property
     def p0_passed(self) -> bool:
@@ -100,7 +98,7 @@ class ValidationReport:
             return "CAPPED"
         return "PASS"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "card_id": self.card_id,
             "timestamp": self.timestamp,
@@ -179,10 +177,10 @@ class DriftEvent:
     new_value: Any
     timestamp: str
     severity: Severity = Severity.P1_WARN
-    justification: Optional[str] = None
+    justification: str | None = None
     adjudicated: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "drift_type": self.drift_type.value,
             "card_id": self.card_id,
@@ -204,7 +202,7 @@ class DriftLedger:
 
     def __init__(self, ledger_path: Path):
         self.ledger_path = ledger_path
-        self.events: List[DriftEvent] = []
+        self.events: list[DriftEvent] = []
         self._load()
 
     def _load(self) -> None:
@@ -245,9 +243,9 @@ class DriftLedger:
     def detect_drift(
         self,
         card_id: str,
-        old_state: Dict[str, Any],
-        new_state: Dict[str, Any],
-    ) -> List[DriftEvent]:
+        old_state: dict[str, Any],
+        new_state: dict[str, Any],
+    ) -> list[DriftEvent]:
         """Detect drift between old and new card state."""
         detected = []
         now = datetime.now(timezone.utc).isoformat()
@@ -321,7 +319,7 @@ class DriftLedger:
 
         return detected
 
-    def unadjudicated_count(self, severity: Optional[Severity] = None) -> int:
+    def unadjudicated_count(self, severity: Severity | None = None) -> int:
         """Count unadjudicated drift events."""
         events = self.events
         if severity:
@@ -377,7 +375,7 @@ class CircuitBreaker:
         self.status_path = status_path
         self._consecutive_failures = 0
 
-    def check_health(self) -> tuple[bool, List[str]]:
+    def check_health(self) -> tuple[bool, list[str]]:
         """
         Check system health.
         Returns (healthy, reasons) tuple.
@@ -430,11 +428,11 @@ class Witness:
     """A witness for a claim/artifact."""
     source_type: str  # "registry", "file", "run", "manual"
     locator: str      # Path, URL, or ID
-    content_hash: Optional[str] = None
-    timestamp: Optional[str] = None
+    content_hash: str | None = None
+    timestamp: str | None = None
     grade: str = "B"  # A (strong), B (medium), C (weak)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "source_type": self.source_type,
             "locator": self.locator,
@@ -501,27 +499,27 @@ class CapsuleManifest:
     machine_id: str = ""
 
     # Inputs
-    input_hashes: Dict[str, str] = field(default_factory=dict)
+    input_hashes: dict[str, str] = field(default_factory=dict)
 
     # Witnesses
-    witnesses: List[Dict[str, Any]] = field(default_factory=list)
+    witnesses: list[dict[str, Any]] = field(default_factory=list)
 
     # Validation
-    validation_report: Optional[Dict[str, Any]] = None
+    validation_report: dict[str, Any] | None = None
     assurance_level: str = "none"
 
     # Outputs
-    artifacts: List[Dict[str, Any]] = field(default_factory=list)
+    artifacts: list[dict[str, Any]] = field(default_factory=list)
 
     # Drift
-    drift_events: List[Dict[str, Any]] = field(default_factory=list)
+    drift_events: list[dict[str, Any]] = field(default_factory=list)
 
     def compute_capsule_id(self) -> str:
         """Compute capsule ID as SHA-256 of manifest content."""
         content = json.dumps(self.to_dict(), sort_keys=True)
         return hashlib.sha256(content.encode()).hexdigest()[:16]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "capsule_id": self.capsule_id,
             "card_id": self.card_id,

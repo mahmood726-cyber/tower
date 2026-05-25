@@ -14,13 +14,12 @@ Features:
 - When-to-use guidance
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
-from enum import Enum
-from datetime import datetime, timezone
-import json
-import re
 import hashlib
+import re
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any
 
 # Optional: integrate with ledger if available
 try:
@@ -56,20 +55,20 @@ class ToolParameter:
     description: str
     required: bool = True
     default: Any = None
-    enum: Optional[List[Any]] = None
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
-    pattern: Optional[str] = None  # Regex pattern for strings
-    examples: List[Any] = field(default_factory=list)
+    enum: list[Any] | None = None
+    min_value: float | None = None
+    max_value: float | None = None
+    pattern: str | None = None  # Regex pattern for strings
+    examples: list[Any] = field(default_factory=list)
 
 
 @dataclass
 class ToolExample:
     """Example usage of a tool."""
     description: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     expected_outcome: str
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -79,20 +78,20 @@ class Tool:
     description: str
     when_to_use: str
     when_not_to_use: str
-    parameters: List[ToolParameter]
+    parameters: list[ToolParameter]
     category: ToolCategory
-    examples: List[ToolExample] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    examples: list[ToolExample] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     requires_confirmation: bool = False
     is_destructive: bool = False
-    rate_limit: Optional[int] = None  # Max calls per minute
-    timeout_seconds: Optional[int] = None
+    rate_limit: int | None = None  # Max calls per minute
+    timeout_seconds: int | None = None
     version: str = "1.0.0"
     deprecated: bool = False
-    deprecation_message: Optional[str] = None
+    deprecation_message: str | None = None
     created_at: datetime = field(default_factory=_now_utc)
 
-    def to_schema(self) -> Dict[str, Any]:
+    def to_schema(self) -> dict[str, Any]:
         """Convert to JSON schema format for LLM consumption."""
         properties = {}
         required = []
@@ -140,8 +139,8 @@ class ToolMatch:
     """Result of a tool search."""
     tool: Tool
     relevance_score: float  # 0.0 to 1.0
-    match_reasons: List[str]
-    example_match: Optional[ToolExample] = None
+    match_reasons: list[str]
+    example_match: ToolExample | None = None
 
 
 @dataclass
@@ -157,9 +156,9 @@ class ValidationError:
 class ToolCallValidation:
     """Result of tool call validation."""
     valid: bool
-    errors: List[ValidationError] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    normalized_params: Dict[str, Any] = field(default_factory=dict)
+    errors: list[ValidationError] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    normalized_params: dict[str, Any] = field(default_factory=dict)
 
 
 class ToolRegistry:
@@ -174,17 +173,17 @@ class ToolRegistry:
 
     def __init__(
         self,
-        ledger_path: Optional[str] = None,
+        ledger_path: str | None = None,
         enable_semantic_search: bool = True
     ):
-        self._tools: Dict[str, Tool] = {}
-        self._tags_index: Dict[str, Set[str]] = {}  # tag -> tool names
-        self._category_index: Dict[ToolCategory, Set[str]] = {}
-        self._keyword_index: Dict[str, Set[str]] = {}  # keyword -> tool names
+        self._tools: dict[str, Tool] = {}
+        self._tags_index: dict[str, set[str]] = {}  # tag -> tool names
+        self._category_index: dict[ToolCategory, set[str]] = {}
+        self._keyword_index: dict[str, set[str]] = {}  # keyword -> tool names
         self._enable_semantic = enable_semantic_search
 
         # Ledger integration
-        self._logger: Optional[EventLogger] = None
+        self._logger: EventLogger | None = None
         if HAS_LEDGER and ledger_path:
             self._logger = EventLogger(ledger_path)
 
@@ -194,14 +193,14 @@ class ToolRegistry:
         description: str,
         when_to_use: str,
         when_not_to_use: str,
-        parameters: List[ToolParameter],
+        parameters: list[ToolParameter],
         category: ToolCategory,
-        examples: Optional[List[ToolExample]] = None,
-        tags: Optional[List[str]] = None,
+        examples: list[ToolExample] | None = None,
+        tags: list[str] | None = None,
         requires_confirmation: bool = False,
         is_destructive: bool = False,
-        rate_limit: Optional[int] = None,
-        timeout_seconds: Optional[int] = None,
+        rate_limit: int | None = None,
+        timeout_seconds: int | None = None,
         version: str = "1.0.0"
     ) -> Tool:
         """Register a new tool with the registry."""
@@ -261,7 +260,7 @@ class ToolRegistry:
                 self._keyword_index[kw] = set()
             self._keyword_index[kw].add(tool.name)
 
-    def _extract_keywords(self, text: str) -> Set[str]:
+    def _extract_keywords(self, text: str) -> set[str]:
         """Extract searchable keywords from text."""
         # Remove punctuation and split
         words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
@@ -273,18 +272,18 @@ class ToolRegistry:
         }
         return {w for w in words if w not in stop_words}
 
-    def get_tool(self, name: str) -> Optional[Tool]:
+    def get_tool(self, name: str) -> Tool | None:
         """Get a tool by exact name."""
         return self._tools.get(name)
 
     def search_tools(
         self,
         query: str,
-        category: Optional[ToolCategory] = None,
-        tags: Optional[List[str]] = None,
+        category: ToolCategory | None = None,
+        tags: list[str] | None = None,
         max_results: int = 5,
         include_deprecated: bool = False
-    ) -> List[ToolMatch]:
+    ) -> list[ToolMatch]:
         """
         Search for tools using natural language query.
 
@@ -294,7 +293,7 @@ class ToolRegistry:
         - Tags and categories
         - Example descriptions
         """
-        matches: List[ToolMatch] = []
+        matches: list[ToolMatch] = []
         query_keywords = self._extract_keywords(query)
         query_lower = query.lower()
 
@@ -360,8 +359,8 @@ class ToolRegistry:
         self,
         tool: Tool,
         query_lower: str,
-        query_keywords: Set[str]
-    ) -> Tuple[float, List[str]]:
+        query_keywords: set[str]
+    ) -> tuple[float, list[str]]:
         """Calculate relevance score and reasons for a tool."""
         score = 0.0
         reasons = []
@@ -419,7 +418,7 @@ class ToolRegistry:
     def validate_tool_call(
         self,
         tool_name: str,
-        parameters: Dict[str, Any]
+        parameters: dict[str, Any]
     ) -> ToolCallValidation:
         """
         Validate a tool call before execution.
@@ -442,9 +441,9 @@ class ToolRegistry:
                 )]
             )
 
-        errors: List[ValidationError] = []
-        warnings: List[str] = []
-        normalized: Dict[str, Any] = {}
+        errors: list[ValidationError] = []
+        warnings: list[str] = []
+        normalized: dict[str, Any] = {}
 
         # Check each parameter definition
         param_defs = {p.name: p for p in tool.parameters}
@@ -515,7 +514,7 @@ class ToolRegistry:
                 if not re.match(param.pattern, normalized_value):
                     errors.append(ValidationError(
                         parameter=param_name,
-                        message=f"Value does not match pattern",
+                        message="Value does not match pattern",
                         value=normalized_value,
                         expected=f"pattern: {param.pattern}"
                     ))
@@ -548,39 +547,38 @@ class ToolRegistry:
             normalized_params=normalized
         )
 
-    def _validate_type(self, value: Any, expected_type: str) -> Tuple[bool, Any]:
+    def _validate_type(self, value: Any, expected_type: str) -> tuple[bool, Any]:
         """Validate and normalize a value to the expected type."""
         try:
             if expected_type == "string":
                 return True, str(value)
-            elif expected_type == "integer":
+            if expected_type == "integer":
                 return True, int(value)
-            elif expected_type == "number":
+            if expected_type == "number":
                 return True, float(value)
-            elif expected_type == "boolean":
+            if expected_type == "boolean":
                 if isinstance(value, bool):
                     return True, value
                 if isinstance(value, str):
                     return True, value.lower() in ('true', '1', 'yes')
                 return True, bool(value)
-            elif expected_type == "array":
+            if expected_type == "array":
                 if isinstance(value, list):
                     return True, value
                 return False, value
-            elif expected_type == "object":
+            if expected_type == "object":
                 if isinstance(value, dict):
                     return True, value
                 return False, value
-            else:
-                return True, value
+            return True, value
         except (ValueError, TypeError):
             return False, value
 
     def get_tool_examples(
         self,
         tool_name: str,
-        tags: Optional[List[str]] = None
-    ) -> List[ToolExample]:
+        tags: list[str] | None = None
+    ) -> list[ToolExample]:
         """Get usage examples for a tool, optionally filtered by tags."""
         tool = self._tools.get(tool_name)
         if not tool:
@@ -599,7 +597,7 @@ class ToolRegistry:
         self,
         category: ToolCategory,
         include_deprecated: bool = False
-    ) -> List[Tool]:
+    ) -> list[Tool]:
         """Get all tools in a category."""
         if category not in self._category_index:
             return []
@@ -614,7 +612,7 @@ class ToolRegistry:
     def get_all_schemas(
         self,
         include_deprecated: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get JSON schemas for all tools (for LLM context)."""
         return [
             tool.to_schema()
@@ -626,13 +624,13 @@ class ToolRegistry:
         self,
         tool_name: str,
         max_results: int = 3
-    ) -> List[Tool]:
+    ) -> list[Tool]:
         """Suggest similar tools based on category and tags."""
         tool = self._tools.get(tool_name)
         if not tool:
             return []
 
-        similar: List[Tuple[Tool, int]] = []
+        similar: list[tuple[Tool, int]] = []
 
         for other_name, other in self._tools.items():
             if other_name == tool_name or other.deprecated:
@@ -658,7 +656,7 @@ class ToolRegistry:
         self,
         tool_name: str,
         message: str,
-        replacement: Optional[str] = None
+        replacement: str | None = None
     ) -> bool:
         """Mark a tool as deprecated."""
         tool = self._tools.get(tool_name)
@@ -684,7 +682,7 @@ class ToolRegistry:
 
         return True
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         active_tools = [t for t in self._tools.values() if not t.deprecated]
         deprecated_tools = [t for t in self._tools.values() if t.deprecated]
@@ -705,7 +703,7 @@ class ToolRegistry:
             "indexed_keywords": len(self._keyword_index)
         }
 
-    def export_catalog(self) -> Dict[str, Any]:
+    def export_catalog(self) -> dict[str, Any]:
         """Export full tool catalog for documentation."""
         return {
             "generated_at": _now_utc().isoformat(),
@@ -746,12 +744,12 @@ class ToolRegistry:
 
 # Convenience exports
 __all__ = [
-    "ToolRegistry",
     "Tool",
-    "ToolParameter",
+    "ToolCallValidation",
+    "ToolCategory",
     "ToolExample",
     "ToolMatch",
-    "ToolCategory",
-    "ToolCallValidation",
+    "ToolParameter",
+    "ToolRegistry",
     "ValidationError"
 ]

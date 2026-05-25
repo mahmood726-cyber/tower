@@ -16,7 +16,6 @@ import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -51,10 +50,10 @@ def _generate_run_id() -> str:
 def run_with_mlflow(
     name: str,
     cmd: str,
-    card_id: Optional[str] = None,
-    model: Optional[str] = None,
-    session: Optional[str] = None,
-    tags: Optional[list] = None
+    card_id: str | None = None,
+    model: str | None = None,
+    session: str | None = None,
+    tags: list | None = None
 ) -> int:
     """
     Run command with MLflow tracking.

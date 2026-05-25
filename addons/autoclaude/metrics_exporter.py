@@ -11,21 +11,7 @@ Provides metrics export with:
 - Custom metric registration
 """
 
-from __future__ import annotations
-
-import json
-import sys
-import threading
-import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-from collections import defaultdict
-
-# Paths
+from __future__ import annotationsimport sysimport threadingimport timefrom collections.abc import Callablefrom dataclasses import dataclass, fieldfrom datetime import datetime, timezonefrom enum import Enumfrom http.server import BaseHTTPRequestHandler, HTTPServerfrom pathlib import Pathfrom typing import Any# Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
 TOWER_ROOT = SCRIPT_DIR.parent.parent
 LEDGER_DIR = TOWER_ROOT / "addons" / "ledger"
@@ -62,7 +48,7 @@ class MetricLabel:
 class MetricValue:
     """A metric value with labels."""
     value: float
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
 
@@ -80,13 +66,13 @@ class Metric:
     name: str
     metric_type: MetricType
     help_text: str = ""
-    labels: List[str] = field(default_factory=list)
-    values: Dict[str, MetricValue] = field(default_factory=dict)
-    buckets: List[HistogramBucket] = field(default_factory=list)
+    labels: list[str] = field(default_factory=list)
+    values: dict[str, MetricValue] = field(default_factory=dict)
+    buckets: list[HistogramBucket] = field(default_factory=list)
     sum_value: float = 0.0
     count_value: int = 0
 
-    def get_label_key(self, labels: Dict[str, str]) -> str:
+    def get_label_key(self, labels: dict[str, str]) -> str:
         """Generate unique key for label combination."""
         if not labels:
             return "__default__"
@@ -126,7 +112,7 @@ class MetricsRegistry:
     """Registry for metrics."""
 
     def __init__(self):
-        self.metrics: Dict[str, Metric] = {}
+        self.metrics: dict[str, Metric] = {}
         self._lock = threading.Lock()
 
     def register(
@@ -134,8 +120,8 @@ class MetricsRegistry:
         name: str,
         metric_type: MetricType,
         help_text: str = "",
-        labels: Optional[List[str]] = None,
-        buckets: Optional[List[float]] = None,
+        labels: list[str] | None = None,
+        buckets: list[float] | None = None,
     ) -> Metric:
         """Register a new metric."""
         with self._lock:
@@ -158,7 +144,7 @@ class MetricsRegistry:
             self.metrics[name] = metric
             return metric
 
-    def get(self, name: str) -> Optional[Metric]:
+    def get(self, name: str) -> Metric | None:
         """Get a metric by name."""
         return self.metrics.get(name)
 
@@ -166,7 +152,7 @@ class MetricsRegistry:
         self,
         name: str,
         value: float = 1.0,
-        labels: Optional[Dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> None:
         """Increment a counter."""
         with self._lock:
@@ -185,7 +171,7 @@ class MetricsRegistry:
         self,
         name: str,
         value: float,
-        labels: Optional[Dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> None:
         """Set a gauge value."""
         with self._lock:
@@ -200,7 +186,7 @@ class MetricsRegistry:
         self,
         name: str,
         value: float,
-        labels: Optional[Dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> None:
         """Observe a histogram value."""
         with self._lock:
@@ -271,7 +257,7 @@ class MetricsExporter:
         self,
         namespace: str = "tower",
         enable_default_metrics: bool = True,
-        ledger: Optional[EventLogger] = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize metrics exporter.
@@ -285,10 +271,10 @@ class MetricsExporter:
         self.registry = MetricsRegistry()
         self.ledger = ledger
 
-        self._http_server: Optional[HTTPServer] = None
-        self._server_thread: Optional[threading.Thread] = None
+        self._http_server: HTTPServer | None = None
+        self._server_thread: threading.Thread | None = None
         self._statsd_socket = None
-        self._collectors: List[Callable[[], None]] = []
+        self._collectors: list[Callable[[], None]] = []
 
         if enable_default_metrics:
             self._register_default_metrics()
@@ -418,7 +404,7 @@ class MetricsExporter:
         output_tokens: int,
         cost: float,
         success: bool = True,
-        error_type: Optional[str] = None,
+        error_type: str | None = None,
     ) -> None:
         """Record metrics for an LLM request."""
         status = "success" if success else "error"
@@ -584,7 +570,7 @@ class MetricsExporter:
         self.collect()
         return self.registry.to_prometheus()
 
-    def export_json(self) -> Dict[str, Any]:
+    def export_json(self) -> dict[str, Any]:
         """Export metrics as JSON."""
         self.collect()
 
@@ -616,7 +602,7 @@ class MetricsExporter:
         self,
         host: str = "127.0.0.1",
         port: int = 8125,
-        prefix: Optional[str] = None,
+        prefix: str | None = None,
     ) -> None:
         """Send metrics to StatsD/Datadog."""
         import socket
@@ -655,7 +641,7 @@ class MetricsExporter:
 # Convenience functions
 def create_metrics_exporter(
     namespace: str = "tower",
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> MetricsExporter:
     """Create a metrics exporter with default configuration."""
     return MetricsExporter(namespace=namespace, ledger=ledger)

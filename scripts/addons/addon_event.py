@@ -40,7 +40,7 @@ def load_schema():
     schema_path = get_schema_path()
     if schema_path.exists():
         try:
-            with open(schema_path, 'r', encoding='utf-8') as f:
+            with open(schema_path, encoding='utf-8') as f:
                 return json.load(f)
         except Exception:
             pass
@@ -136,7 +136,7 @@ def main():
 
     elif args.event_file:
         try:
-            with open(args.event_file, 'r', encoding='utf-8') as f:
+            with open(args.event_file, encoding='utf-8') as f:
                 event = json.load(f)
         except Exception as e:
             print(f"ERROR: Could not read event file: {e}", file=sys.stderr)

@@ -15,16 +15,17 @@ Features:
 - Trace context propagation
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Callable, Union
-from enum import Enum
-from datetime import datetime, timezone
-from contextlib import contextmanager
-import json
 import hashlib
+import json
+import random
 import threading
 import time
-import random
+from collections.abc import Callable
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any
 
 # Optional: integrate with ledger if available
 try:
@@ -110,11 +111,11 @@ class SpanContext:
     """Trace context for span correlation."""
     trace_id: str
     span_id: str
-    parent_span_id: Optional[str] = None
+    parent_span_id: str | None = None
     trace_flags: int = 1  # sampled
     trace_state: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "trace_id": self.trace_id,
@@ -129,7 +130,7 @@ class SpanEvent:
     """Event within a span."""
     name: str
     timestamp: datetime
-    attributes: Dict[str, Any] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -139,18 +140,18 @@ class Span:
     context: SpanContext
     kind: SpanKind
     start_time: datetime
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     status: SpanStatus = SpanStatus.UNSET
-    status_message: Optional[str] = None
-    attributes: Dict[str, Any] = field(default_factory=dict)
-    events: List[SpanEvent] = field(default_factory=list)
-    links: List[SpanContext] = field(default_factory=list)
+    status_message: str | None = None
+    attributes: dict[str, Any] = field(default_factory=dict)
+    events: list[SpanEvent] = field(default_factory=list)
+    links: list[SpanContext] = field(default_factory=list)
 
     def set_attribute(self, key: str, value: Any) -> None:
         """Set a span attribute."""
         self.attributes[key] = value
 
-    def add_event(self, name: str, attributes: Optional[Dict[str, Any]] = None) -> None:
+    def add_event(self, name: str, attributes: dict[str, Any] | None = None) -> None:
         """Add an event to the span."""
         self.events.append(SpanEvent(
             name=name,
@@ -158,12 +159,12 @@ class Span:
             attributes=attributes or {}
         ))
 
-    def set_status(self, status: SpanStatus, message: Optional[str] = None) -> None:
+    def set_status(self, status: SpanStatus, message: str | None = None) -> None:
         """Set span status."""
         self.status = status
         self.status_message = message
 
-    def end(self, end_time: Optional[datetime] = None) -> None:
+    def end(self, end_time: datetime | None = None) -> None:
         """End the span."""
         self.end_time = end_time or _now_utc()
 
@@ -173,7 +174,7 @@ class Span:
             return 0.0
         return (self.end_time - self.start_time).total_seconds() * 1000
 
-    def to_otlp(self) -> Dict[str, Any]:
+    def to_otlp(self) -> dict[str, Any]:
         """Convert to OTLP format."""
         return {
             "traceId": self.context.trace_id,
@@ -204,18 +205,17 @@ class Span:
             ]
         }
 
-    def _format_value(self, value: Any) -> Dict[str, Any]:
+    def _format_value(self, value: Any) -> dict[str, Any]:
         """Format value for OTLP."""
         if isinstance(value, bool):
             return {"boolValue": value}
-        elif isinstance(value, int):
+        if isinstance(value, int):
             return {"intValue": str(value)}
-        elif isinstance(value, float):
+        if isinstance(value, float):
             return {"doubleValue": value}
-        elif isinstance(value, list):
+        if isinstance(value, list):
             return {"arrayValue": {"values": [self._format_value(v) for v in value]}}
-        else:
-            return {"stringValue": str(value)}
+        return {"stringValue": str(value)}
 
 
 @dataclass
@@ -223,7 +223,7 @@ class OTelConfig:
     """Configuration for OpenTelemetry exporter."""
     service_name: str = "autoclaude"
     service_version: str = "1.2.0"
-    otlp_endpoint: Optional[str] = None  # e.g., "http://localhost:4318"
+    otlp_endpoint: str | None = None  # e.g., "http://localhost:4318"
     export_interval_seconds: float = 30.0
     batch_size: int = 100
     enable_console_export: bool = False
@@ -242,20 +242,20 @@ class OTelExporter:
 
     def __init__(
         self,
-        config: Optional[OTelConfig] = None,
-        ledger_path: Optional[str] = None
+        config: OTelConfig | None = None,
+        ledger_path: str | None = None
     ):
         self._config = config or OTelConfig()
-        self._spans: List[Span] = []
-        self._active_spans: Dict[str, Span] = {}
+        self._spans: list[Span] = []
+        self._active_spans: dict[str, Span] = {}
         self._lock = threading.Lock()
-        self._export_callbacks: List[Callable[[List[Span]], None]] = []
+        self._export_callbacks: list[Callable[[list[Span]], None]] = []
 
         # Context propagation
         self._context_var = threading.local()
 
         # Ledger integration
-        self._logger: Optional[EventLogger] = None
+        self._logger: EventLogger | None = None
         if HAS_LEDGER and ledger_path:
             self._logger = EventLogger(ledger_path)
 
@@ -275,11 +275,11 @@ class OTelExporter:
         """Determine if this trace should be sampled."""
         return random.random() < self._config.sampling_rate
 
-    def get_current_span(self) -> Optional[Span]:
+    def get_current_span(self) -> Span | None:
         """Get the currently active span."""
         return getattr(self._context_var, 'current_span', None)
 
-    def _set_current_span(self, span: Optional[Span]) -> None:
+    def _set_current_span(self, span: Span | None) -> None:
         """Set the current span in context."""
         self._context_var.current_span = span
 
@@ -288,8 +288,8 @@ class OTelExporter:
         self,
         name: str,
         kind: SpanKind = SpanKind.CLIENT,
-        attributes: Optional[Dict[str, Any]] = None,
-        links: Optional[List[SpanContext]] = None
+        attributes: dict[str, Any] | None = None,
+        links: list[SpanContext] | None = None
     ):
         """Start a new span with context manager."""
         if not self._should_sample():
@@ -409,7 +409,7 @@ class OTelExporter:
     def create_agent_span(
         self,
         agent_name: str,
-        description: Optional[str] = None
+        description: str | None = None
     ):
         """Create a span for an agent operation."""
         attributes = {
@@ -424,7 +424,7 @@ class OTelExporter:
     def create_tool_span(
         self,
         tool_name: str,
-        call_id: Optional[str] = None
+        call_id: str | None = None
     ):
         """Create a span for a tool call."""
         attributes = {
@@ -436,7 +436,7 @@ class OTelExporter:
 
         return self.start_span(f"tool {tool_name}", SpanKind.INTERNAL, attributes)
 
-    def add_export_callback(self, callback: Callable[[List[Span]], None]) -> None:
+    def add_export_callback(self, callback: Callable[[list[Span]], None]) -> None:
         """Add a callback for when spans are exported."""
         self._export_callbacks.append(callback)
 
@@ -476,7 +476,7 @@ class OTelExporter:
                     }
                 )
 
-    def export_otlp_json(self) -> Dict[str, Any]:
+    def export_otlp_json(self) -> dict[str, Any]:
         """Export all spans in OTLP JSON format."""
         with self._lock:
             spans = self._spans.copy()
@@ -507,7 +507,7 @@ class OTelExporter:
         """Force export of all pending spans."""
         self._export_batch()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get exporter statistics."""
         with self._lock:
             return {
@@ -520,7 +520,7 @@ class OTelExporter:
 
 
 # Convenience functions for quick instrumentation
-_default_exporter: Optional[OTelExporter] = None
+_default_exporter: OTelExporter | None = None
 
 
 def get_exporter() -> OTelExporter:
@@ -560,15 +560,15 @@ def trace_llm_call(
 
 # Convenience exports
 __all__ = [
-    "OTelExporter",
+    "GenAIAttributes",
+    "GenAIOperationType",
     "OTelConfig",
+    "OTelExporter",
     "Span",
     "SpanContext",
     "SpanEvent",
     "SpanKind",
     "SpanStatus",
-    "GenAIOperationType",
-    "GenAIAttributes",
     "get_exporter",
     "trace_llm_call"
 ]

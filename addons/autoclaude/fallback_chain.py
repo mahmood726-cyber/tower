@@ -14,11 +14,12 @@ from __future__ import annotations
 
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Generic
+from typing import Any, Generic, TypeVar
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -61,9 +62,9 @@ class ModelConfig:
     cost_per_1k_input: float = 0.0    # Cost per 1K input tokens
     cost_per_1k_output: float = 0.0   # Cost per 1K output tokens
     min_confidence: float = 0.0       # Minimum confidence threshold
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -73,12 +74,12 @@ class FallbackAttempt:
 
     model: str
     success: bool
-    reason: Optional[FallbackReason]
+    reason: FallbackReason | None
     latency_ms: float
-    error: Optional[str] = None
+    error: str | None = None
     timestamp: str = field(default_factory=lambda: _now_utc().isoformat())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["reason"] = self.reason.value if self.reason else None
         return d
@@ -89,14 +90,14 @@ class FallbackResult(Generic[T]):
     """Result of a fallback chain execution."""
 
     success: bool
-    result: Optional[T]
+    result: T | None
     final_model: str
-    attempts: List[FallbackAttempt]
+    attempts: list[FallbackAttempt]
     total_latency_ms: float
     degraded: bool                    # True if fell back to lower model
     fallback_count: int               # Number of fallbacks
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "success": self.success,
             "final_model": self.final_model,
@@ -110,7 +111,7 @@ class FallbackResult(Generic[T]):
 class AllModelsFailedError(Exception):
     """Raised when all models in the chain fail."""
 
-    def __init__(self, attempts: List[FallbackAttempt]):
+    def __init__(self, attempts: list[FallbackAttempt]):
         self.attempts = attempts
         models = [a.model for a in attempts]
         super().__init__(f"All models failed: {models}")
@@ -143,10 +144,10 @@ class FallbackChain:
 
     def __init__(
         self,
-        models: List[ModelConfig],
-        on_fallback: Optional[Callable[[str, str, FallbackReason], None]] = None,
-        on_all_failed: Optional[Callable[[List[FallbackAttempt]], None]] = None,
-        ledger: Optional[EventLogger] = None,
+        models: list[ModelConfig],
+        on_fallback: Callable[[str, str, FallbackReason], None] | None = None,
+        on_all_failed: Callable[[list[FallbackAttempt]], None] | None = None,
+        ledger: EventLogger | None = None,
     ):
         """
         Initialize fallback chain.
@@ -165,7 +166,7 @@ class FallbackChain:
         self.on_all_failed = on_all_failed
         self.ledger = ledger
 
-    def _get_model_config(self, model_name: str) -> Optional[ModelConfig]:
+    def _get_model_config(self, model_name: str) -> ModelConfig | None:
         """Get config for a model by name."""
         for model in self.models:
             if model.name == model_name:
@@ -174,10 +175,10 @@ class FallbackChain:
 
     def _should_fallback(
         self,
-        error: Optional[Exception],
+        error: Exception | None,
         latency_ms: float,
         config: ModelConfig,
-    ) -> Optional[FallbackReason]:
+    ) -> FallbackReason | None:
         """Determine if we should fallback and why."""
         if error is not None:
             error_str = str(error).lower()
@@ -203,8 +204,8 @@ class FallbackChain:
     def _log_event(
         self,
         event_type: str,
-        card_id: Optional[str],
-        data: Dict[str, Any],
+        card_id: str | None,
+        data: dict[str, Any],
     ) -> None:
         """Log fallback event."""
         if self.ledger:
@@ -218,8 +219,8 @@ class FallbackChain:
     def execute(
         self,
         func: Callable[[str], T],
-        card_id: Optional[str] = None,
-        start_model: Optional[str] = None,
+        card_id: str | None = None,
+        start_model: str | None = None,
     ) -> FallbackResult[T]:
         """
         Execute function with fallback chain.
@@ -237,7 +238,7 @@ class FallbackChain:
         Raises:
             AllModelsFailedError: If all models fail
         """
-        attempts: List[FallbackAttempt] = []
+        attempts: list[FallbackAttempt] = []
         start_time = time.monotonic()
 
         # Determine starting index
@@ -333,7 +334,7 @@ class FallbackChain:
         func: Callable[[str], T],
         quality_check: Callable[[T], float],
         min_quality: float = 0.5,
-        card_id: Optional[str] = None,
+        card_id: str | None = None,
     ) -> FallbackResult[T]:
         """
         Execute with quality-based fallback.
@@ -349,9 +350,9 @@ class FallbackChain:
         Returns:
             FallbackResult with outcome
         """
-        attempts: List[FallbackAttempt] = []
+        attempts: list[FallbackAttempt] = []
         start_time = time.monotonic()
-        best_result: Optional[T] = None
+        best_result: T | None = None
         best_quality = 0.0
         best_model = ""
 
@@ -469,22 +470,22 @@ class FallbackChain:
 
 # Convenience factory functions
 def create_claude_chain(
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> FallbackChain:
     """Create a Claude model fallback chain."""
     return FallbackChain(models=FallbackChain.CLAUDE_CHAIN, ledger=ledger)
 
 
 def create_gpt_chain(
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> FallbackChain:
     """Create a GPT model fallback chain."""
     return FallbackChain(models=FallbackChain.GPT_CHAIN, ledger=ledger)
 
 
 def create_cost_optimized_chain(
-    models: List[ModelConfig],
-    ledger: Optional[EventLogger] = None,
+    models: list[ModelConfig],
+    ledger: EventLogger | None = None,
 ) -> FallbackChain:
     """Create a chain ordered by cost (cheapest first)."""
     sorted_models = sorted(

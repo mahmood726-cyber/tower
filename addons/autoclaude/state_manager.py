@@ -15,15 +15,14 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import shutil
 import sys
 import threading
-import time
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -67,17 +66,17 @@ class WALEntry:
     operation: OperationType
     namespace: str
     key: str
-    value: Optional[Any] = None
+    value: Any | None = None
     timestamp: str = field(default_factory=lambda: _now_utc().isoformat())
-    checksum: Optional[str] = None
+    checksum: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["operation"] = self.operation.value
         return d
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "WALEntry":
+    def from_dict(cls, d: dict[str, Any]) -> WALEntry:
         return cls(
             sequence=d["sequence"],
             operation=OperationType(d["operation"]),
@@ -101,19 +100,19 @@ class Snapshot:
     snapshot_id: str
     version: int
     timestamp: str
-    namespaces: Dict[str, Dict[str, Any]]
+    namespaces: dict[str, dict[str, Any]]
     status: StateStatus = StateStatus.PENDING
-    checksum: Optional[str] = None
+    checksum: str | None = None
     wal_sequence: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["status"] = self.status.value
         return d
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "Snapshot":
+    def from_dict(cls, d: dict[str, Any]) -> Snapshot:
         return cls(
             snapshot_id=d["snapshot_id"],
             version=d["version"],
@@ -146,7 +145,7 @@ class StateConfig:
 class StateCorruptionError(Exception):
     """Raised when state corruption is detected."""
 
-    def __init__(self, message: str, snapshot_id: Optional[str] = None):
+    def __init__(self, message: str, snapshot_id: str | None = None):
         self.snapshot_id = snapshot_id
         super().__init__(message)
 
@@ -167,10 +166,10 @@ class StateManager:
 
     def __init__(
         self,
-        storage_path: Optional[Path] = None,
-        config: Optional[StateConfig] = None,
-        ledger: Optional[EventLogger] = None,
-        migration_handlers: Optional[Dict[int, Callable[[Dict], Dict]]] = None,
+        storage_path: Path | None = None,
+        config: StateConfig | None = None,
+        ledger: EventLogger | None = None,
+        migration_handlers: dict[int, Callable[[dict], dict]] | None = None,
     ):
         """
         Initialize state manager.
@@ -189,8 +188,8 @@ class StateManager:
         self.migration_handlers = migration_handlers or {}
 
         # State storage
-        self._namespaces: Dict[str, Dict[str, Any]] = {}
-        self._wal: List[WALEntry] = []
+        self._namespaces: dict[str, dict[str, Any]] = {}
+        self._wal: list[WALEntry] = []
         self._wal_sequence = 0
         self._lock = threading.RLock()
 
@@ -203,13 +202,13 @@ class StateManager:
         self._recover_state()
 
         # Background snapshot thread
-        self._snapshot_thread: Optional[threading.Thread] = None
+        self._snapshot_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
 
     def _log_event(
         self,
         event_type: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ) -> None:
         """Log state event."""
         if self.ledger:
@@ -263,7 +262,7 @@ class StateManager:
         if self.config.wal_enabled and self._wal_path.exists():
             self._replay_wal()
 
-    def _load_latest_snapshot(self) -> Optional[Snapshot]:
+    def _load_latest_snapshot(self) -> Snapshot | None:
         """Load the most recent valid snapshot."""
         snapshots = sorted(
             self._snapshot_dir.glob("snapshot_*.json"),
@@ -454,7 +453,7 @@ class StateManager:
         self,
         namespace: str,
         key: str,
-        updates: Dict[str, Any],
+        updates: dict[str, Any],
     ) -> None:
         """
         Update a dictionary value (merge).
@@ -478,12 +477,12 @@ class StateManager:
             self._write_wal(entry)
             self._apply_wal_entry(entry)
 
-    def get_namespace(self, namespace: str) -> Dict[str, Any]:
+    def get_namespace(self, namespace: str) -> dict[str, Any]:
         """Get all values in a namespace."""
         with self._lock:
             return self._namespaces.get(namespace, {}).copy()
 
-    def list_namespaces(self) -> List[str]:
+    def list_namespaces(self) -> list[str]:
         """List all namespaces."""
         with self._lock:
             return list(self._namespaces.keys())
@@ -546,7 +545,7 @@ class StateManager:
         for snapshot_path in snapshots[self.config.max_snapshots:]:
             snapshot_path.unlink()
 
-    def create_checkpoint(self, label: Optional[str] = None) -> str:
+    def create_checkpoint(self, label: str | None = None) -> str:
         """
         Create a named checkpoint.
 
@@ -605,7 +604,7 @@ class StateManager:
             })
             return False
 
-    def list_snapshots(self) -> List[Dict[str, Any]]:
+    def list_snapshots(self) -> list[dict[str, Any]]:
         """List all available snapshots."""
         snapshots = []
 
@@ -649,7 +648,7 @@ class StateManager:
         if self._snapshot_thread:
             self._snapshot_thread.join(timeout=5)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get state manager statistics."""
         with self._lock:
             total_keys = sum(len(ns) for ns in self._namespaces.values())
@@ -665,7 +664,7 @@ class StateManager:
 
 # Convenience functions
 def create_state_manager(
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> StateManager:
     """Create a state manager with default configuration."""
     return StateManager(ledger=ledger)

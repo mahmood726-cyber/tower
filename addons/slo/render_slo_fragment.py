@@ -9,12 +9,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -33,7 +31,7 @@ def _generate_run_id() -> str:
     return f"{ts}_{suffix}"
 
 
-def _load_json(path: Path) -> Dict:
+def _load_json(path: Path) -> dict:
     if not path.exists():
         return {}
     try:

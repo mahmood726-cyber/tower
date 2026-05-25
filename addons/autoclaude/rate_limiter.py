@@ -16,11 +16,12 @@ import asyncio
 import sys
 import threading
 import time
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, TypeVar
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -80,7 +81,7 @@ class RateLimitConfig:
     tokens_per_second: float            # Token refill rate
     bucket_size: float                  # Maximum tokens in bucket
     scope: LimitScope = LimitScope.GLOBAL
-    initial_tokens: Optional[float] = None  # Initial tokens (default: bucket_size)
+    initial_tokens: float | None = None  # Initial tokens (default: bucket_size)
     min_tokens: float = 1.0             # Minimum tokens per request
 
     def __post_init__(self):
@@ -193,7 +194,7 @@ class TokenBucket:
             tokens_needed = tokens - self.tokens
             return tokens_needed / self.config.tokens_per_second
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "name": self.config.name,
@@ -214,7 +215,7 @@ class RateLimitStats:
     total_wait_time_ms: float = 0.0
     tokens_consumed: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -263,9 +264,9 @@ class RateLimiter:
 
     def __init__(
         self,
-        limits: Optional[List[RateLimitConfig]] = None,
-        ledger: Optional[EventLogger] = None,
-        on_limit_exceeded: Optional[Callable[[str, float], None]] = None,
+        limits: list[RateLimitConfig] | None = None,
+        ledger: EventLogger | None = None,
+        on_limit_exceeded: Callable[[str, float], None] | None = None,
     ):
         """
         Initialize rate limiter.
@@ -280,9 +281,9 @@ class RateLimiter:
         self.on_limit_exceeded = on_limit_exceeded
 
         # Create buckets for each limit
-        self._global_buckets: Dict[str, TokenBucket] = {}
-        self._scoped_buckets: Dict[str, Dict[str, TokenBucket]] = {}
-        self._stats: Dict[str, RateLimitStats] = {}
+        self._global_buckets: dict[str, TokenBucket] = {}
+        self._scoped_buckets: dict[str, dict[str, TokenBucket]] = {}
+        self._stats: dict[str, RateLimitStats] = {}
 
         for limit in self.limits:
             if limit.scope == LimitScope.GLOBAL:
@@ -296,7 +297,7 @@ class RateLimiter:
     def _get_bucket(
         self,
         limit: RateLimitConfig,
-        scope_key: Optional[str] = None,
+        scope_key: str | None = None,
     ) -> TokenBucket:
         """Get or create bucket for a limit."""
         if limit.scope == LimitScope.GLOBAL:
@@ -319,18 +320,18 @@ class RateLimiter:
     def _get_scope_key(
         self,
         limit: RateLimitConfig,
-        model: Optional[str] = None,
-        card_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-    ) -> Optional[str]:
+        model: str | None = None,
+        card_id: str | None = None,
+        user_id: str | None = None,
+    ) -> str | None:
         """Get scope key based on limit scope."""
         if limit.scope == LimitScope.GLOBAL:
             return None
-        elif limit.scope == LimitScope.PER_MODEL:
+        if limit.scope == LimitScope.PER_MODEL:
             return model or "__default__"
-        elif limit.scope == LimitScope.PER_CARD:
+        if limit.scope == LimitScope.PER_CARD:
             return card_id or "__default__"
-        elif limit.scope == LimitScope.PER_USER:
+        if limit.scope == LimitScope.PER_USER:
             return user_id or "__default__"
         return None
 
@@ -338,7 +339,7 @@ class RateLimiter:
         self,
         event_type: str,
         limit_name: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ) -> None:
         """Log rate limit event."""
         if self.ledger:
@@ -351,11 +352,11 @@ class RateLimiter:
 
     def try_acquire(
         self,
-        limit_name: Optional[str] = None,
+        limit_name: str | None = None,
         tokens: float = 1.0,
-        model: Optional[str] = None,
-        card_id: Optional[str] = None,
-        user_id: Optional[str] = None,
+        model: str | None = None,
+        card_id: str | None = None,
+        user_id: str | None = None,
     ) -> bool:
         """
         Try to acquire tokens without blocking.
@@ -413,13 +414,13 @@ class RateLimiter:
 
     def acquire(
         self,
-        limit_name: Optional[str] = None,
+        limit_name: str | None = None,
         tokens: float = 1.0,
         timeout: float = 30.0,
         blocking: bool = True,
-        model: Optional[str] = None,
-        card_id: Optional[str] = None,
-        user_id: Optional[str] = None,
+        model: str | None = None,
+        card_id: str | None = None,
+        user_id: str | None = None,
     ) -> bool:
         """
         Acquire tokens, optionally blocking.
@@ -490,12 +491,12 @@ class RateLimiter:
 
     async def acquire_async(
         self,
-        limit_name: Optional[str] = None,
+        limit_name: str | None = None,
         tokens: float = 1.0,
         timeout: float = 30.0,
-        model: Optional[str] = None,
-        card_id: Optional[str] = None,
-        user_id: Optional[str] = None,
+        model: str | None = None,
+        card_id: str | None = None,
+        user_id: str | None = None,
     ) -> bool:
         """
         Acquire tokens asynchronously.
@@ -536,7 +537,7 @@ class RateLimiter:
 
         return True
 
-    def get_stats(self, limit_name: Optional[str] = None) -> Dict[str, RateLimitStats]:
+    def get_stats(self, limit_name: str | None = None) -> dict[str, RateLimitStats]:
         """Get statistics for limits."""
         if limit_name:
             return {limit_name: self._stats.get(limit_name, RateLimitStats())}
@@ -544,8 +545,8 @@ class RateLimiter:
 
     def get_bucket_status(
         self,
-        limit_name: Optional[str] = None,
-    ) -> Dict[str, Dict[str, Any]]:
+        limit_name: str | None = None,
+    ) -> dict[str, dict[str, Any]]:
         """Get current bucket status."""
         result = {}
 
@@ -584,14 +585,14 @@ class RateLimiter:
 
 # Convenience functions
 def create_default_limiter(
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> RateLimiter:
     """Create a rate limiter with default limits."""
     return RateLimiter(limits=RateLimiter.DEFAULT_LIMITS, ledger=ledger)
 
 
 def create_claude_limiter(
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> RateLimiter:
     """Create a rate limiter optimized for Claude API."""
     return RateLimiter(limits=RateLimiter.CLAUDE_LIMITS, ledger=ledger)
@@ -600,7 +601,7 @@ def create_claude_limiter(
 def create_per_card_limiter(
     requests_per_second: float = 2.0,
     burst_size: float = 10.0,
-    ledger: Optional[EventLogger] = None,
+    ledger: EventLogger | None = None,
 ) -> RateLimiter:
     """Create a per-card rate limiter."""
     limits = [

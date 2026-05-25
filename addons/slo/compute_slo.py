@@ -15,7 +15,6 @@ import sys
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -28,9 +27,9 @@ LEDGER_DIR = TOWER_ROOT / "addons" / "ledger"
 sys.path.insert(0, str(LEDGER_DIR))
 try:
     from event_logger import (
-        get_state_transitions,
         count_events_by_type,
         get_active_hours,
+        get_state_transitions,
         read_events,
     )
     LEDGER_AVAILABLE = True
@@ -48,7 +47,7 @@ def _generate_run_id() -> str:
     return f"{ts}_{suffix}"
 
 
-def _load_json(path: Path) -> Optional[Dict]:
+def _load_json(path: Path) -> dict | None:
     """Load JSON file or return None."""
     if not path.exists():
         return None
@@ -59,7 +58,7 @@ def _load_json(path: Path) -> Optional[Dict]:
         return None
 
 
-def _load_config() -> Dict:
+def _load_config() -> dict:
     """Load SLO config."""
     config_path = SCRIPT_DIR / "slo_config.json"
     config = _load_json(config_path)
@@ -79,7 +78,7 @@ def _load_config() -> Dict:
     }
 
 
-def _load_metrics_csv() -> List[Dict]:
+def _load_metrics_csv() -> list[dict]:
     """Load metrics from CSV."""
     metrics_path = CONTROL_DIR / "metrics.csv"
     if not metrics_path.exists():
@@ -99,9 +98,9 @@ def _load_metrics_csv() -> List[Dict]:
 
 def _compute_slo_metric(
     metric_name: str,
-    value: Optional[float],
-    threshold: Dict
-) -> Dict:
+    value: float | None,
+    threshold: dict
+) -> dict:
     """Compute SLO status for a single metric."""
     target = threshold.get("target", 0)
     breach = threshold.get("breach", 0)
@@ -129,7 +128,7 @@ def _compute_slo_metric(
     }
 
 
-def _compute_rollback_rate_from_ledger(since: str, notes: List[str]) -> Optional[float]:
+def _compute_rollback_rate_from_ledger(since: str, notes: list[str]) -> float | None:
     """Compute rollback rate from historical ledger data."""
     if not LEDGER_AVAILABLE:
         notes.append("Event ledger not available for historical rollback computation")
@@ -158,7 +157,7 @@ def _compute_rollback_rate_from_ledger(since: str, notes: List[str]) -> Optional
         return None
 
 
-def _compute_validator_fail_rate_from_ledger(since: str, notes: List[str]) -> Optional[float]:
+def _compute_validator_fail_rate_from_ledger(since: str, notes: list[str]) -> float | None:
     """Compute validator fail rate from historical ledger data."""
     if not LEDGER_AVAILABLE:
         notes.append("Event ledger not available for historical validation computation")
@@ -179,7 +178,7 @@ def _compute_validator_fail_rate_from_ledger(since: str, notes: List[str]) -> Op
         return None
 
 
-def _compute_drift_rate_from_ledger(since: str, notes: List[str]) -> Optional[float]:
+def _compute_drift_rate_from_ledger(since: str, notes: list[str]) -> float | None:
     """Compute drift incidents per 100 active hours from ledger."""
     if not LEDGER_AVAILABLE:
         notes.append("Event ledger not available for historical drift computation")
@@ -203,7 +202,7 @@ def _compute_drift_rate_from_ledger(since: str, notes: List[str]) -> Optional[fl
         return None
 
 
-def compute_slo(write_output: bool = False) -> Dict:
+def compute_slo(write_output: bool = False) -> dict:
     """
     Compute SLO status from Tower metrics.
 
@@ -350,7 +349,7 @@ def compute_slo(write_output: bool = False) -> Dict:
     return result
 
 
-def _write_outputs(result: Dict, config: Dict):
+def _write_outputs(result: dict, config: dict):
     """Write SLO outputs atomically."""
     run_id = _generate_run_id()
     today = _now_utc().strftime("%Y-%m-%d")
@@ -402,7 +401,7 @@ def _write_outputs(result: Dict, config: Dict):
     print(f"Wrote: {report_file}")
 
 
-def _generate_report(result: Dict) -> str:
+def _generate_report(result: dict) -> str:
     """Generate markdown report."""
     lines = [
         "# SLO Status Report",

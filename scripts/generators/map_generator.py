@@ -10,7 +10,6 @@ Per Spec v0.8 Section 11:
 
 import argparse
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 
