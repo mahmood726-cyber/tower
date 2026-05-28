@@ -11,6 +11,7 @@ The server binds to localhost (127.0.0.1) by default for security.
 
 import argparse
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -133,8 +134,9 @@ def run_script(script_path: str, args: list[str] = None) -> dict[str, Any]:
         }
     except subprocess.TimeoutExpired:
         return {"success": False, "error": "Script timed out"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    except Exception:
+        logging.getLogger(__name__).exception("run_script failed for %s", script_path)
+        return {"success": False, "error": "Internal error running script"}
 
 
 # ============================================================================
@@ -342,8 +344,9 @@ def action_freeze():
         with open(freeze_path, "w", encoding="utf-8") as f:
             json.dump(freeze_data, f, indent=2)
         return jsonify({"success": True, "freeze": freeze_data})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+    except Exception:
+        logging.getLogger(__name__).exception("freeze failed")
+        return jsonify({"success": False, "error": "Internal error"})
 
 
 @app.route("/api/actions/unfreeze", methods=["POST"])
@@ -357,8 +360,9 @@ def action_unfreeze():
         if freeze_path.exists():
             freeze_path.unlink()
         return jsonify({"success": True})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+    except Exception:
+        logging.getLogger(__name__).exception("unfreeze failed")
+        return jsonify({"success": False, "error": "Internal error"})
 
 
 # ============================================================================
