@@ -99,12 +99,25 @@ def run_script(script_path: str, args: list[str] = None) -> dict[str, Any]:
     if READONLY_MODE:
         return {"success": False, "error": "Server is in read-only mode"}
 
-    script = SCRIPTS_DIR / script_path
+    # Defense in depth: resolve the requested script and confirm it stays
+    # inside SCRIPTS_DIR. Blocks path-traversal (e.g. "../../etc/evil.sh")
+    # even if a caller forgets to validate its input. All current callers
+    # pass hardcoded script names, but this keeps run_script safe as a
+    # standalone sink (CodeQL py/command-line-injection).
+    scripts_root = SCRIPTS_DIR.resolve()
+    script = (scripts_root / script_path).resolve()
+    if scripts_root not in script.parents and script != scripts_root:
+        return {"success": False, "error": "Script path escapes scripts directory"}
+    if script.suffix != ".sh":
+        return {"success": False, "error": "Only .sh scripts may be run"}
     if not script.exists():
         return {"success": False, "error": f"Script not found: {script_path}"}
 
+    # Reject args that look like option flags (option-injection hardening).
+    safe_args = [a for a in (args or []) if not str(a).startswith("-")]
+
     try:
-        cmd = ["bash", str(script)] + (args or [])
+        cmd = ["bash", str(script), *safe_args]
         result = subprocess.run(
             cmd,
             capture_output=True,
