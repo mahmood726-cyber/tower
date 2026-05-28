@@ -371,9 +371,11 @@
         document.getElementById('gen-time').textContent = new Date(data.generated_at).toLocaleString();
 
         // Helper functions
+        function escapeHtml(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+
         function getStateBadge(state, color) {
             const colorClass = {GREEN: 'badge-green', YELLOW: 'badge-yellow', RED: 'badge-red'}[color] || 'badge-gray';
-            return `<span class="badge ${colorClass}">${state}</span>`;
+            return `<span class="badge ${colorClass}">${escapeHtml(state)}</span>`;
         }
 
         function getProgressBar(percent) {
@@ -413,10 +415,10 @@
                 <tr><th>Card</th><th>Title</th><th>State</th><th>Issue</th><th>Last Update</th></tr>
                 ${inboxCards.map(c => `
                     <tr>
-                        <td>${c.card_id}</td>
-                        <td>${c.title || '-'}</td>
+                        <td>${escapeHtml(c.card_id)}</td>
+                        <td>${escapeHtml(c.title || '-')}</td>
                         <td>${getStateBadge(c.state, c.color)}</td>
-                        <td>${c.has_drift_alert ? '<span class="badge badge-red">DRIFT</span>' : c.state}</td>
+                        <td>${c.has_drift_alert ? '<span class="badge badge-red">DRIFT</span>' : escapeHtml(c.state)}</td>
                         <td>${c.last_update ? new Date(c.last_update).toLocaleString() : '-'}</td>
                     </tr>
                 `).join('')}
@@ -431,9 +433,9 @@
                 <tr><th>Card</th><th>Proofpack</th><th>Action</th></tr>
                 ${mergeCards.map(c => `
                     <tr>
-                        <td>${c.card_id}</td>
-                        <td><a href="../${c.latest_proofpack_path}">${c.latest_proofpack_path}</a></td>
-                        <td><button class="btn btn-copy" onclick="navigator.clipboard.writeText('bash tower/scripts/merge_gold.sh --card ${c.card_id} --do-merge').then(() => alert('Copied!'))">Copy Merge Command</button></td>
+                        <td>${escapeHtml(c.card_id)}</td>
+                        <td><a href="../${escapeHtml(c.latest_proofpack_path)}">${escapeHtml(c.latest_proofpack_path)}</a></td>
+                        <td><button class="btn btn-copy" onclick="navigator.clipboard.writeText('bash tower/scripts/merge_gold.sh --card ${escapeHtml(c.card_id)} --do-merge').then(() => alert('Copied!'))">Copy Merge Command</button></td>
                     </tr>
                 `).join('')}
             </table>
@@ -449,11 +451,11 @@
                     <tr><th>Card</th><th>Title</th><th>Stream</th><th>State</th><th>Artifacts</th><th>Last Update</th></tr>
                     ${cards.map(c => `
                         <tr>
-                            <td>${c.card_id}</td>
-                            <td>${c.title || '-'}</td>
-                            <td>${c.stream || '-'}</td>
+                            <td>${escapeHtml(c.card_id)}</td>
+                            <td>${escapeHtml(c.title || '-')}</td>
+                            <td>${escapeHtml(c.stream || '-')}</td>
                             <td>${getStateBadge(c.state, c.color)}</td>
-                            <td>${c.latest_artifacts_path ? `<a href="../${c.latest_artifacts_path}">View</a>` : '-'}</td>
+                            <td>${c.latest_artifacts_path ? `<a href="../${escapeHtml(c.latest_artifacts_path)}">View</a>` : '-'}</td>
                             <td>${c.last_update ? new Date(c.last_update).toLocaleString() : '-'}</td>
                         </tr>
                     `).join('')}
@@ -466,11 +468,11 @@
                 <input type="text" class="search-input" id="card-search" placeholder="Search cards..." aria-label="Card search">
                 <select id="state-filter" aria-label="State filter">
                     <option value="">All States</option>
-                    ${[...new Set((data.cards || []).map(c => c.state))].map(s => `<option value="${s}">${s}</option>`).join('')}
+                    ${[...new Set((data.cards || []).map(c => c.state))].map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')}
                 </select>
                 <select id="stream-filter" aria-label="Stream filter">
                     <option value="">All Streams</option>
-                    ${[...new Set((data.cards || []).map(c => c.stream).filter(Boolean))].map(s => `<option value="${s}">${s}</option>`).join('')}
+                    ${[...new Set((data.cards || []).map(c => c.stream).filter(Boolean))].map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')}
                 </select>
             </div>
             <div id="cards-table">${renderCards(allCards)}</div>
@@ -502,7 +504,7 @@
                 <tr><th>Model</th><th>Daily Usage</th><th>Weekly Usage</th></tr>
                 ${(data.quota_summary || []).map(q => `
                     <tr>
-                        <td>${q.model}</td>
+                        <td>${escapeHtml(q.model)}</td>
                         <td>${getProgressBar(q.daily_percent)} (${q.daily_used}/${q.daily_limit})</td>
                         <td>${getProgressBar(q.weekly_percent)} (${q.weekly_used}/${q.weekly_limit})</td>
                     </tr>
@@ -514,7 +516,7 @@
                 <tr><th>PC</th><th>Status</th><th>Last Seen</th><th>CPU</th><th>RAM</th></tr>
                 ${(data.pc_summary || []).map(p => `
                     <tr>
-                        <td>${p.pc_id}</td>
+                        <td>${escapeHtml(p.pc_id)}</td>
                         <td><span class="status-${p.online ? 'online' : 'offline'}">${p.online ? 'ONLINE' : 'OFFLINE'}</span></td>
                         <td>${p.last_seen ? new Date(p.last_seen).toLocaleString() : '-'}</td>
                         <td>${p.cpu_utilization != null ? p.cpu_utilization + '%' : '-'}</td>
@@ -527,9 +529,9 @@
         // Alerts
         document.getElementById('tab-alerts').innerHTML = (data.alerts?.items || []).length ? `
             ${(data.alerts.items).map(a => `
-                <div class="alert-item ${a.type}">
-                    <div class="alert-type">${a.type}${a.card_id ? ' - ' + a.card_id : ''}</div>
-                    <div class="alert-message">${a.message}</div>
+                <div class="alert-item ${escapeHtml(a.type)}">
+                    <div class="alert-type">${escapeHtml(a.type)}${a.card_id ? ' - ' + escapeHtml(a.card_id) : ''}</div>
+                    <div class="alert-message">${escapeHtml(a.message)}</div>
                 </div>
             `).join('')}
         ` : '<div class="empty">No active alerts</div>';
@@ -539,7 +541,7 @@
         document.getElementById('tab-papers').innerHTML = `
             <div class="tiles" style="margin-bottom:20px">
                 ${Object.entries(paperCounts).map(([status, count]) => `
-                    <div class="tile"><div class="tile-title">${status}</div><div class="tile-value">${count}</div></div>
+                    <div class="tile"><div class="tile-title">${escapeHtml(status)}</div><div class="tile-value">${count}</div></div>
                 `).join('')}
             </div>
             <p>Total papers: ${data.papers?.total || 0}</p>
