@@ -236,11 +236,11 @@
         const red = (counts['BLOCKED'] || 0) + (counts['ESCALATED'] || 0);
 
         tiles.innerHTML = `
-            <div class="tile"><div class="tile-title">Total Cards</div><div class="tile-value">${total}</div></div>
-            <div class="tile green"><div class="tile-title">GREEN</div><div class="tile-value">${green}</div><div class="tile-sub">GOLD + MERGED</div></div>
-            <div class="tile yellow"><div class="tile-title">In Progress</div><div class="tile-value">${yellow}</div><div class="tile-sub">ACTIVE + READY</div></div>
-            <div class="tile red"><div class="tile-title">Needs Attention</div><div class="tile-value">${red}</div><div class="tile-sub">BLOCKED + ESCALATED</div></div>
-            <div class="tile"><div class="tile-title">Alerts</div><div class="tile-value">${data.alerts?.total_count || 0}</div></div>
+            <div class="tile"><div class="tile-title">Total Cards</div><div class="tile-value">${escapeHtml(total)}</div></div>
+            <div class="tile green"><div class="tile-title">GREEN</div><div class="tile-value">${escapeHtml(green)}</div><div class="tile-sub">GOLD + MERGED</div></div>
+            <div class="tile yellow"><div class="tile-title">In Progress</div><div class="tile-value">${escapeHtml(yellow)}</div><div class="tile-sub">ACTIVE + READY</div></div>
+            <div class="tile red"><div class="tile-title">Needs Attention</div><div class="tile-value">${escapeHtml(red)}</div><div class="tile-sub">BLOCKED + ESCALATED</div></div>
+            <div class="tile"><div class="tile-title">Alerts</div><div class="tile-value">${escapeHtml(data.alerts?.total_count || 0)}</div></div>
             <div class="tile"><div class="tile-title">PCs Online</div><div class="tile-value">${(data.pc_summary || []).filter(p => p.online).length}/${(data.pc_summary || []).length}</div></div>
         `;
 
@@ -263,7 +263,7 @@
                         <td>${escapeHtml(c.title || '-')}</td>
                         <td>${getStateBadge(c.state, c.color)}</td>
                         <td>${c.has_drift_alert ? '<span class="badge badge-red">DRIFT</span>' : escapeHtml(c.state)}</td>
-                        <td>${c.last_update ? new Date(c.last_update).toLocaleString() : '-'}</td>
+                        <td>${escapeHtml(c.last_update ? new Date(c.last_update).toLocaleString() : '-')}</td>
                     </tr>
                 `).join('')}
             </table>
@@ -300,7 +300,7 @@
                             <td>${escapeHtml(c.stream || '-')}</td>
                             <td>${getStateBadge(c.state, c.color)}</td>
                             <td>${c.latest_artifacts_path ? `<a href="../${escapeHtml(c.latest_artifacts_path)}">View</a>` : '-'}</td>
-                            <td>${c.last_update ? new Date(c.last_update).toLocaleString() : '-'}</td>
+                            <td>${escapeHtml(c.last_update ? new Date(c.last_update).toLocaleString() : '-')}</td>
                         </tr>
                     `).join('')}
                 </table>
@@ -349,8 +349,8 @@
                 ${(data.quota_summary || []).map(q => `
                     <tr>
                         <td>${escapeHtml(q.model)}</td>
-                        <td>${getProgressBar(q.daily_percent)} (${q.daily_used}/${q.daily_limit})</td>
-                        <td>${getProgressBar(q.weekly_percent)} (${q.weekly_used}/${q.weekly_limit})</td>
+                        <td>${getProgressBar(q.daily_percent)} (${escapeHtml(q.daily_used)}/${escapeHtml(q.daily_limit)})</td>
+                        <td>${getProgressBar(q.weekly_percent)} (${escapeHtml(q.weekly_used)}/${escapeHtml(q.weekly_limit)})</td>
                     </tr>
                 `).join('')}
             </table>
@@ -362,9 +362,9 @@
                     <tr>
                         <td>${escapeHtml(p.pc_id)}</td>
                         <td><span class="status-${p.online ? 'online' : 'offline'}">${p.online ? 'ONLINE' : 'OFFLINE'}</span></td>
-                        <td>${p.last_seen ? new Date(p.last_seen).toLocaleString() : '-'}</td>
-                        <td>${p.cpu_utilization != null ? p.cpu_utilization + '%' : '-'}</td>
-                        <td>${p.ram_utilization != null ? p.ram_utilization + '%' : '-'}</td>
+                        <td>${escapeHtml(p.last_seen ? new Date(p.last_seen).toLocaleString() : '-')}</td>
+                        <td>${escapeHtml(p.cpu_utilization != null ? p.cpu_utilization + '%' : '-')}</td>
+                        <td>${escapeHtml(p.ram_utilization != null ? p.ram_utilization + '%' : '-')}</td>
                     </tr>
                 `).join('')}
             </table>
@@ -385,10 +385,10 @@
         document.getElementById('tab-papers').innerHTML = `
             <div class="tiles" style="margin-bottom:20px">
                 ${Object.entries(paperCounts).map(([status, count]) => `
-                    <div class="tile"><div class="tile-title">${escapeHtml(status)}</div><div class="tile-value">${count}</div></div>
+                    <div class="tile"><div class="tile-title">${escapeHtml(status)}</div><div class="tile-value">${escapeHtml(count)}</div></div>
                 `).join('')}
             </div>
-            <p>Total papers: ${data.papers?.total || 0}</p>
+            <p>Total papers: ${escapeHtml(data.papers?.total || 0)}</p>
         `;
 
         // Tab switching
